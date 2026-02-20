@@ -1,0 +1,1211 @@
+.testimonial-one img {
+  display: unset !important;
+  width: 90%;
+}
+.coinDetails-datepiker .picker__container {
+  position: relative !important;
+}
+.wallet-card {
+  margin: 0 auto;
+  width: 95% !important;
+}
+.dataTables_wrapper .dataTables_paginate span .paginate_button {
+  display: inline-block;
+}
+.sidebar-right
+  .tab-content
+  .tab-pane
+  .admin-settings
+  input[type="radio"]:checked
+  + label::after {
+  background-color: rgba(1, 1, 1, 0) !important;
+}
+/* ////////////////////////fixed */
+.element-right-round button#dropdown-button-drop-dwon {
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+._i-hover:hover {
+  left: 0 !important;
+}
+@media screen and (min-width: 695px) {
+  .d-unset {
+    display: unset !important;
+  }
+}
+.d-unset {
+  display: block;
+}
+button#check-minutes {
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+.fc-toolbar-chunk {
+  display: flex;
+}
+@media screen and (max-width: 335px) {
+  .fc-toolbar-chunk {
+    display: block;
+    text-align: center;
+    line-height: 2.8;
+  }
+  .fc-direction-ltr .fc-toolbar > * > :not(:first-child) {
+    margin: 0 !important;
+  }
+}
+/* Editor */
+.tox .tox-notification--warn,
+.tox .tox-notification--warning {
+  display: none !important;
+}
+
+/* Map */
+svg.svg-map {
+  stroke: white !important;
+}
+.svg-map__location {
+  fill: #eff2f4 !important;
+}
+.svg-map__location:focus,
+.svg-map__location:hover {
+  fill: black !important;
+}
+.map-unselected{
+	fill: #eff2f4 !important;
+}
+
+.p-meddle {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  width: 100%;
+}
+/* color picker */
+
+.chrome-picker {
+  position: absolute;
+  top: -310px;
+}
+.color-gradian-tixia .popover {
+  top: -410px !important;
+}
+/* wizard */
+
+/* date piker */
+@media screen and (max-width: 590px) {
+  .rangeDatePicker .calendar__item {
+    display: block !important;
+    width: 100%;
+  }
+  .rangeDatePicker .calendar__container {
+    width: 100% !important;
+  }
+}
+
+form#step-form-horizontal div:first-child > div:last-child {
+  text-align: right;
+  /* padding-top: 2rem; */
+}
+
+label.mailclinet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  cursor: pointer;
+  background-color: #eef5f9;
+  text-align: center;
+  margin: auto;
+}
+
+.wizard-four-color {
+  /* color: #222fb9; */
+  text-decoration: underline;
+}
+
+.redio-false {
+  display: none;
+}
+
+span.mail-icon {
+  font-size: 3rem;
+  display: inline-block;
+  line-height: 1;
+  margin-top: -1rem;
+}
+
+span.mail-text {
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* Wizard end */
+
+/* cursor-pointer */
+.cursor-pointer {
+  cursor: pointer;
+}
+/* form */
+#multiselect button.btn.dropdown-toggle.btn-light {
+  background: no-repeat;
+  border: 1px solid #d7dae3;
+  color: #3e4954;
+  font-weight: 100;
+}
+/* slider */
+
+.card-text {
+  margin-bottom: 0;
+}
+#whiteSpace {
+  white-space: normal;
+}
+
+#tp-btn::after {
+  content: "";
+}
+
+.swal-footer {
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+.ui .progress .progress-bar {
+  animation-name: animateBar;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in;
+  animation-duration: 0.6s;
+}
+@keyframes animateBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+ol.go2441762052 {
+  text-align: center;
+}
+
+#order2 {
+  order: 2;
+}
+
+/* Editor */
+
+/* Nova login refresh */
+.nova-login {
+  background: linear-gradient(135deg, #000 0%, #2a6486 55%, #000 100%);
+  min-height: 100vh;
+  padding: 3rem 0;
+}
+.nova-login-card {
+  border: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+}
+.nova-login-form .card {
+  border: 0;
+  border-radius: 0;
+}
+.nova-form-body {
+  padding: 3rem 2.5rem;
+}
+.nova-subtitle {
+  color: #000;
+  opacity: 0.7;
+  margin-bottom: 1.5rem;
+}
+.nova-login-btn {
+  background: #2a6486;
+  border-color: #2a6486;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+.nova-login-btn:hover {
+  background: #000;
+  border-color: #000;
+}
+.nova-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #000;
+  font-weight: 500;
+}
+.nova-form-footer a {
+  color: #2a6486;
+  text-decoration: none;
+}
+.nova-form-footer a:hover {
+  color: #000;
+}
+.nova-login-aside {
+  background: linear-gradient(140deg, #2a6486 0%, #000 70%);
+  color: #fff;
+}
+.nova-aside-inner {
+  padding: 3rem 3rem 1.5rem;
+  position: relative;
+  min-height: 100%;
+}
+.nova-aside-hero {
+  max-width: 420px;
+  animation: novaFadeUp 0.7s ease-out both;
+}
+.nova-aside-text {
+  opacity: 0.85;
+  margin-bottom: 2rem;
+}
+.nova-downloads {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.nova-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #fff;
+  border-radius: 14px;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.3);
+}
+.nova-store-btn i {
+  font-size: 1.5rem;
+}
+.nova-store-btn span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.nova-store-btn small {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.nova-store-btn strong {
+  font-size: 1rem;
+}
+.nova-store-btn:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+.nova-aside-art {
+  position: relative;
+  margin-top: 2.5rem;
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.nova-aside-image {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+}
+.nova-orb {
+  position: absolute;
+  right: 30px;
+  bottom: 40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #2a6486 60%, #000 100%);
+  opacity: 0.6;
+  animation: novaFloat 6s ease-in-out infinite;
+}
+.nova-phone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  height: 160px;
+  border-radius: 24px;
+  border: 2px solid #fff;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  transform: rotate(-6deg);
+}
+.nova-phone::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  border-radius: 16px;
+  border: 1px solid #2a6486;
+}
+@keyframes novaFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes novaFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+@media (max-width: 991.98px) {
+  .nova-login {
+    padding: 2rem 0;
+  }
+  .nova-aside-inner {
+    padding: 2.5rem 2rem;
+  }
+  .nova-downloads {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nova-aside-art {
+    min-height: 180px;
+  }
+}
+@media (max-width: 575.98px) {
+  .nova-form-body {
+    padding: 2.5rem 1.5rem;
+  }
+  .nova-phone {
+    width: 180px;
+    height: 140px;
+  }
+}
+
+.summernote > :first-child {
+  min-height: 250px;
+  border: 1px solid #a9a9a9;
+  border-color: #f0f1f5;
+}
+.rdw-image-modal {
+  right: 0 !important;
+  left: unset !important;
+}
+.rdw-editor-toolbar {
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+}
+
+/* Button */
+button:focus,
+a:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Chart */
+
+.go2478912419 {
+  text-align: center;
+  display: block;
+  margin-bottom: 2rem;
+}
+
+.picker-input__text,
+.range-picker-input {
+  width: 100% !important;
+}
+
+.timepicker-container,
+.MuiFormControl-root.MuiTextField-root {
+  flex: 1 1 auto;
+}
+
+.timepicker-container input {
+  background: #fff;
+  border: 1px solid #f0f1f5;
+  color: #b1b1b1;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  height: 41px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.MuiFormControl-root.MuiTextField-root {
+  display: block;
+}
+.MuiInputBase-root.MuiInput-root.MuiInput-underline.MuiInputBase-formControl.MuiInput-formControl {
+  width: 100%;
+  height: 100%;
+}
+
+.dd .nestable-item-name {
+  color: #fff;
+  background: #e23428;
+  display: block;
+  height: 35px;
+  margin: 5px 0;
+  padding: 8px 10px;
+  text-decoration: none;
+  font-weight: 700;
+  border: 1px solid #e23428;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 13px;
+  margin-bottom: -4px;
+}
+
+/* Picker */
+
+.i-false:after {
+  content: none !important;
+}
+
+rect#chart_ChartBorder {
+  fill: transparent;
+}
+
+/* pagination */
+/* .pagination { */
+  /* margin-bottom: 0 !important; */
+/* } */
+
+@import url("https://fonts.googleapis.com/css?family=Lato");
+.rc-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 80;
+}
+.rc-backdrop.invert {
+  background: rgba(1, 1, 1, 0.7);
+}
+.range-picker-input {
+  display: inline-flex;
+  border: 1px solid #e4e4e4;
+  width: 300px;
+}
+.range-picker-input * {
+  box-sizing: border-box;
+}
+.range-picker-input__icon {
+  display: inline-flex;
+  align-items: center;
+}
+.range-picker-input__start,
+.range-picker-input__end {
+  display: inline-flex;
+  flex: 1;
+}
+.range-picker-input__start .picker-input.range input,
+.range-picker-input__end .picker-input.range input {
+  width: 100%;
+  border: none;
+}
+.picker-input {
+  display: inline-block;
+  position: relative;
+}
+.picker-input__icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+}
+.picker-input__text {
+  padding: 10px;
+  border: 1px solid #e4e4e4;
+  outline: none;
+  font-size: 16.8px;
+}
+.picker-input__text:disabled {
+  background: #e4e4e4;
+}
+.picker-input__clear {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 10px;
+  cursor: pointer;
+}
+.picker {
+  display: inline-block;
+}
+.picker__container {
+  position: absolute;
+  z-index: 100;
+}
+.picker__container.portal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+.picker__container__include-time {
+  border: 1px solid #e4e4e4;
+}
+.picker__container__include-time .calendar__item,
+.picker__container__include-time .time__container {
+  border: none;
+}
+.picker__container__tab {
+  margin: 10px 0;
+}
+.picker__container__tab button {
+  padding: 5px 10px;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  border-bottom: 2px solid #e4e4e4;
+}
+.picker__container__tab button.active {
+  color: #49599a;
+  border-bottom: 2px solid #49599a;
+}
+.picker__container__tab button:first-child {
+  border-right: none;
+}
+.picker__container__tab button svg {
+  margin-right: 5px;
+}
+.time__container {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e4e4e4;
+  padding: 15px;
+  background: white;
+  font-family: "Lato";
+  font-size: 12px;
+}
+.time__container__div {
+  margin: 0 10px;
+}
+.time__container__type {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+.time-input {
+  display: inline-block;
+  width: 40px;
+  overflow: hidden;
+}
+.time-input__up,
+.time-input__down {
+  border: 1px solid #e4e4e4;
+}
+.time-input__up button,
+.time-input__down button {
+  outline: none;
+  width: 100%;
+  cursor: pointer;
+  border: none;
+}
+.time-input__text {
+  width: 100%;
+  border-left: 1px solid #e4e4e4;
+  border-right: 1px solid #e4e4e4;
+  box-sizing: border-box;
+}
+.time-input__text input {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  font-size: 15px;
+  padding: 5px;
+  text-align: center;
+  outline: none;
+}
+
+/* calender */
+
+.react-calendar {
+  border: none !important;
+  font-family: "poppins", sans-serif !important;
+  width: 100% !important;
+  font-size: 1rem;
+}
+
+abbr[title],
+abbr[data-original-title] {
+  text-decoration: none !important;
+}
+button.react-calendar__tile.react-calendar__month-view__days__day.react-calendar__month-view__days__day--neighboringMonth {
+  color: #dee2e6 !important;
+  font-family: "poppins", sans-serif;
+}
+
+span.react-calendar__navigation__label__labelText.react-calendar__navigation__label__labelText--from {
+  font-size: 18px;
+  font-weight: 500;
+  color: #717579;
+  font-family: "poppins", sans-serif;
+}
+button.react-calendar__navigation__arrow.react-calendar__navigation__prev-button,
+button.react-calendar__navigation__arrow.react-calendar__navigation__next-button {
+  display: none;
+}
+
+button.react-calendar__tile.react-calendar__month-view__days__day {
+  border-radius: 10px;
+  color: #000;
+  font-weight: 500;
+  height: 40px;
+  line-height: 30px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "poppins", sans-serif;
+}
+button.react-calendar__navigation__label {
+  /* padding: 20px 15px; */
+  border-radius: 1.75rem !important;
+  font-size: 20px;
+}
+button.react-calendar__navigation__label:hover {
+  color: white !important;
+  background: #eeeeee !important;
+}
+button.react-calendar__navigation__label:hover > span {
+  /* color: white !important; */
+  /* background: #EEEEEE !important; */
+}
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus,
+.react-calendar__navigation__label:hover > span {
+  /* background-color: #eeeeee !important; */
+  /* color: white; */
+  /* border-radius: 50%; */
+}
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus,
+.react-calendar__tile--hasActive,
+.react-calendar__navigation button[disabled],
+.react-calendar__navigation button[disabled] > span {
+  background-color: #eeeeee !important;
+
+  /* color: white; */
+}
+button.react-calendar__tile.react-calendar__tile--now.react-calendar__month-view__days__day,
+button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--range.react-calendar__tile--rangeStart.react-calendar__tile--rangeEnd.react-calendar__tile--rangeBothEnds.react-calendar__month-view__days__day {
+  position: relative;
+  box-shadow: none;
+  /* color: white !important; */
+  border-radius: 10px;
+  overflow: unset !important;
+  padding: 16px 5px 15px 5px;
+  /* border-radius: 35px; */
+  line-height: 1;
+  color:#fff;
+  background:var(--primary)!important;
+}
+
+button.react-calendar__tile.react-calendar__tile--now.react-calendar__month-view__days__day::before,
+button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--range.react-calendar__tile--rangeStart.react-calendar__tile--rangeEnd.react-calendar__tile--rangeBothEnds.react-calendar__month-view__days__day::before {
+	content:"";
+	height: 0.8rem;
+	width: 0.8rem;
+	border-radius: 50%;
+	right: -0.3125rem;
+	top: -0.3125rem;
+	position:absolute;
+	border: 2px solid #fff;
+	background: #2a353a;
+}
+
+
+.react-calendar {
+  border: none;
+}
+.react-calendar__navigation button{
+	font-size:24px;
+}
+
+.calendar {
+  display: inline-block;
+  background: white;
+  font-size: 12px;
+}
+.calendar *,
+.calendar *:before,
+.calendar *:after {
+  box-sizing: border-box;
+}
+.calendar__container {
+  width: 270px;
+  font-family: "Roboto", sans-serif;
+  display: none;
+}
+.calendar__list {
+  display: table;
+}
+.calendar__item {
+  display: table-cell;
+  border: 1px solid #ececec;
+}
+.calendar__item:not(:first-child) {
+  border-left: none !important;
+}
+.calendar--show {
+  display: inline-block;
+}
+.calendar__head {
+  position: relative;
+  background: transparent;
+  padding: 10px 6px;
+}
+.calendar__head--title {
+  font-size: 1.3em;
+  color: #9a9fa4;
+  text-align: center;
+  margin: 4px;
+}
+.calendar__head--button {
+  outline: none;
+  border: none;
+  cursor: pointer;
+  background: none;
+  font-size: 20px;
+}
+.calendar__head--button svg {
+  fill: #9a9fa4;
+}
+.calendar__head--prev,
+.calendar__head--next {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+.calendar__head--prev {
+  left: 0;
+}
+.calendar__head--next {
+  right: 0;
+}
+.calendar__panel--show {
+  display: block !important;
+}
+.calendar__panel--today {
+  background: #aab6fe;
+  padding: 5px;
+  display: none;
+}
+.calendar__panel--today h2 {
+  margin: 0;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: center;
+}
+.calendar__body--table {
+  width: 100%;
+  table-layout: fixed;
+  text-align: center;
+  border-spacing: none;
+  border-collapse: collapse;
+}
+.calendar__body--table th {
+  height: 30px;
+  vertical-align: middle;
+  color: #9a9fa4;
+}
+.calendar__day {
+  vertical-align: top;
+  padding-top: 5px;
+  height: 40px;
+  cursor: pointer;
+}
+/* .calendar__day self:hover:not(&--disabled) {
+   background: #aab6fe;
+   cursor: pointer;
+} */
+.calendar__day--0 {
+  color: red;
+}
+.calendar__day--6 {
+  color: blue;
+}
+.calendar__day--today {
+  background: #fff9c4;
+}
+.calendar__day--disabled {
+  color: #ddd;
+  cursor: initial;
+}
+.calendar__day--start,
+.calendar__day--end,
+.calendar__day--selected {
+  background: #7986cb;
+  color: #fff;
+}
+.calendar__day--start:hover,
+.calendar__day--end:hover,
+.calendar__day--selected:hover {
+  background: #7986cb;
+}
+.calendar__day--range {
+  background: #dce1ff;
+}
+.calendar__day--text {
+  display: block;
+  font-size: 10px;
+}
+.calendar__year,
+.calendar__month {
+  height: 55px;
+  vertical-align: middle;
+}
+.calendar__year:hover,
+.calendar__month:hover {
+  background: #aab6fe;
+  cursor: pointer;
+}
+
+/* Selector Design */
+.css-1okebmr-indicatorSeparator {
+  display: none;
+}
+
+.nestable .icon-minus-gray,.nestable .icon-plus-gray{
+	background-image:none;
+}
+.nestable .nestable-icon:before{
+	content:"\f068";
+	font-family:'Font Awesome 5 Free';
+	font-weight: 600;
+	width: auto;
+	height: auto;
+	display: contents;
+}
+.nestable .nestable-item--children-collapsed .nestable-icon:before{
+	content:"\f067";
+	font-family:'Font Awesome 5 Free';
+	font-weight: 600;
+	width: auto;
+	height: auto;
+	display: contents;
+}
+
+.icon-bell-effect path{
+  stroke-dasharray: 57px 77px;
+  stroke-dashoffset: 0px;  
+}
+.icon-bell-effect:hover path{
+  animation: anim-bell 2s linear forwards
+}
+@keyframes anim-bell {
+  0%{
+    stroke-dashoffset: 0px;
+  }
+  45%{
+    stroke-dashoffset: 60px;
+  }
+  /* 50%{
+    stroke-dashoffset: 10px;
+  }*/
+  /* 100%{
+    stroke-dashoffset: 60px;
+  }  */
+}
+
+/* Nova admin */
+.nova-dashboard-hero {
+  background: linear-gradient(135deg, #0f0c3d 0%, #1b0f5a 55%, #0d0b2f 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.nova-stat-card {
+  border: 1px solid #eef1f6;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(30, 52, 95, 0.08);
+}
+.nova-stat-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+.nova-stat-value {
+  margin-top: 0.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.nova-highlight-card {
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e8eef6;
+}
+.nova-card-image {
+  width: 110px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+}
+.nova-card-thumb {
+  width: 64px;
+  height: auto;
+  border-radius: 8px;
+}
+.nova-panel {
+  border-radius: 18px;
+  border: 1px solid #eef1f6;
+  box-shadow: 0 14px 30px rgba(30, 52, 95, 0.08);
+}
+.nova-action-panel {
+  min-width: 180px;
+}
+.nova-action-dialog .p-dialog-content {
+  padding-top: 0.5rem;
+}
+.nova-table .p-datatable-header {
+  border: 0;
+  padding: 1rem 1.2rem;
+  background: transparent;
+}
+.nova-table-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.nova-table-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.nova-dropdown .p-dropdown-label {
+  padding: 0.6rem 0.9rem;
+}
+.nova-calendar .p-inputtext {
+  padding: 0.6rem 0.9rem;
+}
+.nova-input .p-inputtext {
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  padding-left: 2.2rem;
+}
+.nova-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 1rem 0;
+}
+.nova-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+@media (max-width: 767.98px) {
+  .nova-dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+.nova-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+.nova-card-tile {
+  --nova-card-accent: rgba(38, 150, 253, 0.16);
+  --nova-card-accent-2: rgba(38, 150, 253, 0.12);
+  --nova-card-icon: #2696fd;
+  background: var(--nova-card-surface, #fff);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 190px);
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  min-height: 220px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.nova-card-tile::before {
+  content: "";
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  right: -70px;
+  top: -80px;
+  border-radius: 50%;
+  background: var(--nova-card-accent);
+  opacity: 0.8;
+}
+.nova-card-tile::after {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  left: -50px;
+  bottom: -70px;
+  border-radius: 50%;
+  background: var(--nova-card-accent-2);
+  opacity: 0.6;
+}
+.nova-card-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.12);
+}
+.nova-card-tile.is-virtual {
+  --nova-card-surface: linear-gradient(135deg, #ffffff 0%, #eaf4ff 100%);
+  --nova-card-accent: rgba(38, 150, 253, 0.2);
+  --nova-card-accent-2: rgba(42, 101, 135, 0.2);
+  --nova-card-icon: #2696fd;
+}
+.nova-card-tile.is-physical {
+  --nova-card-surface: linear-gradient(135deg, #ffffff 0%, #fff2e3 100%);
+  --nova-card-accent: rgba(255, 171, 45, 0.22);
+  --nova-card-accent-2: rgba(253, 83, 83, 0.14);
+  --nova-card-icon: #ffab2d;
+}
+.nova-card-tile-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.nova-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.nova-card-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.08);
+}
+.nova-card-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+}
+.nova-card-status.is-available {
+  background: rgba(40, 190, 157, 0.18);
+  color: #15803d;
+}
+.nova-card-status.is-paused {
+  background: rgba(255, 171, 45, 0.2);
+  color: #b45309;
+}
+.nova-card-name {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+.nova-card-desc {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+.nova-card-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.nova-card-meta-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+.nova-card-meta-value {
+  font-weight: 700;
+  color: #0f172a;
+}
+.nova-card-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+.nova-card-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #334155;
+  font-weight: 500;
+}
+.nova-card-feature .pi {
+  color: var(--nova-card-icon);
+  font-size: 0.95rem;
+}
+.nova-card-visual {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-card-hero {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.18);
+  transform: rotate(-6deg);
+}
+@media (max-width: 991.98px) {
+  .nova-card-tile {
+    grid-template-columns: 1fr;
+  }
+  .nova-card-visual {
+    justify-content: flex-start;
+  }
+  .nova-card-hero {
+    max-width: 240px;
+    transform: rotate(-3deg);
+  }
+}
+@media (max-width: 575.98px) {
+  .nova-card-tile {
+    padding: 1.25rem;
+  }
+  .nova-card-hero {
+    max-width: 200px;
+  }
+}
