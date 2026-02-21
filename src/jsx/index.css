@@ -232,10 +232,56 @@ ol.go2441762052 {
   background: #000;
   border-color: #000;
 }
+.nova-auth-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.nova-auth-tabs .nav-item {
+  margin-right: 0 !important;
+  flex: 1 1 auto;
+}
+.nova-auth-tab-btn {
+  width: 100%;
+  border-radius: 10px;
+  white-space: nowrap;
+  text-align: center;
+}
+.nova-auth-tabs .nav-link {
+  background: #eef4f7;
+  border: 1px solid transparent;
+  color: #2a6486;
+  font-weight: 600;
+  padding: 0.7rem 1rem;
+}
+.nova-auth-tabs .nav-link.active,
+.nova-auth-tabs .show > .nav-link {
+  background: #dfe8ef;
+  border-color: #d4e1ea;
+  color: #1f5d82;
+}
+.nova-code-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+.nova-code-row .form-control {
+  min-width: 0;
+}
+.nova-code-btn {
+  min-width: 120px;
+  padding-inline: 1rem;
+  white-space: nowrap;
+  border-radius: 12px;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
 .nova-form-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   color: #000;
   font-weight: 500;
 }
@@ -370,6 +416,9 @@ ol.go2441762052 {
   .nova-login {
     padding: 2rem 0;
   }
+  .nova-form-body {
+    padding: 2.5rem 2rem;
+  }
   .nova-aside-inner {
     padding: 2.5rem 2rem;
   }
@@ -384,6 +433,16 @@ ol.go2441762052 {
 @media (max-width: 575.98px) {
   .nova-form-body {
     padding: 2.5rem 1.5rem;
+  }
+  .nova-auth-tabs .nav-item {
+    flex: 1 1 100%;
+  }
+  .nova-code-row {
+    flex-direction: column;
+  }
+  .nova-code-btn {
+    min-width: 0;
+    width: 100%;
   }
   .nova-phone {
     width: 180px;

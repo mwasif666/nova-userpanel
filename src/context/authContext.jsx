@@ -1,60 +1,102 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import { request } from "../utils/api";
 
 export const AuthContext = createContext();
+
+const isObject = (value) =>
+  value !== null && typeof value === "object" && !Array.isArray(value);
+
+const resolveUserPayload = (payload) => {
+  if (!isObject(payload)) return null;
+
+  const candidates = [
+    payload?.data?.user,
+    payload?.user,
+    payload?.data?.profile,
+    payload?.profile,
+    payload?.data?.data?.user,
+    payload?.data?.data,
+    payload?.data,
+  ];
+
+  for (const candidate of candidates) {
+    if (!isObject(candidate)) continue;
+
+    const looksLikeAuthEnvelope =
+      candidate?.token !== undefined ||
+      candidate?.access_token !== undefined ||
+      candidate?.expires_in !== undefined ||
+      candidate?.user !== undefined;
+
+    if (looksLikeAuthEnvelope && !candidate?.id && !candidate?.email && !candidate?.name) {
+      continue;
+    }
+
+    return candidate;
+  }
+
+  return null;
+};
+
+const resolveAuthPayload = (payload) => {
+  const container = isObject(payload?.data) ? payload.data : payload;
+
+  const token =
+    container?.token ||
+    container?.access_token ||
+    payload?.token ||
+    payload?.access_token ||
+    null;
+
+  const expires_in = container?.expires_in ?? payload?.expires_in ?? null;
+  const user = resolveUserPayload(payload);
+
+  return { token, expires_in, user };
+};
+
+const resolvePermissionKeys = (permissions) => {
+  if (Array.isArray(permissions)) {
+    return permissions
+      .map((permission) =>
+        typeof permission === "string" ? permission : permission?.key,
+      )
+      .filter(Boolean);
+  }
+
+  if (isObject(permissions)) {
+    return Object.keys(permissions).filter((key) => Boolean(permissions[key]));
+  }
+
+  return [];
+};
+
+const resolveRoleValue = (user) => {
+  if (!isObject(user)) return null;
+
+  if (user?.role_key !== undefined && user?.role_key !== null) return user.role_key;
+  if (typeof user?.role === "string") return user.role;
+  if (isObject(user?.role)) return user.role.key || user.role.name || user.role.title || null;
+
+  return user?.role ?? null;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
+  const getStoredUser = useCallback(() => {
     const userData = localStorage.getItem("user");
-    let parsedUser = null;
+    if (!userData) return null;
 
-    if (userData) {
-      try {
-        parsedUser = JSON.parse(userData);
-      } catch (error) {
-        parsedUser = null;
-      }
+    try {
+      const parsed = JSON.parse(userData);
+      return isObject(parsed) ? parsed : null;
+    } catch (error) {
+      return null;
     }
-
-    if (token) {
-      setUser({ access_token: token, ...(parsedUser || {}) });
-    }
-
-    setLoading(false);
   }, []);
 
-  const storeDataInLocalStorage = (response) => {
-    const { expires_in, token, user } = response;
-    /** Permission Scenario */
-    const permissions = Array.isArray(user?.permissions) ? user.permissions.map((p) => p.key) : [];
-    localStorage.setItem("permissions", JSON.stringify(permissions));
-
-    /** token Scenario */
-    if (token) localStorage.setItem("access_token", token);
-
-    /** Store User*/
-    if (user) localStorage.setItem("user", JSON.stringify(user));
-
-    localStorage.setItem("nova_role", JSON.stringify(user?.role ?? null));
-    if (expires_in !== undefined && expires_in !== null) {
-      localStorage.setItem("expire", expires_in);
-    } else {
-      localStorage.removeItem("expire");
-    }
-
-    if (token || user) {
-      setUser({
-        ...(user || {}),
-        ...(token ? { access_token: token } : {}),
-      });
-    }
-  };
-
-  const removeDataInLocalStorage = () => {
+  const removeDataInLocalStorage = useCallback(() => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
     localStorage.removeItem("permissions");
@@ -62,7 +104,109 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("nova_role");
     localStorage.removeItem("email");
     setUser(null);
-  };
+  }, []);
+
+  const applyUserData = useCallback((userData, tokenOverride = null) => {
+    if (!isObject(userData)) return;
+
+    const permissions = resolvePermissionKeys(userData.permissions);
+    localStorage.setItem("permissions", JSON.stringify(permissions));
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("nova_role", JSON.stringify(resolveRoleValue(userData)));
+
+    setUser((prevUser) => {
+      const previous = isObject(prevUser) ? prevUser : {};
+      const accessToken =
+        tokenOverride ||
+        previous?.access_token ||
+        localStorage.getItem("access_token");
+
+      return {
+        ...previous,
+        ...userData,
+        ...(accessToken ? { access_token: accessToken } : {}),
+      };
+    });
+  }, []);
+
+  const storeDataInLocalStorage = useCallback(
+    (response) => {
+      const { expires_in, token, user: userData } = resolveAuthPayload(response);
+
+      if (token) {
+        localStorage.setItem("access_token", token);
+      }
+
+      if (expires_in !== undefined && expires_in !== null) {
+        localStorage.setItem("expire", String(expires_in));
+      } else {
+        localStorage.removeItem("expire");
+      }
+
+      if (userData) {
+        applyUserData(userData, token || null);
+      } else if (token) {
+        setUser((prevUser) => ({
+          ...(isObject(prevUser) ? prevUser : {}),
+          access_token: token,
+        }));
+      }
+    },
+    [applyUserData],
+  );
+
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      return { isError: true, error: new Error("No access token found") };
+    }
+
+    try {
+      const response = await request({
+        url: "me",
+        method: "GET",
+      });
+
+      const currentUser = resolveUserPayload(response);
+      if (currentUser) {
+        applyUserData(currentUser, token);
+      }
+
+      return { isError: false, response, user: currentUser };
+    } catch (error) {
+      if (error?.response?.status === 401) {
+        removeDataInLocalStorage();
+      }
+      return { isError: true, error };
+    }
+  }, [applyUserData, removeDataInLocalStorage]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const bootstrapAuth = async () => {
+      const token = localStorage.getItem("access_token");
+      const parsedUser = getStoredUser();
+
+      if (token && isMounted) {
+        setUser({ ...(parsedUser || {}), access_token: token });
+      }
+
+      if (token) {
+        await refreshUser();
+      }
+
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+
+    bootstrapAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [getStoredUser, refreshUser]);
 
   const verifyOTP = async (code) => {
     const formData = new FormData();
@@ -74,7 +218,8 @@ export const AuthProvider = ({ children }) => {
         method: "POST",
         data: formData,
       });
-      storeDataInLocalStorage(response.data);
+      storeDataInLocalStorage(response);
+      await refreshUser();
       return { isError: false, response: response };
     } catch (error) {
       return { isError: true, error: error };
@@ -95,15 +240,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     localStorage.setItem("email", email);
-    const resolveAuthPayload = (response) => {
-      if (!response || typeof response !== "object") return null;
-      if (response?.data && typeof response.data === "object") {
-        if (response.data?.token || response.data?.user) return response.data;
-      }
-      if (response?.token || response?.user) return response;
-      return null;
-    };
-
     let response = [];
     try {
       response = await request({
@@ -114,12 +250,8 @@ export const AuthProvider = ({ children }) => {
           password,
         },
       });
-
-      const authPayload = resolveAuthPayload(response);
-      if (authPayload) {
-        storeDataInLocalStorage(authPayload);
-      }
-
+      storeDataInLocalStorage(response);
+      await refreshUser();
       return { isError: false, response: response };
     } catch (error) {
       return { isError: true, error: error };
@@ -128,15 +260,6 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithCode = async (email, verificationCode) => {
     localStorage.setItem("email", email);
-
-    const resolveAuthPayload = (response) => {
-      if (!response || typeof response !== "object") return null;
-      if (response?.data && typeof response.data === "object") {
-        if (response.data?.token || response.data?.user) return response.data;
-      }
-      if (response?.token || response?.user) return response;
-      return null;
-    };
 
     try {
       const response = await request({
@@ -147,12 +270,8 @@ export const AuthProvider = ({ children }) => {
           verification_code: verificationCode,
         },
       });
-
-      const authPayload = resolveAuthPayload(response);
-      if (authPayload) {
-        storeDataInLocalStorage(authPayload);
-      }
-
+      storeDataInLocalStorage(response);
+      await refreshUser();
       return { isError: false, response };
     } catch (error) {
       return { isError: true, error };
@@ -199,7 +318,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutUser = async () => {
-    let token =  localStorage.getItem("access_token");
+    let token = localStorage.getItem("access_token");
     let formData = new FormData();
     formData.append("token", token);
     try {
@@ -217,7 +336,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = () => {
-    return user && user.access_token;
+    return Boolean(user?.access_token || localStorage.getItem("access_token"));
   };
 
   return (
@@ -233,6 +352,7 @@ export const AuthProvider = ({ children }) => {
         verifyOTP,
         getOTP,
         isAuthenticated,
+        refreshUser,
       }}
     >
       {children}

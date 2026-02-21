@@ -132,8 +132,8 @@ function Register() {
                         </p>
 
                         <form className="mt-4" onSubmit={formik.handleSubmit}>
-                          <div className="row">
-                            <div className="col-sm-6">
+                          <div className="row g-3">
+                            <div className="col-md-6">
                               <div className="form-group mb-3">
                                 <label>Name</label>
                                 <input
@@ -149,7 +149,7 @@ function Register() {
                               </div>
                             </div>
 
-                            <div className="col-sm-6">
+                            <div className="col-md-6">
                               <div className="form-group mb-3">
                                 <label>Phone</label>
                                 <input
@@ -180,8 +180,8 @@ function Register() {
                             {renderFieldError("email")}
                           </div>
 
-                          <div className="row">
-                            <div className="col-sm-6">
+                          <div className="row g-3">
+                            <div className="col-md-6">
                               <div className="form-group mb-3">
                                 <label>Password</label>
                                 <input
@@ -197,7 +197,7 @@ function Register() {
                               </div>
                             </div>
 
-                            <div className="col-sm-6">
+                            <div className="col-md-6">
                               <div className="form-group mb-3">
                                 <label>Confirm Password</label>
                                 <input
@@ -213,36 +213,8 @@ function Register() {
                               </div>
                             </div>
                           </div>
-
-                          <div className="row">
-                            <div className="col-sm-6">
-                              <div className="form-group mb-3">
-                                <label>Verification Code</label>
-                                <div className="d-flex gap-2">
-                                  <input
-                                    type="text"
-                                    name="verification_code"
-                                    maxLength="6"
-                                    className="form-control"
-                                    value={formik.values.verification_code}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    placeholder="Enter 6 digit code"
-                                  />
-                                  <button
-                                    type="button"
-                                    disabled={sendingCode}
-                                    onClick={onGetCode}
-                                    className="btn btn-outline-primary px-3"
-                                  >
-                                    {sendingCode ? "Sending..." : "Get Code"}
-                                  </button>
-                                </div>
-                                {renderFieldError("verification_code")}
-                              </div>
-                            </div>
-
-                            <div className="col-sm-6">
+                          <div className="row g-3">
+                            <div className="col-lg-12">
                               <div className="form-group mb-3">
                                 <label>Referral Code (Optional)</label>
                                 <input
@@ -258,14 +230,47 @@ function Register() {
                               </div>
                             </div>
                           </div>
+                          <div className="row g-3">
+                            <div className="col-lg-12">
+                              <div className="form-group mb-3">
+                                <label>Verification Code</label>
+                                <div className="nova-code-row">
+                                  <input
+                                    type="text"
+                                    name="verification_code"
+                                    maxLength="6"
+                                    className="form-control"
+                                    value={formik.values.verification_code}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    placeholder="Enter 6 digit code"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={sendingCode}
+                                    onClick={onGetCode}
+                                    className="btn btn-outline-primary nova-code-btn"
+                                  >
+                                    {sendingCode ? "Sending..." : "Get Code"}
+                                  </button>
+                                </div>
+                                {renderFieldError("verification_code")}
+                              </div>
+                            </div>
+                          </div>
 
                           <button
                             type="submit"
                             disabled={formik.isSubmitting}
                             className="btn w-100 text-white mb-3 nova-login-btn"
-                            style={{ backgroundColor: "#285e7f", borderColor: "#285e7f" }}
+                            style={{
+                              backgroundColor: "#285e7f",
+                              borderColor: "#285e7f",
+                            }}
                           >
-                            {formik.isSubmitting ? "Creating Account..." : "Sign Up"}
+                            {formik.isSubmitting
+                              ? "Creating Account..."
+                              : "Sign Up"}
                           </button>
                         </form>
 

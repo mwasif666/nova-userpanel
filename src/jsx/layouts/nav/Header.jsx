@@ -15,6 +15,14 @@ import { AuthContext } from "../../../context/authContext";
 const Header = ({ onNote }) => {
   const { sidwallateBar, setSidwallateBar } = useContext(ThemeContext);
   const { user } = useContext(AuthContext);
+  const displayName = user?.name || user?.email || "User";
+  const rawRole =
+    typeof user?.role === "string"
+      ? user.role
+      : user?.role?.name || user?.role?.title || user?.role_key || "";
+  const roleLabel = rawRole
+    ? rawRole.toString().charAt(0).toUpperCase() + rawRole.toString().slice(1)
+    : "User";
 
   const path = window.location.pathname.split("/");
   const name = path[path.length - 1].split("-");
@@ -352,11 +360,8 @@ const Header = ({ onNote }) => {
                     <div className="header-info2 d-flex align-items-center">
                       <div className="d-flex align-items-center sidebar-info">
                         <div>
-                          <h4 className="mb-0">{user?.name}</h4>
-                          <span className="d-block text-end">
-                            {user?.role?.charAt(0).toUpperCase() +
-                              user?.role?.slice(1)}
-                          </span>
+                          <h4 className="mb-0">{displayName}</h4>
+                          <span className="d-block text-end">{roleLabel}</span>
                         </div>
                       </div>
                       <img src={profile} width="20" alt="" />
@@ -367,7 +372,7 @@ const Header = ({ onNote }) => {
                     className="mt-1 dropdown-menu dropdown-menu-right "
                   >
                     <Link
-                      to={"/app-profile"}
+                      to={"/profile"}
                       className="dropdown-item ai-icon icon-bell-effect"
                     >
                       {SVGICON.ProfileSvg}

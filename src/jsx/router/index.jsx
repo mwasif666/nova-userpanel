@@ -17,6 +17,7 @@ import ScrollToTop from "./../layouts/ScrollToTop";
 
 /// Admin pages
 import Index3 from "../pages/dashboard/Index3";
+import Home from "../pages/dashboard/Home";
 import KycAll from "../pages/admin/KycAll";
 import Cards from "../pages/admin/Cards";
 import Transactions from "../pages/admin/Transactions";
@@ -44,7 +45,7 @@ const Markup = () => {
         <Route path="/page-error-503" element={<Error503 />} />
         <Route element={<MainLayout />}>
           {/* <Route path="/index-3" element={<Index3 />} /> */}
-          <Route path="/" element={<Index3 />} />
+          <Route path="/" element={<Home />} />
           <Route path="/kyc" element={<KycAll />} />
           {/* <Route path="/kyc-submitted" element={<KycSubmitted />} />
           <Route path="/kyc-pending" element={<KycPending />} />

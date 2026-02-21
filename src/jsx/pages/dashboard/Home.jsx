@@ -16,6 +16,8 @@ import WeeklySummarChart from "../../elements/dashboard/WeeklySummarChart";
 import BarWeeklySummary from "../../elements/dashboard/BarWeeklySummary";
 import InvoiceChart from "../../elements/dashboard/InvoiceChart";
 import { ThemeContext } from "../../../context/ThemeContext";
+import { AuthContext } from "../../../context/authContext";
+import { request } from "../../../utils/api";
 
 const options = [
   { value: "1", label: "Select Menu" },
@@ -88,9 +90,12 @@ const contactGroup = [
   },
 ];
 
-export function CommandPage() {
+export function CommandPage({ user }) {
   const [makePayment, setMakePayment] = useState(false);
   const [withdrowModal, setWithdrowModal] = useState(false);
+  const [userCards, setUserCards] = useState([]);
+  const [userCardsLoading, setUserCardsLoading] = useState(false);
+  const [userCardsError, setUserCardsError] = useState("");
 
   const projectSeries = (value) => {
     ApexCharts.exec("assetDistribution2", "toggleSeries", value);
@@ -109,6 +114,94 @@ export function CommandPage() {
   };
   const [cardModal, setCardModal] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState(false);
+  const userName = user?.name || "User";
+  const userEmail = user?.email || "N/A";
+  const userPhone = user?.phone || "N/A";
+  const userCode = user?.tevau_user?.user_code || null;
+  const thirdId = user?.tevau_user?.third_id || null;
+  const tevauStatus = user?.tevau_user?.status || "N/A";
+  const roleRaw =
+    typeof user?.role === "string"
+      ? user.role
+      : user?.role?.name || user?.role_key || "member";
+  const roleLabel = roleRaw
+    ? roleRaw.toString().charAt(0).toUpperCase() + roleRaw.toString().slice(1)
+    : "Member";
+
+  useEffect(() => {
+    if (!user?.id) {
+      setUserCards([]);
+      return;
+    }
+
+    let mounted = true;
+
+    const loadUserCards = async () => {
+      setUserCardsLoading(true);
+      setUserCardsError("");
+
+      try {
+        const res = await request({
+          url: "tevau/cards",
+          method: "GET",
+        });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        const rows = Array.isArray(payload) ? payload : [];
+
+        const filtered = rows.filter((row) => {
+          const rowUserCode = row?.user_code || row?.tevau_user?.user_code;
+          const rowThirdId = row?.third_id || row?.tevau_user?.third_id;
+          const rowUserId =
+            row?.user_id || row?.tevau_user?.user_id || row?.tevau_user?.user?.id;
+
+          return (
+            (userCode && rowUserCode === userCode) ||
+            (thirdId && rowThirdId === thirdId) ||
+            (user?.id && Number(rowUserId) === Number(user.id))
+          );
+        });
+
+        if (mounted) {
+          setUserCards(filtered);
+        }
+      } catch (error) {
+        if (mounted) {
+          setUserCards([]);
+          setUserCardsError("Cards load nahi ho sake.");
+        }
+      } finally {
+        if (mounted) {
+          setUserCardsLoading(false);
+        }
+      }
+    };
+
+    loadUserCards();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id, userCode, thirdId]);
+
+  const totalCardBalance = userCards.reduce((sum, card) => {
+    const value = Number(card?.balance || 0);
+    return sum + (Number.isNaN(value) ? 0 : value);
+  }, 0);
+
+  const activeCardCount = userCards.filter((card) =>
+    ["active", "normal"].includes(String(card?.status || "").toLowerCase()),
+  ).length;
+
+  const formatUsd = (value) => {
+    const numeric = Number(value || 0);
+    const safeValue = Number.isNaN(numeric) ? 0 : numeric;
+    return safeValue.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
   return (
     <>
@@ -117,10 +210,18 @@ export function CommandPage() {
           <div className="payment-bx">
             <div className="d-flex justify-content-between flex-wrap">
               <div className="payment-content">
-                <h1 className="font-w500 mb-2">Good morning, Dude </h1>
+                <h1 className="font-w500 mb-2">Good morning, {userName}</h1>
                 <p className="dz-para">
-                  Market has been growing in volume at rate of 2.3%
+                  {roleLabel} | {userEmail} | {userPhone}
                 </p>
+                <div className="d-flex flex-wrap gap-2">
+                  <span className="badge badge-sm bg-primary">
+                    Tevau Status: {tevauStatus}
+                  </span>
+                  <span className="badge badge-sm bg-info">
+                    User Code: {userCode || "N/A"}
+                  </span>
+                </div>
               </div>
               <div className="mb-4 mb-xl-0">
                 <button
@@ -186,10 +287,16 @@ export function CommandPage() {
                   <div className="card-body py-3 pt-1 d-flex align-items-center justify-content-between flex-wrap pe-3">
                     <div className="wallet-info">
                       <span className="fs-14 font-w400 d-block">
-                        Wallet Balance
+                        Wallet Balance (My Cards)
                       </span>
-                      <h2 className="font-w600 mb-0">$824,571.93</h2>
-                      <span>+0,8% than last week</span>
+                      <h2 className="font-w600 mb-0">
+                        {userCardsLoading ? "Loading..." : formatUsd(totalCardBalance)}
+                      </h2>
+                      <span>
+                        {userCardsLoading
+                          ? "Cards loading..."
+                          : `${activeCardCount} active of ${userCards.length} cards`}
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -210,6 +317,55 @@ export function CommandPage() {
               </div>
               <div className="col-xl-8">
                 <MainBalanceCard />
+              </div>
+            </div>
+            <div className="row mt-2">
+              <div className="col-xl-12">
+                <div className="card">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <h4 className="mb-0">My Cards</h4>
+                      <Link to="/cards" className="btn btn-sm btn-primary">
+                        View All
+                      </Link>
+                    </div>
+
+                    {userCardsLoading && <p className="mb-0">Cards loading...</p>}
+                    {!userCardsLoading && userCardsError && (
+                      <p className="text-danger mb-0">{userCardsError}</p>
+                    )}
+                    {!userCardsLoading && !userCardsError && userCards.length === 0 && (
+                      <p className="mb-0">Aap ke account par abhi koi card linked nahi hai.</p>
+                    )}
+
+                    {!userCardsLoading && userCards.length > 0 && (
+                      <div className="table-responsive">
+                        <table className="table table-sm align-middle mb-0">
+                          <thead>
+                            <tr>
+                              <th>Card ID</th>
+                              <th>Type</th>
+                              <th>Status</th>
+                              <th>Balance</th>
+                              <th>Currency</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {userCards.slice(0, 5).map((card) => (
+                              <tr key={card?.id || card?.card_id}>
+                                <td>{card?.card_id || card?.id || "N/A"}</td>
+                                <td>{card?.card_type || "N/A"}</td>
+                                <td>{card?.status || "N/A"}</td>
+                                <td>{formatUsd(card?.balance || 0)}</td>
+                                <td>{card?.currency || "USD"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -658,15 +814,27 @@ const Home = () => {
     setHeaderIcon,
     changeNavigationHader,
   } = useContext(ThemeContext);
+  const { user, refreshUser } = useContext(AuthContext);
+
   useEffect(() => {
     changeBackground({ value: "light", label: "Light" });
     changeNavigationHader("color_2");
     chnageSidebarColor("color_2");
     setHeaderIcon(true);
-  }, []);
+  }, [
+    changeBackground,
+    changeNavigationHader,
+    chnageSidebarColor,
+    setHeaderIcon,
+  ]);
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
   return (
     <>
-      <CommandPage />
+      <CommandPage user={user} />
     </>
   );
 };

@@ -133,11 +133,11 @@ function Login() {
                           Login with password or verification code.
                         </p>
 
-                        <ul className="nav nav-pills mb-4">
-                          <li className="nav-item me-2">
+                        <ul className="nav nav-pills mb-4 nova-auth-tabs">
+                          <li className="nav-item">
                             <button
                               type="button"
-                              className={`nav-link ${activeTab === "password" ? "active" : ""}`}
+                              className={`nav-link nova-auth-tab-btn ${activeTab === "password" ? "active" : ""}`}
                               onClick={() => setActiveTab("password")}
                             >
                               With Password
@@ -146,7 +146,7 @@ function Login() {
                           <li className="nav-item">
                             <button
                               type="button"
-                              className={`nav-link ${activeTab === "code" ? "active" : ""}`}
+                              className={`nav-link nova-auth-tab-btn ${activeTab === "code" ? "active" : ""}`}
                               onClick={() => setActiveTab("code")}
                             >
                               With Verification Code
@@ -217,7 +217,7 @@ function Login() {
 
                             <div className="form-group mb-4">
                               <label>Verification Code</label>
-                              <div className="d-flex gap-2">
+                              <div className="nova-code-row">
                                 <input
                                   type="text"
                                   maxLength="6"
@@ -228,7 +228,7 @@ function Login() {
                                 />
                                 <button
                                   type="button"
-                                  className="btn btn-outline-primary px-3"
+                                  className="btn btn-outline-primary nova-code-btn"
                                   onClick={onSendCode}
                                   disabled={sendingCode}
                                 >
