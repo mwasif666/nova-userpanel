@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import ApexCharts from "apexcharts";
 import { Link } from "react-router-dom";
 import { SelectPicker } from "rsuite";
@@ -90,12 +90,64 @@ const contactGroup = [
   },
 ];
 
+const toSafeNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+};
+
+const formatCurrencyValue = (value, currency = "USD") => {
+  const safeValue = toSafeNumber(value) ?? 0;
+  const safeCurrency = String(currency || "USD").toUpperCase();
+
+  try {
+    return safeValue.toLocaleString("en-US", {
+      style: "currency",
+      currency: safeCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  } catch (error) {
+    return `${safeCurrency} ${safeValue.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+};
+
+const normalizeStatus = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "N/A";
+  return raw
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const isWalletAssetUsable = (asset) => {
+  if (!asset || typeof asset !== "object") return false;
+  const balance = toSafeNumber(asset?.balance) ?? 0;
+  const available = toSafeNumber(asset?.available_balance) ?? 0;
+  const status = String(asset?.status || "").toLowerCase();
+  return (
+    balance > 0 ||
+    available > 0 ||
+    (!asset?.coming_soon && status !== "coming_soon")
+  );
+};
+
 export function CommandPage({ user }) {
   const [makePayment, setMakePayment] = useState(false);
   const [withdrowModal, setWithdrowModal] = useState(false);
   const [userCards, setUserCards] = useState([]);
   const [userCardsLoading, setUserCardsLoading] = useState(false);
   const [userCardsError, setUserCardsError] = useState("");
+  const [walletAssets, setWalletAssets] = useState([]);
+  const [walletStatistics, setWalletStatistics] = useState(null);
+  const [walletTransactions, setWalletTransactions] = useState([]);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState("");
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const projectSeries = (value) => {
     ApexCharts.exec("assetDistribution2", "toggleSeries", value);
@@ -131,6 +183,10 @@ export function CommandPage({ user }) {
   useEffect(() => {
     if (!user?.id) {
       setUserCards([]);
+      setWalletAssets([]);
+      setWalletStatistics(null);
+      setWalletTransactions([]);
+      setWalletError("");
       return;
     }
 
@@ -176,7 +232,57 @@ export function CommandPage({ user }) {
       }
     };
 
+    const loadWalletBalance = async () => {
+      setWalletLoading(true);
+      setWalletError("");
+
+      try {
+        const res = await request({
+          url: "wallet/balance",
+          method: "GET",
+          baseURL: "https://nova.innovationpixel.com/public/api/",
+          data: {
+            ...(userCode ? { user_code: userCode } : {}),
+            ...(thirdId ? { third_id: thirdId } : {}),
+            ...(user?.id ? { user_id: user.id } : {}),
+          },
+        });
+
+        const payload = res?.data ?? {};
+        const assets = Array.isArray(payload?.assets) ? payload.assets : [];
+        const statistics =
+          payload?.statistics && typeof payload.statistics === "object"
+            ? payload.statistics
+            : null;
+        const recentTransactions = Array.isArray(payload?.recent_transactions)
+          ? payload.recent_transactions
+          : [];
+
+        if (mounted) {
+          setWalletAssets(assets);
+          setWalletStatistics(statistics);
+          setWalletTransactions(recentTransactions);
+
+          if (!assets.length) {
+            setWalletError("Wallet assets API se nahi mil sakin.");
+          }
+        }
+      } catch (error) {
+        if (mounted) {
+          setWalletAssets([]);
+          setWalletStatistics(null);
+          setWalletTransactions([]);
+          setWalletError("Wallet details load nahi ho sakin.");
+        }
+      } finally {
+        if (mounted) {
+          setWalletLoading(false);
+        }
+      }
+    };
+
     loadUserCards();
+    loadWalletBalance();
 
     return () => {
       mounted = false;
@@ -192,16 +298,62 @@ export function CommandPage({ user }) {
     ["active", "normal"].includes(String(card?.status || "").toLowerCase()),
   ).length;
 
-  const formatUsd = (value) => {
-    const numeric = Number(value || 0);
-    const safeValue = Number.isNaN(numeric) ? 0 : numeric;
-    return safeValue.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
+  const selectedCardCurrency = String(
+    selectedCard?.displayCurrency || selectedCard?.currency || "",
+  ).toUpperCase();
+
+  const primaryWalletAsset = useMemo(() => {
+    if (!walletAssets.length) return null;
+
+    const priorityAssets = walletAssets.filter(isWalletAssetUsable);
+
+    const source = priorityAssets.length ? priorityAssets : walletAssets;
+    return [...source].sort((a, b) => {
+      const scoreA =
+        (toSafeNumber(a?.balance) ?? 0) + (toSafeNumber(a?.available_balance) ?? 0);
+      const scoreB =
+        (toSafeNumber(b?.balance) ?? 0) + (toSafeNumber(b?.available_balance) ?? 0);
+      return scoreB - scoreA;
+    })[0];
+  }, [walletAssets]);
+
+  const mappedWalletAsset = useMemo(() => {
+    if (!walletAssets.length) return null;
+    if (selectedCardCurrency) {
+      const matched = walletAssets.find(
+        (asset) =>
+          String(asset?.currency || "").toUpperCase() === selectedCardCurrency,
+      );
+      if (matched) {
+        if (isWalletAssetUsable(matched) || !isWalletAssetUsable(primaryWalletAsset)) {
+          return matched;
+        }
+      }
+    }
+    return primaryWalletAsset;
+  }, [walletAssets, selectedCardCurrency, primaryWalletAsset]);
+
+  const walletCurrency = String(
+    mappedWalletAsset?.currency ||
+      primaryWalletAsset?.currency ||
+      userCards.find((card) => card?.currency)?.currency ||
+      "USD",
+  ).toUpperCase();
+  const walletBalanceToShow =
+    toSafeNumber(mappedWalletAsset?.balance) ?? totalCardBalance;
+  const walletAvailableBalance = toSafeNumber(mappedWalletAsset?.available_balance);
+  const walletLockedBalance = toSafeNumber(mappedWalletAsset?.locked_balance);
+  const walletStatus = normalizeStatus(mappedWalletAsset?.status);
+  const walletAssetName = mappedWalletAsset?.name || "N/A";
+  const walletTotalTransactions = Math.max(
+    0,
+    Math.trunc(toSafeNumber(walletStatistics?.transaction_count) ?? walletTransactions.length),
+  );
+  const walletDeposits = toSafeNumber(walletStatistics?.total_deposits) ?? 0;
+  const walletWithdrawals = toSafeNumber(walletStatistics?.total_withdrawals) ?? 0;
+  const walletTxPreview = walletTransactions.slice(0, 3);
+  const showWalletBalanceLoading =
+    userCardsLoading && walletLoading && !mappedWalletAsset;
 
   return (
     <>
@@ -240,8 +392,8 @@ export function CommandPage({ user }) {
                 </button>
               </div>
             </div>
-            <div className="row">
-              <div className="col-xl-4">
+            <div className="row g-3">
+              <div className="col-12">
                 <div className="card  dz-wallet overflow-hidden">
                   <div className="boxs">
                     <span className="box one"></span>
@@ -287,16 +439,78 @@ export function CommandPage({ user }) {
                   <div className="card-body py-3 pt-1 d-flex align-items-center justify-content-between flex-wrap pe-3">
                     <div className="wallet-info">
                       <span className="fs-14 font-w400 d-block">
-                        Wallet Balance (My Cards)
+                        Wallet Balance ({walletCurrency})
                       </span>
                       <h2 className="font-w600 mb-0">
-                        {userCardsLoading ? "Loading..." : formatUsd(totalCardBalance)}
+                        {showWalletBalanceLoading
+                          ? "Loading..."
+                          : formatCurrencyValue(walletBalanceToShow, walletCurrency)}
                       </h2>
                       <span>
                         {userCardsLoading
                           ? "Cards loading..."
                           : `${activeCardCount} active of ${userCards.length} cards`}
                       </span>
+                      <div className="nova-wallet-stats">
+                        <span className="nova-wallet-stat-chip">
+                          Asset: {walletAssetName}
+                        </span>
+                        <span className="nova-wallet-stat-chip">
+                          Currency: {String(walletCurrency || "USD").toUpperCase()}
+                        </span>
+                        <span className="nova-wallet-stat-chip">
+                          Status: {walletStatus}
+                        </span>
+                        {walletAvailableBalance !== null && (
+                          <span className="nova-wallet-stat-chip">
+                            Available: {formatCurrencyValue(walletAvailableBalance, walletCurrency)}
+                          </span>
+                        )}
+                        {walletLockedBalance !== null && (
+                          <span className="nova-wallet-stat-chip">
+                            Locked: {formatCurrencyValue(walletLockedBalance, walletCurrency)}
+                          </span>
+                        )}
+                        <span className="nova-wallet-stat-chip">
+                          API: {walletAssets.length ? "Connected" : "Fallback"}
+                        </span>
+                      </div>
+                      <div className="nova-wallet-overview">
+                        <span>
+                          Deposits: {formatCurrencyValue(walletDeposits, walletCurrency)}
+                        </span>
+                        <span>
+                          Withdrawals: {formatCurrencyValue(walletWithdrawals, walletCurrency)}
+                        </span>
+                        <span>Transactions: {walletTotalTransactions}</span>
+                      </div>
+                      {walletTxPreview.length > 0 && (
+                        <div className="nova-wallet-quick-tx">
+                          {walletTxPreview.map((txn) => (
+                            <div
+                              className="nova-wallet-quick-tx-item"
+                              key={txn?.id || txn?.created_at}
+                            >
+                              <span className="text-capitalize">
+                                {txn?.type || "txn"} {txn?.network ? `(${txn.network})` : ""}
+                              </span>
+                              <strong>
+                                {formatCurrencyValue(txn?.amount || 0, walletCurrency)}
+                              </strong>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {userCardsError && !userCardsLoading && (
+                        <span className="text-danger d-block mt-1">
+                          {userCardsError}
+                        </span>
+                      )}
+                      {walletError && !walletLoading && (
+                        <span className="text-warning d-block mt-1">
+                          {walletError}
+                        </span>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -315,57 +529,14 @@ export function CommandPage({ user }) {
                   </div>
                 </div>
               </div>
-              <div className="col-xl-8">
-                <MainBalanceCard />
-              </div>
-            </div>
-            <div className="row mt-2">
-              <div className="col-xl-12">
-                <div className="card">
-                  <div className="card-body">
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <h4 className="mb-0">My Cards</h4>
-                      <Link to="/cards" className="btn btn-sm btn-primary">
-                        View All
-                      </Link>
-                    </div>
-
-                    {userCardsLoading && <p className="mb-0">Cards loading...</p>}
-                    {!userCardsLoading && userCardsError && (
-                      <p className="text-danger mb-0">{userCardsError}</p>
-                    )}
-                    {!userCardsLoading && !userCardsError && userCards.length === 0 && (
-                      <p className="mb-0">Aap ke account par abhi koi card linked nahi hai.</p>
-                    )}
-
-                    {!userCardsLoading && userCards.length > 0 && (
-                      <div className="table-responsive">
-                        <table className="table table-sm align-middle mb-0">
-                          <thead>
-                            <tr>
-                              <th>Card ID</th>
-                              <th>Type</th>
-                              <th>Status</th>
-                              <th>Balance</th>
-                              <th>Currency</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {userCards.slice(0, 5).map((card) => (
-                              <tr key={card?.id || card?.card_id}>
-                                <td>{card?.card_id || card?.id || "N/A"}</td>
-                                <td>{card?.card_type || "N/A"}</td>
-                                <td>{card?.status || "N/A"}</td>
-                                <td>{formatUsd(card?.balance || 0)}</td>
-                                <td>{card?.currency || "USD"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <div className="col-12">
+                <MainBalanceCard
+                  cards={userCards}
+                  userName={userName}
+                  loading={userCardsLoading}
+                  onCardChange={setSelectedCard}
+                  walletAsset={mappedWalletAsset}
+                />
               </div>
             </div>
           </div>

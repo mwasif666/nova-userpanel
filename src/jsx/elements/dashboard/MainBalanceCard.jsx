@@ -1,55 +1,417 @@
-import React from 'react';
-import { Dropdown } from 'react-bootstrap';
+import React, { useEffect, useMemo, useState } from "react";
+import virtualCardImage from "../../../assets/images/virtual_card.jpeg";
+import physicalCardImage from "../../../assets/images/nova_card.png";
+import virtualCardBackImage from "../../../assets/images/virtual_card_back.jpeg";
+import physicalCardBackImage from "../../../assets/images/physical_card_back.jpeg";
 
-const MainBalanceCard = () => {
-    return (
-        <>           
-            <div className="card dz-wallet">
-                <div className="card-header border-0 align-items-start pb-0">
-                    <div>
-                        <span className="fs-18 d-block mb-2">Main Balance</span>
-                        <h2 className="fs-28 font-w600 ">$ 98,452.44</h2>
-                    </div>
-                    <Dropdown className="send style-1">
-                        <Dropdown.Toggle className="btn-link btn sharp tp-btn-light btn-primary pill i-false">
-                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8.47908 4.58333C8.47908 3.19 9.60659 2.0625 10.9999 2.0625C12.3933 2.0625 13.5208 3.19 13.5208 4.58333C13.5208 5.97667 12.3933 7.10417 10.9999 7.10417C9.60658 7.10417 8.47908 5.97667 8.47908 4.58333ZM12.1458 4.58333C12.1458 3.95083 11.6324 3.4375 10.9999 3.4375C10.3674 3.4375 9.85408 3.95083 9.85408 4.58333C9.85408 5.21583 10.3674 5.72917 10.9999 5.72917C11.6324 5.72917 12.1458 5.21583 12.1458 4.58333Z" fill="#fff"/>
-                                <path d="M8.47908 17.4163C8.47908 16.023 9.60659 14.8955 10.9999 14.8955C12.3933 14.8955 13.5208 16.023 13.5208 17.4163C13.5208 18.8097 12.3933 19.9372 10.9999 19.9372C9.60658 19.9372 8.47908 18.8097 8.47908 17.4163ZM12.1458 17.4163C12.1458 16.7838 11.6324 16.2705 10.9999 16.2705C10.3674 16.2705 9.85408 16.7838 9.85408 17.4163C9.85408 18.0488 10.3674 18.5622 10.9999 18.5622C11.6324 18.5622 12.1458 18.0488 12.1458 17.4163Z" fill="#fff"/>
-                                <path d="M8.47908 11.0003C8.47908 9.60699 9.60659 8.47949 10.9999 8.47949C12.3933 8.47949 13.5208 9.60699 13.5208 11.0003C13.5208 12.3937 12.3933 13.5212 10.9999 13.5212C9.60658 13.5212 8.47908 12.3937 8.47908 11.0003ZM12.1458 11.0003C12.1458 10.3678 11.6324 9.85449 10.9999 9.85449C10.3674 9.85449 9.85408 10.3678 9.85408 11.0003C9.85408 11.6328 10.3674 12.1462 10.9999 12.1462C11.6324 12.1462 12.1458 11.6328 12.1458 11.0003Z" fill="#fff"/>
-                            </svg>
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu align="end" className="dropdown-menu-end">
-                            <Dropdown.Item>Delete</Dropdown.Item>
-                            <Dropdown.Item>Edit</Dropdown.Item>
-                        </Dropdown.Menu>
-                    </Dropdown>
-                </div>
-                <div className="card-body py-4 pt-md-2">
-                    <div className="progress default-progress mb-3">
-                        <div className="progress-bar bg-vigit progress-animated" style={{width: "80%", height:"8px"}}>
-                            <span className="sr-only">90% Complete</span>
-                        </div>
-                    </div>
-                    <div className="row mt-1">
-                        <div className="value-data col-xl-3 col-md-4 col-6">
-                            <p className="mb-1">VALID THRU</p>
-                            <h4 className="mb-0 font-w500 text-white">08/27</h4>
-                        </div>
-                        <div className="value-data col-xl-3 col-md-4 col-6">
-                            <p className="mb-1">CARD HOLDER</p>
-                            <h4 className="mb-0 text-white font-w500">Adam Jackson</h4>
-                        </div>
-                        <div className="value-data col-xl-4 col-md-4 col-12">
-                            <p className="mb-1">CARD NUMBER</p>
-                            <h4 className="mb-0 text-white font-w500">**** **** **** 1234</h4>
-                        </div>
-                        <div className="col-xl-2"></div>                                            
-                    </div>
-                </div>
-            </div>
-             
-        </>
+const normalizeCardType = (value) => {
+  const text = String(value || "").toLowerCase();
+  if (text.includes("virtual")) return "Virtual";
+  if (text.includes("physical")) return "Physical";
+  return "Card";
+};
+
+const getCardImages = (cardType) => {
+  const type = normalizeCardType(cardType);
+  return type === "Physical"
+    ? { front: physicalCardImage, back: physicalCardBackImage }
+    : { front: virtualCardImage, back: virtualCardBackImage };
+};
+
+const getCvv = (card) => {
+  const raw = String(card?.cvv || card?.card_cvv || card?.cvc || "").trim();
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "***";
+  return digits.slice(-3).padStart(3, "*");
+};
+
+const formatBalance = (value, currency = "USD") => {
+  const number = Number(value || 0);
+  const safe = Number.isNaN(number) ? 0 : number;
+  const safeCurrency = String(currency || "USD").toUpperCase();
+
+  try {
+    return safe.toLocaleString("en-US", {
+      style: "currency",
+      currency: safeCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  } catch (error) {
+    return `${safeCurrency} ${safe.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+};
+
+const formatExpiry = (card) => {
+  const direct =
+    card?.valid_thru || card?.expiry || card?.exp_date || card?.expiry_date;
+  if (direct) return String(direct);
+
+  const dateValue = card?.expired_at || card?.expires_at || card?.bound_at;
+  if (!dateValue) return "--/--";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "--/--";
+
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yy = String(date.getFullYear()).slice(-2);
+  return `${mm}/${yy}`;
+};
+
+const formatCardDigits = (digits) =>
+  digits.match(/.{1,4}/g)?.join(" ") || "**** **** **** ****";
+
+const buildPseudoDigits = (card, fallback = "0000") => {
+  const seed = String(
+    card?.card_id || card?.id || card?.user_code || card?.third_id || fallback,
+  ).replace(/\D/g, "");
+  const padded = (seed + "174426843901").slice(-16);
+  return formatCardDigits(padded);
+};
+
+const resolveCardNumber = (card) => {
+  const raw = String(
+    card?.card_number || card?.masked_card_number || card?.card_no || card?.number || "",
+  ).trim();
+
+  if (!raw) return buildPseudoDigits(card);
+  if (raw.includes("*")) return raw;
+
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return buildPseudoDigits(card);
+
+  if (digits.length >= 16) {
+    return formatCardDigits(digits.slice(0, 16));
+  }
+
+  return formatCardDigits((digits + "0000000000000000").slice(0, 16));
+};
+
+const formatDateTime = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
+
+const normalizeStatus = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "N/A";
+  return raw
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const MainBalanceCard = ({
+  cards = [],
+  userName = "Card Holder",
+  loading = false,
+  onCardChange = null,
+  walletAsset = null,
+}) => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const fallbackCard = useMemo(
+    () => ({
+      displayId: "N/A",
+      displayName: "Nova Card",
+      displayType: "Virtual",
+      displayNumber: "**** **** **** ****",
+      displayExpiry: "--/--",
+      displayCurrency: "USD",
+      displayBalance: "$0.00",
+      displayCvv: "***",
+      displayStatus: "inactive",
+      themeClass: "is-virtual",
+      images: {
+        front: virtualCardImage,
+        back: virtualCardBackImage,
+      },
+    }),
+    [],
+  );
+
+  const normalizedCards = useMemo(
+    () =>
+      cards.map((card, index) => {
+        const displayType = normalizeCardType(card?.card_type);
+        const themeClass = displayType === "Physical" ? "is-physical" : "is-virtual";
+        const images = getCardImages(displayType);
+
+        return {
+          ...card,
+          displayId: card?.card_id || card?.id || `CARD-${index + 1}`,
+          displayName:
+            card?.card_name || card?.name || `${displayType} Card ${index + 1}`,
+          displayType,
+          displayNumber: resolveCardNumber(card),
+          displayExpiry: formatExpiry(card),
+          displayCurrency: card?.currency || "USD",
+          displayBalance: formatBalance(card?.balance, card?.currency || "USD"),
+          displayCvv: getCvv(card),
+          displayStatus: String(card?.status || "active"),
+          themeClass,
+          images,
+        };
+      }),
+    [cards],
+  );
+
+  const availableCards = useMemo(
+    () => (normalizedCards.length ? normalizedCards : [fallbackCard]),
+    [normalizedCards, fallbackCard],
+  );
+
+  useEffect(() => {
+    if (!availableCards.length) {
+      setSelectedIndex(0);
+      return;
+    }
+
+    if (selectedIndex > availableCards.length - 1) {
+      setSelectedIndex(0);
+    }
+  }, [availableCards, selectedIndex]);
+
+  const safeIndex = Math.min(selectedIndex, availableCards.length - 1);
+  const selectedCard = availableCards[safeIndex] || fallbackCard;
+
+  useEffect(() => {
+    if (typeof onCardChange === "function") {
+      onCardChange(selectedCard);
+    }
+  }, [onCardChange, selectedCard]);
+
+  const stackCards = useMemo(() => {
+    const depth = Math.min(5, availableCards.length);
+    return Array.from({ length: depth }, (_, layer) => {
+      const index = (safeIndex + layer) % availableCards.length;
+      return {
+        layer,
+        index,
+        card: availableCards[index],
+      };
+    });
+  }, [availableCards, safeIndex]);
+
+  const onPrev = () => {
+    setSelectedIndex((prev) =>
+      prev <= 0 ? availableCards.length - 1 : prev - 1,
     );
+  };
+
+  const onNext = () => {
+    setSelectedIndex((prev) => (prev + 1) % availableCards.length);
+  };
+
+  const showNoCards = !loading && normalizedCards.length === 0;
+  const walletCurrency = String(
+    walletAsset?.currency || selectedCard.displayCurrency || "USD",
+  ).toUpperCase();
+  const walletBalance = formatBalance(
+    walletAsset?.balance ?? 0,
+    walletCurrency,
+  );
+  const walletAvailable = formatBalance(
+    walletAsset?.available_balance ?? 0,
+    walletCurrency,
+  );
+  const walletLocked = formatBalance(
+    walletAsset?.locked_balance ?? 0,
+    walletCurrency,
+  );
+  const detailRows = [
+    { label: "Card ID", value: selectedCard.displayId },
+    { label: "Card Type", value: selectedCard.displayType },
+    { label: "Currency", value: selectedCard.displayCurrency },
+    { label: "Card Balance", value: selectedCard.displayBalance },
+    { label: "Valid Thru", value: selectedCard.displayExpiry },
+    { label: "Status", value: normalizeStatus(selectedCard.displayStatus) },
+    { label: "User Code", value: selectedCard.user_code || "N/A" },
+    { label: "Third ID", value: selectedCard.third_id || "N/A" },
+    { label: "Bound At", value: formatDateTime(selectedCard.bound_at) },
+  ];
+
+  return (
+    <div className="card dz-wallet nova-main-balance-card">
+      <div className="card-header border-0 align-items-start pb-0">
+        <div>
+          <span className="fs-18 d-block mb-2">Main Balance</span>
+          <h2 className="fs-28 font-w600">{selectedCard.displayBalance}</h2>
+        </div>
+        <div className="nova-card-controls">
+          <button
+            type="button"
+            className="nova-card-nav-btn"
+            onClick={onPrev}
+            disabled={availableCards.length <= 1}
+            aria-label="Previous card"
+          >
+            <i className="fa fa-chevron-left" />
+          </button>
+          <span className="nova-card-nav-count">
+            {safeIndex + 1}/{availableCards.length}
+          </span>
+          <button
+            type="button"
+            className="nova-card-nav-btn"
+            onClick={onNext}
+            disabled={availableCards.length <= 1}
+            aria-label="Next card"
+          >
+            <i className="fa fa-chevron-right" />
+          </button>
+        </div>
+      </div>
+
+      <div className="card-body py-3 pt-md-2">
+        <div className="row g-3 nova-main-balance-bootstrap">
+          <div className="col-xl-4 col-lg-4 col-12">
+            <div className="nova-deck-layout">
+              <div className="nova-deck-zone">
+                <div className="nova-deck-stack">
+                  {[...stackCards].reverse().map(({ layer, index, card }) => (
+                    <button
+                      key={`${card.displayId}-${layer}`}
+                      type="button"
+                      className={`nova-deck-layer ${card.themeClass} ${
+                        layer === 0 ? "is-front" : ""
+                      }`}
+                      style={{ "--stack-depth": layer }}
+                      onClick={() => setSelectedIndex(index)}
+                      aria-label={`Show ${card.displayName}`}
+                    >
+                      {layer === 0 ? (
+                        <div className="nova-flip-card">
+                          <div className="nova-flip-inner">
+                            <div
+                              className={`nova-flip-face nova-flip-front ${card.themeClass}`}
+                              style={{
+                                backgroundImage: `linear-gradient(135deg, rgba(10,26,46,0.58) 0%, rgba(12,22,38,0.22) 100%), url(${card.images.front})`,
+                              }}
+                            >
+                              <div className="nova-card-head">
+                                <span className="nova-card-chip" />
+                              </div>
+                              <div className="nova-card-name">{card.displayName}</div>
+                              <div className="nova-card-number">{card.displayNumber}</div>
+                              <div className="nova-card-foot">
+                                <div>
+                                  <span>VALID THRU</span>
+                                  <strong>{card.displayExpiry}</strong>
+                                </div>
+                                <div>
+                                  <span>CARD HOLDER</span>
+                                  <strong>{userName}</strong>
+                                </div>
+                                <div>
+                                  <span>STATUS</span>
+                                  <strong className="text-capitalize">
+                                    {card.displayStatus}
+                                  </strong>
+                                </div>
+                              </div>
+                              <div className="nova-card-id">ID: {card.displayId}</div>
+                            </div>
+
+                            <div
+                              className={`nova-flip-face nova-flip-back ${card.themeClass}`}
+                              style={{
+                                backgroundImage: `linear-gradient(135deg, rgba(8,16,29,0.72) 0%, rgba(16,22,35,0.48) 100%), url(${card.images.back})`,
+                              }}
+                            >
+                              <div className="nova-card-stripe" />
+                              <div className="nova-card-cvv-row">
+                                <span>CVV</span>
+                                <strong>{card.displayCvv}</strong>
+                              </div>
+                              <div className="nova-card-back-meta">
+                                <span>{card.displayNumber}</span>
+                                <span>{card.displayCurrency}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="nova-deck-shadow-card" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="nova-stack-hint">
+                  {showNoCards
+                    ? "No cards found"
+                    : `${Math.max(availableCards.length - 1, 0)} cards behind`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-4 col-lg-4 col-12">
+            <div className="nova-card-live-block h-100">
+              <h5 className="nova-card-live-title">Card Details</h5>
+              <div className="nova-card-live-grid">
+                {detailRows.map((item) => (
+                  <div className="nova-card-live-item" key={item.label}>
+                    <span>{item.label}</span>
+                    <strong>{item.value || "N/A"}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-4 col-lg-4 col-12">
+            <div className="nova-card-live-block h-100">
+              <h5 className="nova-card-live-title">
+                Wallet Asset ({walletCurrency})
+              </h5>
+              <div className="nova-card-live-grid">
+                <div className="nova-card-live-item">
+                  <span>Asset</span>
+                  <strong>{walletAsset?.name || "N/A"}</strong>
+                </div>
+                <div className="nova-card-live-item">
+                  <span>Status</span>
+                  <strong>{normalizeStatus(walletAsset?.status)}</strong>
+                </div>
+                <div className="nova-card-live-item">
+                  <span>Total Balance</span>
+                  <strong>{walletBalance}</strong>
+                </div>
+                <div className="nova-card-live-item">
+                  <span>Available</span>
+                  <strong>{walletAvailable}</strong>
+                </div>
+                <div className="nova-card-live-item">
+                  <span>Locked</span>
+                  <strong>{walletLocked}</strong>
+                </div>
+                <div className="nova-card-live-item">
+                  <span>Coming Soon</span>
+                  <strong>
+                    {walletAsset
+                      ? walletAsset.coming_soon
+                        ? "Yes"
+                        : "No"
+                      : "N/A"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default MainBalanceCard;
