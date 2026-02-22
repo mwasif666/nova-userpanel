@@ -15,15 +15,10 @@ import { ThemeContext } from "../../context/ThemeContext";
 // Scroll To Top
 import ScrollToTop from "./../layouts/ScrollToTop";
 
-/// Admin pages
-import Index3 from "../pages/dashboard/Index3";
+/// User pages
 import Home from "../pages/dashboard/Home";
-import KycAll from "../pages/admin/KycAll";
-import Cards from "../pages/admin/Cards";
-import Transactions from "../pages/admin/Transactions";
-import Subscribers from "../pages/admin/Subscribers";
-import Invites from "../pages/admin/Invites";
-import Profile from "../pages/admin/Profile";
+import Kyc from "../pages/user/Kyc";
+import UserPlaceholderPage from "../pages/user/UserPlaceholderPage";
 
 /// Error pages
 import LockScreen from "./../pages/error/LockScreen";
@@ -44,18 +39,57 @@ const Markup = () => {
         <Route path="/page-error-500" element={<Error500 />} />
         <Route path="/page-error-503" element={<Error503 />} />
         <Route element={<MainLayout />}>
-          {/* <Route path="/index-3" element={<Index3 />} /> */}
           <Route path="/" element={<Home />} />
-          <Route path="/kyc" element={<KycAll />} />
+          <Route path="/kyc" element={<Kyc />} />
           {/* <Route path="/kyc-submitted" element={<KycSubmitted />} />
           <Route path="/kyc-pending" element={<KycPending />} />
           <Route path="/kyc-approved" element={<KycApproved />} />
           <Route path="/kyc-rejected" element={<KycRejected />} /> */}
-          <Route path="/cards" element={<Cards />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/subscribers" element={<Subscribers />} />
-          <Route path="/invites" element={<Invites />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route
+            path="/cards"
+            element={
+              <UserPlaceholderPage
+                title="Cards"
+                description="User cards page yahan build hoga. Admin cards page ka API/data ab route se hata diya gaya hai."
+              />
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <UserPlaceholderPage
+                title="Transactions"
+                description="User transactions page yahan build hoga. Admin transactions data/API ab use nahi ho raha."
+              />
+            }
+          />
+          <Route
+            path="/subscribers"
+            element={
+              <UserPlaceholderPage
+                title="Subscribers"
+                description="Is section ko user panel requirement ke hisab se redesign karna hai. Admin page route remove kar diya gaya hai."
+              />
+            }
+          />
+          <Route
+            path="/invites"
+            element={
+              <UserPlaceholderPage
+                title="Invites"
+                description="User invites page placeholder. Admin invite metrics/data se decouple kar diya gaya hai."
+              />
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <UserPlaceholderPage
+                title="Profile"
+                description="User profile page yahan build hoga. Admin profile analytics/data route se remove ho chuki hai."
+              />
+            }
+          />
         </Route>
       </Routes>
       <ScrollToTop />

@@ -1281,6 +1281,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   overflow: hidden;
   min-height: 420px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  --nova-deck-card-width: 468px;
+  --nova-deck-card-height: 278px;
+  --nova-deck-stack-rise: 14px;
 }
 .nova-main-balance-card .card-header {
   display: flex;
@@ -1330,25 +1333,30 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 }
 .nova-main-balance-card .nova-deck-zone {
   position: relative;
-  width: min(100%, 520px);
-  min-height: 302px;
+  width: min(100%, calc(var(--nova-deck-card-width) + 16px));
+  min-height: calc(
+    var(--nova-deck-card-height) + (var(--nova-deck-stack-rise) * 4) + 2.35rem
+  );
   margin: 0 auto;
 }
 .nova-main-balance-card .nova-deck-stack {
   position: relative;
-  height: 280px;
-  padding-bottom: 20px;
+  width: 100%;
+  height: calc(var(--nova-deck-card-height) + (var(--nova-deck-stack-rise) * 4));
+  overflow: visible;
 }
 .nova-main-balance-card .nova-deck-layer {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
+  width: var(--nova-deck-card-width);
   border: 0;
   background: transparent;
   padding: 0;
-  transform: translateY(calc(var(--stack-depth, 0) * -14px))
-    translateX(calc(var(--stack-depth, 0) * 4px))
+  transform-origin: center bottom;
+  transform: translateX(calc(-50% + (var(--stack-depth, 0) * 2px)))
+    translateY(calc(var(--stack-depth, 0) * -1 * var(--nova-deck-stack-rise)))
     scale(calc(1 - (var(--stack-depth, 0) * 0.02)));
   opacity: calc(1 - (var(--stack-depth, 0) * 0.12));
   z-index: calc(40 - var(--stack-depth, 0));
@@ -1360,7 +1368,8 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   cursor: pointer;
 }
 .nova-main-balance-card .nova-deck-shadow-card {
-  height: 228px;
+  width: 100%;
+  height: var(--nova-deck-card-height);
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.28);
@@ -1381,9 +1390,11 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 }
 .nova-main-balance-card .nova-flip-card {
   perspective: 1300px;
+  width: 100%;
 }
 .nova-main-balance-card .nova-flip-inner {
-  height: 228px;
+  width: 100%;
+  height: var(--nova-deck-card-height);
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.65s ease;
@@ -1395,7 +1406,7 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem 0.9rem;
   backface-visibility: hidden;
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 18px 34px rgba(0, 0, 0, 0.3);
@@ -1410,7 +1421,6 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  height: 240px;
 }
 .nova-main-balance-card .nova-flip-face.is-physical,
 .nova-main-balance-card .nova-deck-layer.is-physical .nova-deck-shadow-card {
@@ -1418,12 +1428,12 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  height: 240px;
 }
 .nova-main-balance-card .nova-flip-front {
   display: flex;
   flex-direction: column;
   color: #fff;
+  justify-content: flex-start;
 }
 .nova-main-balance-card .nova-flip-back {
   transform: rotateY(180deg);
@@ -1447,8 +1457,12 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   font-weight: 700;
 }
 .nova-main-balance-card .nova-card-name {
-  margin-top: 0.65rem;
-  font-size: 0.92rem;
+  margin-top: 1.65rem;
+  width: min(72%, 280px);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  font-size: 0.98rem;
   font-weight: 600;
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
@@ -1457,40 +1471,58 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   text-overflow: ellipsis;
 }
 .nova-main-balance-card .nova-card-number {
-  margin-top: 0.5rem;
-  font-size: 1rem;
-  letter-spacing: 0.12em;
+  margin-top: 0.65rem;
+  text-align: center;
+  font-size: 1.03rem;
+  letter-spacing: 0.18em;
   font-family: "Courier New", monospace;
-  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #fff;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .nova-main-balance-card .nova-card-foot {
   margin-top: auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.6rem 0.65rem;
+  width: 72%;
+  align-items: end;
+}
+.nova-main-balance-card .nova-card-foot > div {
+  background: rgba(10, 20, 36, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 0.34rem 0.42rem;
+  backdrop-filter: blur(1px);
 }
 .nova-main-balance-card .nova-card-foot span {
   display: block;
-  font-size: 0.56rem;
+  font-size: 0.54rem;
   letter-spacing: 0.12em;
   opacity: 0.8;
 }
 .nova-main-balance-card .nova-card-foot strong {
   display: block;
   margin-top: 0.1rem;
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .nova-main-balance-card .nova-card-id {
-  margin-top: 0.5rem;
+  width: 72%;
+  text-align: center;
+  margin-top: 0.38rem;
   font-size: 0.66rem;
   letter-spacing: 0.05em;
   color: rgba(255, 255, 255, 0.9);
+  background: rgba(10, 20, 36, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.18rem 0.45rem;
 }
 .nova-main-balance-card .nova-card-stripe {
   height: 30px;
@@ -1521,15 +1553,17 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   opacity: 0.9;
 }
 .nova-main-balance-card .nova-stack-hint {
-  margin-top: 0.65rem;
+  margin-top: 0.85rem;
   font-size: 0.82rem;
   color: rgba(255, 255, 255, 0.82);
+  padding-top: 0;
+  text-align: left;
 }
 .nova-main-balance-card .nova-card-live-block {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  padding: 0.65rem 0.7rem;
+  padding: 1rem;
 }
 .nova-main-balance-card .nova-card-live-title {
   margin: 0 0 0.45rem;
@@ -1648,6 +1682,8 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 @media (max-width: 991.98px) {
   .nova-main-balance-card {
     min-height: 392px;
+    --nova-deck-card-width: 430px;
+    --nova-deck-card-height: 256px;
   }
   .nova-main-balance-card .nova-main-balance-bootstrap {
     margin-top: 0.65rem;
@@ -1663,29 +1699,689 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   }
   .nova-main-balance-card {
     min-height: 354px;
-  }
-  .nova-main-balance-card .nova-deck-stack {
-    height: 238px;
+    --nova-deck-card-width: 340px;
+    --nova-deck-card-height: 212px;
+    --nova-deck-stack-rise: 10px;
   }
   .nova-main-balance-card .nova-deck-layer {
-    transform: translateY(calc(var(--stack-depth, 0) * -10px))
-      translateX(calc(var(--stack-depth, 0) * 2px))
+    width: min(100%, var(--nova-deck-card-width));
+    transform: translateX(calc(-50% + (var(--stack-depth, 0) * 1px)))
+      translateY(calc(var(--stack-depth, 0) * -1 * var(--nova-deck-stack-rise)))
       scale(calc(1 - (var(--stack-depth, 0) * 0.02)));
-  }
-  .nova-main-balance-card .nova-deck-shadow-card,
-  .nova-main-balance-card .nova-flip-inner {
-    height: 212px;
   }
   .nova-main-balance-card .nova-card-foot {
     grid-template-columns: 1fr 1fr;
+    width: 82%;
+    gap: 0.42rem;
   }
   .nova-main-balance-card .nova-card-id {
+    width: 82%;
     margin-top: 0.4rem;
+    font-size: 0.6rem;
   }
   .nova-main-balance-card .nova-card-number {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+  }
+  .nova-main-balance-card .nova-card-name {
+    margin-top: 1rem;
+    width: 84%;
+    font-size: 0.82rem;
+  }
+  .nova-main-balance-card .nova-card-foot span {
+    font-size: 0.48rem;
+  }
+  .nova-main-balance-card .nova-card-foot strong {
+    font-size: 0.66rem;
   }
   .nova-main-balance-card .nova-card-live-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Nova KYC Submission */
+.nova-kyc-submit-page {
+  margin-bottom: 1.25rem;
+}
+.nova-kyc-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid #d8e5ee;
+  background: linear-gradient(140deg, #f6fbff 0%, #eef7fb 54%, #fdfefe 100%);
+  box-shadow: 0 18px 40px rgba(12, 42, 61, 0.08);
+}
+.nova-kyc-hero-card::before,
+.nova-kyc-hero-card::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.nova-kyc-hero-card::before {
+  width: 240px;
+  height: 240px;
+  right: -70px;
+  top: -90px;
+  background: radial-gradient(circle, rgba(42, 100, 134, 0.16) 0%, rgba(42, 100, 134, 0) 72%);
+}
+.nova-kyc-hero-card::after {
+  width: 180px;
+  height: 180px;
+  left: -50px;
+  bottom: -70px;
+  background: radial-gradient(circle, rgba(18, 79, 116, 0.1) 0%, rgba(18, 79, 116, 0) 75%);
+}
+.nova-kyc-hero-card .card-body {
+  position: relative;
+  z-index: 1;
+  padding: 1.25rem 1.35rem;
+}
+.nova-kyc-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.8fr);
+  gap: 1rem;
+  align-items: start;
+}
+.nova-kyc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #2a6486;
+  font-weight: 700;
+}
+.nova-kyc-hero-title {
+  margin: 0.35rem 0 0.45rem;
+  color: #102337;
+  font-weight: 700;
+}
+.nova-kyc-hero-text {
+  margin: 0;
+  color: #4d6475;
+  max-width: 62ch;
+}
+.nova-kyc-pill-row {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.nova-kyc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.38rem 0.7rem;
+  border: 1px solid #d9e5ed;
+  background: rgba(255, 255, 255, 0.78);
+  color: #18384b;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+.nova-kyc-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+.nova-kyc-pill.is-success {
+  color: #166534;
+  border-color: #b7e3cb;
+  background: #eefbf3;
+}
+.nova-kyc-pill.is-success .nova-kyc-pill-dot {
+  background: #16a34a;
+}
+.nova-kyc-pill.is-warning {
+  color: #9a6408;
+  border-color: #f3deb0;
+  background: #fff7e8;
+}
+.nova-kyc-pill.is-warning .nova-kyc-pill-dot {
+  background: #f59e0b;
+}
+.nova-kyc-pill.is-danger {
+  color: #9f1239;
+  border-color: #f2c6d2;
+  background: #fff0f4;
+}
+.nova-kyc-pill.is-danger .nova-kyc-pill-dot {
+  background: #e11d48;
+}
+.nova-kyc-pill.is-neutral .nova-kyc-pill-dot {
+  background: #64748b;
+}
+.nova-kyc-hero-side {
+  display: grid;
+  gap: 0.75rem;
+}
+.nova-kyc-stat-box {
+  border: 1px solid #dbe8f0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.85rem 0.95rem;
+}
+.nova-kyc-stat-box span {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #5f7587;
+  margin-bottom: 0.25rem;
+}
+.nova-kyc-stat-box strong {
+  display: block;
+  color: #102337;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+.nova-kyc-form-card,
+.nova-kyc-status-card,
+.nova-kyc-guide-card {
+  border-radius: 16px;
+  border: 1px solid #e1eaf1;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05);
+}
+.nova-kyc-form-card .card-body,
+.nova-kyc-status-card .card-body,
+.nova-kyc-guide-card .card-body {
+  padding: 1rem;
+}
+.nova-kyc-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+.nova-kyc-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.34rem 0.68rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid #dbe7ef;
+  background: #f4f7fa;
+  color: #475569;
+}
+.nova-kyc-status-chip.is-success {
+  color: #166534;
+  background: #edf9f1;
+  border-color: #b6e0c5;
+}
+.nova-kyc-status-chip.is-warning {
+  color: #9a6408;
+  background: #fff7e8;
+  border-color: #f0ddb2;
+}
+.nova-kyc-status-chip.is-danger {
+  color: #9f1239;
+  background: #fff0f4;
+  border-color: #efc4d0;
+}
+.nova-kyc-status-chip.is-neutral {
+  color: #475569;
+}
+.nova-kyc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.nova-kyc-block {
+  border: 1px solid #e6edf3;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
+  padding: 0.95rem;
+}
+.nova-kyc-block-title {
+  margin: 0 0 0.75rem;
+  color: #102337;
+  font-weight: 700;
+}
+.nova-kyc-block .form-label {
+  color: #3d5466;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+}
+.nova-kyc-block .form-control,
+.nova-kyc-block .form-select {
+  border-radius: 12px;
+  border-color: #d8e3ec;
+  min-height: 42px;
+}
+.nova-kyc-block .form-control:focus,
+.nova-kyc-block .form-select:focus {
+  border-color: #2a6486;
+  box-shadow: 0 0 0 0.18rem rgba(42, 100, 134, 0.14);
+}
+.nova-kyc-upload-card {
+  display: block;
+  border: 1px dashed #cfdce6;
+  border-radius: 14px;
+  background: #fbfdff;
+  padding: 0.85rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.nova-kyc-upload-card:hover {
+  border-color: #2a6486;
+  box-shadow: 0 10px 18px rgba(42, 100, 134, 0.08);
+  transform: translateY(-1px);
+}
+.nova-kyc-upload-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.nova-kyc-upload-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a6486;
+  background: rgba(42, 100, 134, 0.1);
+  border: 1px solid rgba(42, 100, 134, 0.18);
+  flex: 0 0 auto;
+}
+.nova-kyc-upload-top strong {
+  display: block;
+  color: #0f172a;
+  margin-bottom: 0.15rem;
+}
+.nova-kyc-upload-top p {
+  color: #6b7280;
+  font-size: 0.76rem;
+}
+.nova-kyc-upload-file {
+  margin-top: 0.75rem;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  background: #f3f7fb;
+  border: 1px solid #e2ebf2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.nova-kyc-file-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #163346;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nova-kyc-file-meta {
+  font-size: 0.72rem;
+  color: #64748b;
+  flex: 0 0 auto;
+}
+.nova-kyc-file-empty {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+.nova-kyc-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dbe7ef;
+  background: #f7fbff;
+  color: #18384b;
+  font-size: 0.82rem;
+}
+.nova-kyc-feedback i {
+  margin-top: 0.1rem;
+}
+.nova-kyc-feedback.is-error {
+  background: #fff4f6;
+  border-color: #f1cad4;
+  color: #9f1239;
+}
+.nova-kyc-feedback.is-success {
+  background: #eefbf3;
+  border-color: #bfe4cc;
+  color: #166534;
+}
+.nova-kyc-feedback.is-warning-lite {
+  background: #fff7e8;
+  border-color: #efddb3;
+  color: #9a6408;
+}
+.nova-kyc-form-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.nova-kyc-form-fieldset.is-disabled {
+  opacity: 0.72;
+}
+.nova-kyc-form-fieldset.is-disabled .nova-kyc-upload-card {
+  cursor: not-allowed;
+}
+.nova-kyc-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.15rem;
+}
+.nova-kyc-side-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+.nova-kyc-lookup-box {
+  border: 1px solid #e4edf3;
+  border-radius: 14px;
+  background: #f9fbfd;
+  padding: 0.8rem;
+}
+.nova-kyc-lookup-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+.nova-kyc-lookup-row .btn {
+  min-width: 88px;
+}
+.nova-kyc-link-btn {
+  color: #2a6486;
+  font-weight: 600;
+  text-decoration: none;
+}
+.nova-kyc-link-btn:hover {
+  color: #163346;
+}
+.nova-kyc-kv-list {
+  margin-top: 0.85rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.nova-kyc-kv-item {
+  border-radius: 11px;
+  border: 1px solid #e4edf3;
+  background: #fff;
+  padding: 0.55rem 0.65rem;
+}
+.nova-kyc-kv-item span {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+.nova-kyc-kv-item strong {
+  display: block;
+  margin-top: 0.12rem;
+  color: #0f172a;
+  font-size: 0.82rem;
+  word-break: break-word;
+}
+.nova-kyc-message-box {
+  margin-top: 0.85rem;
+  border: 1px solid #e3ebf2;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 0.75rem;
+}
+.nova-kyc-message-box h6 {
+  margin: 0 0 0.45rem;
+  color: #102337;
+  font-weight: 700;
+}
+.nova-kyc-message-box p {
+  margin: 0;
+  color: #4b6476;
+  font-size: 0.82rem;
+}
+.nova-kyc-message-box p + p {
+  margin-top: 0.35rem;
+}
+.nova-kyc-approval-banner {
+  margin-top: 0.5rem;
+  border-radius: 12px;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid #dce7ef;
+  background: #f7fbff;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+.nova-kyc-approval-banner.is-success {
+  background: #eefbf3;
+  border-color: #bfe4cc;
+}
+.nova-kyc-approval-banner.is-warning {
+  background: #fff7e8;
+  border-color: #efddb3;
+}
+.nova-kyc-approval-banner.is-danger {
+  background: #fff1f4;
+  border-color: #efc7d1;
+}
+.nova-kyc-approval-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: rgba(42, 100, 134, 0.1);
+  color: #2a6486;
+}
+.nova-kyc-approval-banner.is-success .nova-kyc-approval-icon {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+.nova-kyc-approval-banner.is-warning .nova-kyc-approval-icon {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+.nova-kyc-approval-banner.is-danger .nova-kyc-approval-icon {
+  background: rgba(225, 29, 72, 0.12);
+  color: #be123c;
+}
+.nova-kyc-approval-banner strong {
+  display: block;
+  color: #102337;
+  line-height: 1.35;
+}
+.nova-kyc-approval-banner span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.76rem;
+  color: #586f80;
+}
+.nova-kyc-flow-box {
+  margin-top: 0.85rem;
+  border: 1px solid #e3ebf2;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 0.75rem;
+}
+.nova-kyc-flow-box h6 {
+  margin: 0 0 0.55rem;
+  color: #102337;
+  font-weight: 700;
+}
+.nova-kyc-flow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.nova-kyc-flow-item {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 0.55rem;
+  align-items: start;
+}
+.nova-kyc-flow-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 0.22rem;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(203, 213, 225, 0.25);
+}
+.nova-kyc-flow-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.82rem;
+}
+.nova-kyc-flow-item small {
+  display: block;
+  color: #64748b;
+  font-size: 0.72rem;
+  margin-top: 0.05rem;
+}
+.nova-kyc-flow-item.is-done .nova-kyc-flow-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.16);
+}
+.nova-kyc-flow-item.is-current .nova-kyc-flow-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+.nova-kyc-docs-box {
+  margin-top: 0.85rem;
+  border: 1px solid #e3ebf2;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.75rem;
+}
+.nova-kyc-docs-box h6 {
+  margin: 0 0 0.55rem;
+  color: #102337;
+  font-weight: 700;
+}
+.nova-kyc-docs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.nova-kyc-doc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  border: 1px solid #e5edf3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fbfe;
+}
+.nova-kyc-doc-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #eef3f8;
+}
+.nova-kyc-doc-card span {
+  padding: 0 0.55rem 0.55rem;
+  color: #18384b;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.nova-kyc-doc-card:hover {
+  border-color: #2a6486;
+  box-shadow: 0 10px 18px rgba(42, 100, 134, 0.08);
+}
+.nova-kyc-guide-list {
+  margin: 0;
+  padding-left: 1rem;
+  color: #4b6476;
+}
+.nova-kyc-guide-list li {
+  margin-bottom: 0.45rem;
+  line-height: 1.45;
+}
+.nova-kyc-guide-list li:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 1199.98px) {
+  .nova-kyc-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 767.98px) {
+  .nova-kyc-hero-card .card-body,
+  .nova-kyc-form-card .card-body,
+  .nova-kyc-status-card .card-body,
+  .nova-kyc-guide-card .card-body {
+    padding: 0.85rem;
+  }
+  .nova-kyc-section-header,
+  .nova-kyc-side-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nova-kyc-lookup-row {
+    flex-direction: column;
+  }
+  .nova-kyc-lookup-row .btn {
+    width: 100%;
+  }
+  .nova-kyc-form-actions .btn {
+    width: 100%;
+  }
+  .nova-kyc-pill-row {
+    gap: 0.45rem;
+  }
+  .nova-kyc-docs-grid {
+    grid-template-columns: 1fr;
+  }
+  .nova-kyc-doc-card img {
+    height: 150px;
+  }
+}
+
+.nova-user-placeholder {
+  border: 1px dashed #d6e3ec;
+  border-radius: 14px;
+  padding: 1.25rem;
+  background: linear-gradient(180deg, #fbfdff 0%, #f5fafc 100%);
+}
+.nova-user-placeholder-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2a6486;
+  border: 1px solid rgba(42, 100, 134, 0.2);
+  background: rgba(42, 100, 134, 0.08);
+}
+.nova-user-placeholder h4 {
+  margin: 0 0 0.4rem;
+  color: #102337;
+}
+.nova-user-placeholder p {
+  margin: 0;
+  color: #5a6f7f;
+  max-width: 58ch;
 }

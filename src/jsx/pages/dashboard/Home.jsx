@@ -136,6 +136,24 @@ const isWalletAssetUsable = (asset) => {
   );
 };
 
+const extractCardsRows = (response) => {
+  const payload = response?.data?.data ?? response?.data ?? [];
+
+  if (Array.isArray(payload)) {
+    return { rows: payload, lastPage: 1 };
+  }
+
+  if (payload && typeof payload === "object" && Array.isArray(payload?.data)) {
+    const parsedLastPage = Number(payload?.last_page || 1);
+    return {
+      rows: payload.data,
+      lastPage: Number.isFinite(parsedLastPage) && parsedLastPage > 0 ? parsedLastPage : 1,
+    };
+  }
+
+  return { rows: [], lastPage: 1 };
+};
+
 export function CommandPage({ user }) {
   const [makePayment, setMakePayment] = useState(false);
   const [withdrowModal, setWithdrowModal] = useState(false);
@@ -201,8 +219,32 @@ export function CommandPage({ user }) {
           url: "tevau/cards",
           method: "GET",
         });
-        const payload = res?.data?.data ?? res?.data ?? [];
-        const rows = Array.isArray(payload) ? payload : [];
+        const firstPageResult = extractCardsRows(res);
+        let rows = firstPageResult.rows;
+
+        if (firstPageResult.lastPage > 1) {
+          const pageRequests = Array.from(
+            { length: firstPageResult.lastPage - 1 },
+            (_, index) =>
+              request({
+                url: `tevau/cards?page=${index + 2}`,
+                method: "GET",
+              }),
+          );
+
+          const pageResponses = await Promise.all(pageRequests);
+          const extraRows = pageResponses.flatMap((pageRes) => extractCardsRows(pageRes).rows);
+          rows = [...rows, ...extraRows];
+        }
+
+        rows = Array.from(
+          new Map(
+            rows.map((row, index) => [
+              String(row?.id ?? row?.card_id ?? `row-${index}`),
+              row,
+            ]),
+          ).values(),
+        );
 
         const filtered = rows.filter((row) => {
           const rowUserCode = row?.user_code || row?.tevau_user?.user_code;
