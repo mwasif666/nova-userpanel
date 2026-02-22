@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import ApexCharts from "apexcharts";
 import { Link } from "react-router-dom";
 import { SelectPicker } from "rsuite";
@@ -1028,8 +1028,12 @@ const Home = () => {
     changeNavigationHader,
   } = useContext(ThemeContext);
   const { user, refreshUser } = useContext(AuthContext);
+  const hasAppliedThemeRef = useRef(false);
+  const hasRefreshedUserRef = useRef(false);
 
   useEffect(() => {
+    if (hasAppliedThemeRef.current) return;
+    hasAppliedThemeRef.current = true;
     changeBackground({ value: "light", label: "Light" });
     changeNavigationHader("color_2");
     chnageSidebarColor("color_2");
@@ -1042,6 +1046,8 @@ const Home = () => {
   ]);
 
   useEffect(() => {
+    if (hasRefreshedUserRef.current) return;
+    hasRefreshedUserRef.current = true;
     refreshUser();
   }, [refreshUser]);
 

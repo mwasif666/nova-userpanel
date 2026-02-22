@@ -107,7 +107,8 @@ const resolveCardNumber = (card) => {
   ];
 
   const rawValue = candidates.find(
-    (value) => value !== null && value !== undefined && String(value).trim() !== "",
+    (value) =>
+      value !== null && value !== undefined && String(value).trim() !== "",
   );
 
   const raw = String(rawValue || "").trim();
@@ -150,6 +151,17 @@ const normalizePanResponse = (response) => {
   };
 };
 
+const formatPanErrorMessage = (message, code) => {
+  const raw = String(message || "").trim();
+  const errorCode = Number(code);
+
+  if (errorCode === 2020079 || raw.includes("非冻结、锁定、激活状态")) {
+    return "PAN details are not available for the current card status.";
+  }
+
+  return raw || "PAN details are not available for this card.";
+};
+
 const hasLocalCardNumberData = (card) =>
   [
     card?.pan_details?.card_number,
@@ -161,24 +173,38 @@ const hasLocalCardNumberData = (card) =>
     card?.tevau_response?.maskedCardNumber,
     card?.tevau_response?.cardNumber,
     card?.tevau_response?.cardNo,
-  ].some((value) => value !== null && value !== undefined && String(value).trim() !== "");
+  ].some(
+    (value) =>
+      value !== null && value !== undefined && String(value).trim() !== "",
+  );
 
 const getPanEndpointCardId = (card) => {
-  const raw = card?.id;
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed) || parsed <= 0) return "";
-  return String(parsed);
+  // Prefer the numeric internal `id` (works with backend PAN endpoint when present),
+  // otherwise fall back to provider `card_id` like "CIDV...".
+  const rawNumeric = card?.id;
+  const parsed = Number(rawNumeric);
+  if (Number.isInteger(parsed) && parsed > 0) return String(parsed);
+
+  const raw = card?.card_id ?? "";
+  if (!raw) return "";
+  return String(raw);
 };
 
-const canFetchPanForCard = (card) => {
-  const type = normalizeCardType(card?.displayType || card?.card_type || card?.type);
+const canAttemptPanApi = (card) => {
+  const type = normalizeCardType(
+    card?.displayType || card?.card_type || card?.type,
+  );
   if (type !== "Virtual") return false;
 
-  const status = String(card?.displayStatus || card?.display_status || card?.status || "")
+  const status = String(
+    card?.displayStatus || card?.display_status || card?.status || "",
+  )
     .trim()
     .toLowerCase();
 
-  // Provider PAN endpoint commonly rejects closed/inactive cards.
+  if (!status) return true;
+
+  // Provider PAN endpoint only supports cards in active/locked/frozen style states.
   return ["active", "activated", "frozen", "locked", "lock"].includes(status);
 };
 
@@ -233,12 +259,16 @@ const MainBalanceCard = ({
         const images = getCardImages(displayType);
         const displayCurrency =
           card?.currency || card?.tevau_response?.cardCurrency || "USD";
-        const balanceValue = card?.balance ?? card?.tevau_response?.cardBalance ?? 0;
+        const balanceValue =
+          card?.balance ?? card?.tevau_response?.cardBalance ?? 0;
 
         return {
           ...card,
           displayId:
-            card?.card_id || card?.tevau_response?.cardId || card?.id || `CARD-${index + 1}`,
+            card?.card_id ||
+            card?.tevau_response?.cardId ||
+            card?.id ||
+            `CARD-${index + 1}`,
           displayName:
             card?.card_name || card?.name || `${displayType} Card ${index + 1}`,
           displayType,
@@ -247,7 +277,9 @@ const MainBalanceCard = ({
           displayCurrency,
           displayBalance: formatBalance(balanceValue, displayCurrency),
           displayCvv: getCvv(card),
-          displayStatus: String(card?.display_status || card?.status || "active"),
+          displayStatus: String(
+            card?.display_status || card?.status || "active",
+          ),
           themeClass,
           images,
         };
@@ -274,19 +306,28 @@ const MainBalanceCard = ({
   const safeIndex = Math.min(selectedIndex, availableCards.length - 1);
   const selectedCard = availableCards[safeIndex] || fallbackCard;
   const selectedPanEndpointCardId = getPanEndpointCardId(selectedCard);
-  const canFetchSelectedCardPan = canFetchPanForCard(selectedCard);
+  const canAttemptSelectedCardPanApi = canAttemptPanApi(selectedCard);
 
   useEffect(() => {
     if (!normalizedCards.length) return;
     if (!selectedPanEndpointCardId) return;
-    if (!canFetchSelectedCardPan) {
+    if (!canAttemptSelectedCardPanApi) {
       setPanCacheByCardId((prev) => {
-        if (Object.prototype.hasOwnProperty.call(prev, selectedPanEndpointCardId)) {
+        if (
+          Object.prototype.hasOwnProperty.call(prev, selectedPanEndpointCardId)
+        ) {
           return prev;
         }
         return {
           ...prev,
-          [selectedPanEndpointCardId]: {},
+          [selectedPanEndpointCardId]: {
+            _errorMessage:
+              normalizeCardType(
+                selectedCard?.displayType || selectedCard?.card_type,
+              ) === "Virtual"
+                ? "PAN details are not available for the current card status."
+                : "Expiry and CVV are shown for virtual cards only.",
+          },
         };
       });
       return;
@@ -315,10 +356,26 @@ const MainBalanceCard = ({
 
         if (cancelled) return;
 
-        if (!response?.status || !response?.data || typeof response.data !== "object") {
+        if (
+          !response?.status ||
+          !response?.data ||
+          typeof response.data !== "object"
+        ) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "PAN fetch returned unexpected response",
+            selectedPanEndpointCardId,
+            response,
+          );
+
           setPanCacheByCardId((prev) => ({
             ...prev,
-            [selectedPanEndpointCardId]: {},
+            [selectedPanEndpointCardId]: {
+              _errorMessage: formatPanErrorMessage(
+                response?.error?.message || response?.message,
+                response?.error?.code ?? response?.code,
+              ),
+            },
           }));
           return;
         }
@@ -330,10 +387,23 @@ const MainBalanceCard = ({
       } catch (error) {
         if (cancelled) return;
 
+        const errorPayload = error?.response?.data;
+        // eslint-disable-next-line no-console
+        console.warn(
+          "PAN fetch failed",
+          selectedPanEndpointCardId,
+          error?.response || error,
+        );
+
         // Cache an empty payload so UI shows placeholders instead of retry loops.
         setPanCacheByCardId((prev) => ({
           ...prev,
-          [selectedPanEndpointCardId]: {},
+          [selectedPanEndpointCardId]: {
+            _errorMessage: formatPanErrorMessage(
+              errorPayload?.error?.message || errorPayload?.message,
+              errorPayload?.error?.code ?? errorPayload?.code,
+            ),
+          },
         }));
       }
     };
@@ -343,20 +413,44 @@ const MainBalanceCard = ({
     return () => {
       cancelled = true;
     };
+    // Note: intentionally exclude `panCacheByCardId` from deps to avoid
+    // re-running the effect when we update the cache state inside this effect.
+    // The effect should run when the selected card or eligibility changes.
   }, [
-    canFetchSelectedCardPan,
+    canAttemptSelectedCardPanApi,
     normalizedCards.length,
-    panCacheByCardId,
+    selectedCard?.card_type,
+    selectedCard?.displayType,
     selectedPanEndpointCardId,
   ]);
 
   const selectedPanData = selectedPanEndpointCardId
     ? panCacheByCardId[selectedPanEndpointCardId]
     : null;
+  const isSelectedPanLoading =
+    Boolean(selectedPanData?._loading) && canAttemptSelectedCardPanApi;
+  const selectedPanErrorMessage = String(
+    selectedPanData?._errorMessage || "",
+  ).trim();
   const panCardNumber = String(selectedPanData?.card_number || "").trim();
   const panExpiry = String(selectedPanData?.expiry_date || "").trim();
   const panCvv = String(selectedPanData?.cvv || "").trim();
   const localHasCardNumber = hasLocalCardNumberData(selectedCard);
+  const isSelectedVirtualCard = selectedCard.displayType === "Virtual";
+  const showPanLoaderOnSelectedCard =
+    isSelectedVirtualCard && isSelectedPanLoading && !selectedPanErrorMessage;
+  const shouldLoadSelectedCardNumber =
+    showPanLoaderOnSelectedCard && !localHasCardNumber && !panCardNumber;
+  const inlinePanLoadingNode = (
+    <span className="nova-inline-loader" aria-live="polite">
+      <span
+        className="spinner-border spinner-border-sm"
+        role="status"
+        aria-hidden="true"
+      />
+      <span>Loading...</span>
+    </span>
+  );
 
   const resolvedSelectedCard = useMemo(() => {
     const isVirtualCard = selectedCard.displayType === "Virtual";
@@ -379,6 +473,7 @@ const MainBalanceCard = ({
         })
       : fallbackNumber;
 
+    // Only show PAN-provided expiry/cvv for virtual cards.
     const finalExpiry = isVirtualCard
       ? panExpiry || fallbackExpiry || CARD_EXPIRY_PLACEHOLDER
       : CARD_EXPIRY_PLACEHOLDER;
@@ -439,13 +534,43 @@ const MainBalanceCard = ({
   );
   const detailRows = [
     { label: "Card ID", value: resolvedSelectedCard.displayId },
-    { label: "Card Number", value: resolvedSelectedCard.displayNumber },
+    {
+      label: "Card Number",
+      value: shouldLoadSelectedCardNumber
+        ? inlinePanLoadingNode
+        : resolvedSelectedCard.displayNumber,
+    },
     { label: "Card Type", value: resolvedSelectedCard.displayType },
     { label: "Currency", value: resolvedSelectedCard.displayCurrency },
     { label: "Card Balance", value: resolvedSelectedCard.displayBalance },
-    { label: "Status", value: normalizeStatus(resolvedSelectedCard.displayStatus) },
-    { label: "Valid Thru", value: resolvedSelectedCard.displayExpiry },
-    { label: "CVV", value: resolvedSelectedCard.displayCvv || CARD_CVV_PLACEHOLDER },
+    {
+      label: "Status",
+      value: normalizeStatus(resolvedSelectedCard.displayStatus),
+    },
+    ...(isSelectedVirtualCard
+      ? [
+          {
+            label: "Valid Thru",
+            value: showPanLoaderOnSelectedCard
+              ? inlinePanLoadingNode
+              : resolvedSelectedCard.displayExpiry,
+          },
+          {
+            label: "CVV",
+            value: showPanLoaderOnSelectedCard
+              ? inlinePanLoadingNode
+              : resolvedSelectedCard.displayCvv || CARD_CVV_PLACEHOLDER,
+          },
+        ]
+      : []),
+    ...(isSelectedVirtualCard && selectedPanErrorMessage
+        ? [
+            {
+              label: "PAN Info",
+              value: selectedPanErrorMessage,
+            },
+          ]
+        : []),
     {
       label: "Is Bound",
       value:
@@ -471,18 +596,30 @@ const MainBalanceCard = ({
     },
     { label: "Bound At", value: formatDateTime(resolvedSelectedCard.bound_at) },
     ...(resolvedSelectedCard?.frozen_at
-      ? [{ label: "Frozen At", value: formatDateTime(resolvedSelectedCard.frozen_at) }]
+      ? [
+          {
+            label: "Frozen At",
+            value: formatDateTime(resolvedSelectedCard.frozen_at),
+          },
+        ]
       : []),
     ...(resolvedSelectedCard?.physical_delivery_status
       ? [
           {
             label: "Delivery",
-            value: normalizeStatus(resolvedSelectedCard.physical_delivery_status),
+            value: normalizeStatus(
+              resolvedSelectedCard.physical_delivery_status,
+            ),
           },
         ]
       : []),
     ...(resolvedSelectedCard?.created_at
-      ? [{ label: "Created At", value: formatDateTime(resolvedSelectedCard.created_at) }]
+      ? [
+          {
+            label: "Created At",
+            value: formatDateTime(resolvedSelectedCard.created_at),
+          },
+        ]
       : []),
   ];
 
@@ -491,7 +628,9 @@ const MainBalanceCard = ({
       <div className="card-header border-0 align-items-start pb-0">
         <div>
           <span className="fs-18 d-block mb-2">Main Balance</span>
-          <h2 className="fs-28 font-w600">{resolvedSelectedCard.displayBalance}</h2>
+          <h2 className="fs-28 font-w600">
+            {resolvedSelectedCard.displayBalance}
+          </h2>
         </div>
         <div className="nova-card-controls">
           <button
@@ -525,78 +664,116 @@ const MainBalanceCard = ({
               <div className="nova-deck-zone">
                 <div className="nova-deck-stack">
                   {[...stackCards].reverse().map(({ layer, index, card }) => {
-                    const renderCard = layer === 0 ? resolvedSelectedCard : card;
+                    const isFrontLayer = layer === 0;
+                    const renderCard = isFrontLayer ? resolvedSelectedCard : card;
+                    const isVirtualRenderCard =
+                      renderCard.displayType === "Virtual";
+                    const showPanLoaderBadge =
+                      isFrontLayer && showPanLoaderOnSelectedCard;
+                    const cardNumberForRender =
+                      isFrontLayer && shouldLoadSelectedCardNumber
+                        ? "Loading..."
+                        : renderCard.displayNumber || CARD_NUMBER_PLACEHOLDER;
+                    const cardExpiryForRender = showPanLoaderBadge
+                      ? "Loading..."
+                      : renderCard.displayExpiry || CARD_EXPIRY_PLACEHOLDER;
+                    const cardCvvForRender = showPanLoaderBadge
+                      ? "Loading..."
+                      : renderCard.displayCvv || CARD_CVV_PLACEHOLDER;
                     return (
-                    <button
-                      key={`${renderCard.displayId}-${layer}`}
-                      type="button"
-                      className={`nova-deck-layer ${renderCard.themeClass} ${
-                        layer === 0 ? "is-front" : ""
-                      }`}
-                      style={{ "--stack-depth": layer }}
-                      onClick={() => setSelectedIndex(index)}
-                      aria-label={`Show ${renderCard.displayName}`}
-                    >
-                      {layer === 0 ? (
-                        <div className="nova-flip-card">
-                          <div className="nova-flip-inner">
-                            <div
-                              className={`nova-flip-face nova-flip-front ${renderCard.themeClass}`}
-                              style={{
-                                backgroundImage: `linear-gradient(135deg, rgba(10,26,46,0.58) 0%, rgba(12,22,38,0.22) 100%), url(${renderCard.images.front})`,
-                              }}
-                            >
-                              <div className="nova-card-name">
-                                {renderCard.displayName}
-                              </div>
-                              <div className="nova-card-number">
-                                {renderCard.displayNumber || CARD_NUMBER_PLACEHOLDER}
-                              </div>
-                              <div className="nova-card-foot">
-                                <div>
-                                  <span>VALID THRU</span>
-                                  <strong>
-                                    {renderCard.displayExpiry ||
-                                      CARD_EXPIRY_PLACEHOLDER}
-                                  </strong>
+                      <button
+                        key={`${renderCard.displayId}-${layer}`}
+                        type="button"
+                        className={`nova-deck-layer ${renderCard.themeClass} ${
+                          layer === 0 ? "is-front" : ""
+                        }`}
+                        style={{ "--stack-depth": layer }}
+                        onClick={() => setSelectedIndex(index)}
+                        aria-label={`Show ${renderCard.displayName}`}
+                      >
+                        {layer === 0 ? (
+                          <div className="nova-flip-card">
+                            <div className="nova-flip-inner">
+                              <div
+                                className={`nova-flip-face nova-flip-front ${renderCard.themeClass}`}
+                                style={{
+                                  backgroundImage: `linear-gradient(135deg, rgba(10,26,46,0.58) 0%, rgba(12,22,38,0.22) 100%), url(${renderCard.images.front})`,
+                                }}
+                              >
+                                {showPanLoaderBadge ? (
+                                  <div
+                                    className="nova-card-pan-loader"
+                                    aria-live="polite"
+                                  >
+                                    <span
+                                      className="spinner-border spinner-border-sm"
+                                      role="status"
+                                      aria-hidden="true"
+                                    />
+                                    <span>Loading PAN...</span>
+                                  </div>
+                                ) : null}
+                                <div className="nova-card-name">
+                                  {renderCard.displayName}
                                 </div>
-                                <div>
-                                  <span>CARD HOLDER</span>
-                                  <strong>{userName}</strong>
+                                <div className="nova-card-number">
+                                  {cardNumberForRender}
+                                </div>
+                                <div
+                                  className={`nova-card-foot ${
+                                    isVirtualRenderCard ? "" : "is-single"
+                                  }`.trim()}
+                                >
+                                  {isVirtualRenderCard ? (
+                                    <div>
+                                      <span>VALID THRU</span>
+                                      <strong>{cardExpiryForRender}</strong>
+                                    </div>
+                                  ) : null}
+                                  <div>
+                                    <span>CARD HOLDER</span>
+                                    <strong>{userName}</strong>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="nova-card-id">
-                                ID: {renderCard.displayId}
-                              </div>
-                            </div>
 
-                            <div
-                              className={`nova-flip-face nova-flip-back ${renderCard.themeClass}`}
-                              style={{
-                                backgroundImage: `linear-gradient(135deg, rgba(8,16,29,0.72) 0%, rgba(16,22,35,0.48) 100%), url(${renderCard.images.back})`,
-                              }}
-                            >
-                              <div className="nova-card-stripe" />
-                              <div className="nova-card-cvv-row">
-                                <span>CVV</span>
-                                <strong>
-                                  {renderCard.displayCvv || CARD_CVV_PLACEHOLDER}
-                                </strong>
-                              </div>
-                              <div className="nova-card-back-meta">
-                                <span>
-                                  {renderCard.displayNumber ||
-                                    CARD_NUMBER_PLACEHOLDER}
-                                </span>
-                                <span>{renderCard.displayCurrency}</span>
+                              <div
+                                className={`nova-flip-face nova-flip-back ${renderCard.themeClass}`}
+                                style={{
+                                  backgroundImage: `linear-gradient(135deg, rgba(8,16,29,0.72) 0%, rgba(16,22,35,0.48) 100%), url(${renderCard.images.back})`,
+                                }}
+                              >
+                                {showPanLoaderBadge ? (
+                                  <div
+                                    className="nova-card-pan-loader is-back"
+                                    aria-live="polite"
+                                  >
+                                    <span
+                                      className="spinner-border spinner-border-sm"
+                                      role="status"
+                                      aria-hidden="true"
+                                    />
+                                    <span>Loading PAN...</span>
+                                  </div>
+                                ) : null}
+                                <div className="nova-card-stripe" />
+                                {isVirtualRenderCard ? (
+                                  <div className="nova-card-cvv-row">
+                                    <span>CVV</span>
+                                    <strong>{cardCvvForRender}</strong>
+                                  </div>
+                                ) : null}
+                                <div className="nova-card-back-meta">
+                                  <span>{cardNumberForRender}</span>
+                                  <span>{renderCard.displayCurrency}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="nova-deck-shadow-card" />
-                      )}
-                    </button>
+                        ) : (
+                          <div className="nova-deck-shadow-card" />
+                        )}
+                      </button>
                     );
                   })}
                 </div>
@@ -616,7 +793,7 @@ const MainBalanceCard = ({
                 {detailRows.map((item) => (
                   <div className="nova-card-live-item" key={item.label}>
                     <span>{item.label}</span>
-                    <strong>{item.value || "N/A"}</strong>
+                    <strong>{item.value ?? "N/A"}</strong>
                   </div>
                 ))}
               </div>
