@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 /// Css
@@ -18,7 +18,7 @@ import ScrollToTop from "./../layouts/ScrollToTop";
 /// User pages
 import Home from "../pages/dashboard/Home";
 import Kyc from "../pages/user/Kyc";
-import UserPlaceholderPage from "../pages/user/UserPlaceholderPage";
+import Cards from "../pages/user/Cards";
 
 /// Error pages
 import LockScreen from "./../pages/error/LockScreen";
@@ -41,55 +41,8 @@ const Markup = () => {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/kyc" element={<Kyc />} />
-          {/* <Route path="/kyc-submitted" element={<KycSubmitted />} />
-          <Route path="/kyc-pending" element={<KycPending />} />
-          <Route path="/kyc-approved" element={<KycApproved />} />
-          <Route path="/kyc-rejected" element={<KycRejected />} /> */}
-          <Route
-            path="/cards"
-            element={
-              <UserPlaceholderPage
-                title="Cards"
-                description="User cards page yahan build hoga. Admin cards page ka API/data ab route se hata diya gaya hai."
-              />
-            }
-          />
-          <Route
-            path="/transactions"
-            element={
-              <UserPlaceholderPage
-                title="Transactions"
-                description="User transactions page yahan build hoga. Admin transactions data/API ab use nahi ho raha."
-              />
-            }
-          />
-          <Route
-            path="/subscribers"
-            element={
-              <UserPlaceholderPage
-                title="Subscribers"
-                description="Is section ko user panel requirement ke hisab se redesign karna hai. Admin page route remove kar diya gaya hai."
-              />
-            }
-          />
-          <Route
-            path="/invites"
-            element={
-              <UserPlaceholderPage
-                title="Invites"
-                description="User invites page placeholder. Admin invite metrics/data se decouple kar diya gaya hai."
-              />
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <UserPlaceholderPage
-                title="Profile"
-                description="User profile page yahan build hoga. Admin profile analytics/data route se remove ho chuki hai."
-              />
-            }
-          />
+          <Route path="/cards" element={<Cards />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
       <ScrollToTop />
