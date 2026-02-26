@@ -251,6 +251,9 @@ const CardOperationsModal = ({
   user,
   userCards = [],
   onCardsUpdated,
+  walletSummary = null,
+  onWalletUpdated,
+  inline = false,
 }) => {
   const prefill = useMemo(() => buildPrefill(user), [user]);
   const [orderTab, setOrderTab] = useState("virtual");
@@ -261,10 +264,10 @@ const CardOperationsModal = ({
   const [apiResponse, setApiResponse] = useState(null);
 
   useEffect(() => {
-    if (!show) return;
+    if (!inline && !show) return;
     setOrderForms((prev) => mergeUserPrefillIntoOrderForms(prev, prefill));
     setBindForm((prev) => mergeUserPrefillIntoBindForm(prev, prefill));
-  }, [prefill, show]);
+  }, [inline, prefill, show]);
 
   const activeOrderConfig = CARD_ORDER_CONFIG[orderTab];
   const activeOrderForm = orderForms[orderTab];
@@ -451,6 +454,9 @@ const CardOperationsModal = ({
       if (typeof onCardsUpdated === "function") {
         await onCardsUpdated();
       }
+      if (typeof onWalletUpdated === "function") {
+        await onWalletUpdated();
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
@@ -525,6 +531,279 @@ const CardOperationsModal = ({
   };
 
   const userCardCount = Array.isArray(userCards) ? userCards.length : 0;
+  const walletCurrency = String(walletSummary?.currency || "USD").toUpperCase();
+  const walletAvailable =
+    walletSummary?.availableBalance ?? walletSummary?.balance ?? null;
+
+  const content = (
+    <>
+      <div className="nova-card-ops-modal-summary mb-3">
+        <span className="nova-wallet-stat-chip">
+          User: {sanitizeText(user?.email) || "N/A"}
+        </span>
+        <span className="nova-wallet-stat-chip">
+          User Code: {user?.tevau_user?.user_code || "N/A"}
+        </span>
+        <span className="nova-wallet-stat-chip">
+          Current Cards: {userCardCount}
+        </span>
+        {walletAvailable !== null && (
+          <span className="nova-wallet-stat-chip">
+            Wallet Available: {walletCurrency} {Number(walletAvailable || 0).toLocaleString("en-US")}
+          </span>
+        )}
+      </div>
+
+      <div className="row g-3">
+        <div className="col-xl-7">
+          <div className="nova-flow-shell">
+            <div className="nova-flow-header">
+              <div>
+                <h4 className="mb-1">Order Card</h4>
+                <p className="mb-0 text-muted">
+                  `POST /tevau/cards` with physical or virtual payload
+                </p>
+              </div>
+              <span
+                className={`nova-flow-status-pill ${
+                  orderTab === "virtual" ? "is-virtual" : "is-physical"
+                }`}
+              >
+                {activeOrderConfig.shortLabel}
+              </span>
+            </div>
+
+            <div className="nova-flow-switch" role="tablist" aria-label="Order card type">
+              {Object.entries(CARD_ORDER_CONFIG).map(([key, config]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`nova-flow-switch-btn ${
+                    orderTab === key ? "is-active" : ""
+                  } ${key === "virtual" ? "is-virtual" : "is-physical"}`}
+                  onClick={() => setOrderTab(key)}
+                >
+                  <span className="nova-flow-switch-title">{config.label}</span>
+                  <span className="nova-flow-switch-sub">{config.hint}</span>
+                </button>
+              ))}
+            </div>
+
+            <div
+              className={`nova-flow-hero ${
+                orderTab === "virtual" ? "is-virtual" : "is-physical"
+              }`}
+            >
+              <div className="nova-flow-hero-copy">
+                <div className="nova-flow-kicker">Card Order API</div>
+                <h5>{activeOrderConfig.label}</h5>
+                <p>{activeOrderConfig.hint}</p>
+                <div className="nova-flow-hero-stats">
+                  <div>
+                    <span>Endpoint</span>
+                    <strong>/tevau/cards</strong>
+                  </div>
+                  <div>
+                    <span>Card Code</span>
+                    <strong>{activeOrderForm.card_code}</strong>
+                  </div>
+                  <div>
+                    <span>Address Key</span>
+                    <strong>{activeOrderConfig.addressKey}</strong>
+                  </div>
+                </div>
+              </div>
+              <div className="nova-flow-hero-visual">
+                <img
+                  src={activeOrderConfig.image}
+                  alt={activeOrderConfig.label}
+                  className="nova-flow-hero-image"
+                />
+              </div>
+            </div>
+
+            <div className="nova-flow-section">
+              <div className="nova-flow-section-head">
+                <h6 className="mb-0">Requester Details</h6>
+                <small>Common for both physical and virtual order requests</small>
+              </div>
+              <div className="row g-3">
+                {ORDER_COMMON_FIELDS.map((field) =>
+                  renderField({
+                    label: field.label,
+                    value: activeOrderForm[field.key] || "",
+                    onChange: (value) => setOrderField(orderTab, field.key, value),
+                    placeholder: field.placeholder,
+                    type: field.type || "text",
+                    colClass: field.colClass || "col-md-6",
+                    inputMode: field.inputMode,
+                  }),
+                )}
+              </div>
+            </div>
+
+            <div className="nova-flow-section">
+              <div className="nova-flow-section-head">
+                <h6 className="mb-0">{activeOrderConfig.addressTitle}</h6>
+                <small>{activeOrderConfig.addressKey}</small>
+              </div>
+              <div className="row g-3">
+                {(orderTab === "virtual"
+                  ? VIRTUAL_ADDRESS_FIELDS
+                  : PHYSICAL_ADDRESS_FIELDS
+                ).map((field) =>
+                  renderField({
+                    label: field.label,
+                    value: activeAddress[field.key] || "",
+                    onChange: (value) =>
+                      setOrderAddressField(orderTab, field.key, value),
+                    placeholder: field.placeholder,
+                    type: field.type || "text",
+                    rows: field.rows || 0,
+                    colClass: field.colClass || "col-md-6",
+                    inputMode: field.inputMode,
+                  }),
+                )}
+              </div>
+            </div>
+
+            <div className="nova-flow-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOrderSubmit}
+                disabled={submittingAction === `order-${orderTab}`}
+              >
+                {submittingAction === `order-${orderTab}`
+                  ? "Submitting..."
+                  : `Submit ${activeOrderConfig.shortLabel} Order`}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => {
+                  resetOrderForm(orderTab);
+                  clearResponseState();
+                }}
+              >
+                Reset Order Form
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-xl-5">
+          <div className="nova-flow-shell">
+            <div className="nova-flow-header">
+              <div>
+                <h4 className="mb-1">Bind Card</h4>
+                <p className="mb-0 text-muted">
+                  `POST /tevau/cards/bind`
+                </p>
+              </div>
+              <span className="nova-flow-status-pill is-bind">Bind Flow</span>
+            </div>
+
+            <div className="nova-bind-helper">
+              <div className="nova-bind-helper-title">Request body fields</div>
+              <div className="nova-bind-helper-list">
+                <span>active_code</span>
+                <span>card_number</span>
+                <span>address</span>
+                <span>country_area / city / post_code</span>
+                <span>dial_code / phone_number / email</span>
+              </div>
+            </div>
+
+            <div className="row g-3">
+              {BIND_FIELDS.map((field) =>
+                renderField({
+                  label: field.label,
+                  value: bindForm[field.key] || "",
+                  onChange: (value) => setBindField(field.key, value),
+                  placeholder: field.placeholder,
+                  type: field.type || "text",
+                  rows: field.rows || 0,
+                  colClass: field.colClass || "col-md-6",
+                  inputMode: field.inputMode,
+                }),
+              )}
+            </div>
+
+            <div className="nova-flow-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleBindSubmit}
+                disabled={submittingAction === "bind"}
+              >
+                {submittingAction === "bind" ? "Binding..." : "Bind Card"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => {
+                  resetBindForm();
+                  clearResponseState();
+                }}
+              >
+                Reset Bind Form
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {feedback && (
+        <div className={`nova-flow-alert is-${feedback.type} mt-3`}>
+          <i
+            className={`pi ${
+              feedback.type === "success"
+                ? "pi-check-circle"
+                : "pi-exclamation-triangle"
+            }`}
+          />
+          <span>{feedback.message}</span>
+        </div>
+      )}
+
+      {apiResponse && (
+        <div className="nova-flow-response mt-3">
+          <div className="nova-flow-response-head">
+            <span>API Response</span>
+            <small>{submittingAction || "latest response"}</small>
+          </div>
+          <pre>{JSON.stringify(apiResponse, null, 2)}</pre>
+        </div>
+      )}
+    </>
+  );
+
+  if (inline) {
+    return (
+      <div className="card nova-panel">
+        <div className="card-body">
+          <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-3">
+            <div>
+              <div className="nova-flow-kicker mb-1">Cards Management</div>
+              <h4 className="mb-1">Card Purchasing + Bind Flow</h4>
+              <p className="mb-0 text-muted">
+                Card order submit `POST /tevau/cards` karta hai. Successful submit ke baad wallet summary refresh hoti hai taake auto deduction front par nazar aaye.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-light"
+              onClick={clearResponseState}
+            >
+              Clear Status
+            </button>
+          </div>
+          {content}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Modal
@@ -549,242 +828,7 @@ const CardOperationsModal = ({
         />
       </div>
 
-      <div className="modal-body">
-        <div className="nova-card-ops-modal-summary">
-          <span className="nova-wallet-stat-chip">
-            User: {sanitizeText(user?.email) || "N/A"}
-          </span>
-          <span className="nova-wallet-stat-chip">
-            User Code: {user?.tevau_user?.user_code || "N/A"}
-          </span>
-          <span className="nova-wallet-stat-chip">
-            Current Cards: {userCardCount}
-          </span>
-        </div>
-
-        <div className="row g-3">
-          <div className="col-xl-7">
-            <div className="nova-flow-shell">
-              <div className="nova-flow-header">
-                <div>
-                  <h4 className="mb-1">Order Card</h4>
-                  <p className="mb-0 text-muted">
-                    `POST /tevau/cards` with physical or virtual payload
-                  </p>
-                </div>
-                <span
-                  className={`nova-flow-status-pill ${
-                    orderTab === "virtual" ? "is-virtual" : "is-physical"
-                  }`}
-                >
-                  {activeOrderConfig.shortLabel}
-                </span>
-              </div>
-
-              <div className="nova-flow-switch" role="tablist" aria-label="Order card type">
-                {Object.entries(CARD_ORDER_CONFIG).map(([key, config]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`nova-flow-switch-btn ${
-                      orderTab === key ? "is-active" : ""
-                    } ${key === "virtual" ? "is-virtual" : "is-physical"}`}
-                    onClick={() => setOrderTab(key)}
-                  >
-                    <span className="nova-flow-switch-title">{config.label}</span>
-                    <span className="nova-flow-switch-sub">{config.hint}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div
-                className={`nova-flow-hero ${
-                  orderTab === "virtual" ? "is-virtual" : "is-physical"
-                }`}
-              >
-                <div className="nova-flow-hero-copy">
-                  <div className="nova-flow-kicker">Card Order API</div>
-                  <h5>{activeOrderConfig.label}</h5>
-                  <p>{activeOrderConfig.hint}</p>
-                  <div className="nova-flow-hero-stats">
-                    <div>
-                      <span>Endpoint</span>
-                      <strong>/tevau/cards</strong>
-                    </div>
-                    <div>
-                      <span>Card Code</span>
-                      <strong>{activeOrderForm.card_code}</strong>
-                    </div>
-                    <div>
-                      <span>Address Key</span>
-                      <strong>{activeOrderConfig.addressKey}</strong>
-                    </div>
-                  </div>
-                </div>
-                <div className="nova-flow-hero-visual">
-                  <img
-                    src={activeOrderConfig.image}
-                    alt={activeOrderConfig.label}
-                    className="nova-flow-hero-image"
-                  />
-                </div>
-              </div>
-
-              <div className="nova-flow-section">
-                <div className="nova-flow-section-head">
-                  <h6 className="mb-0">Requester Details</h6>
-                  <small>Common for both physical and virtual order requests</small>
-                </div>
-                <div className="row g-3">
-                  {ORDER_COMMON_FIELDS.map((field) =>
-                    renderField({
-                      label: field.label,
-                      value: activeOrderForm[field.key] || "",
-                      onChange: (value) => setOrderField(orderTab, field.key, value),
-                      placeholder: field.placeholder,
-                      type: field.type || "text",
-                      colClass: field.colClass || "col-md-6",
-                      inputMode: field.inputMode,
-                    }),
-                  )}
-                </div>
-              </div>
-
-              <div className="nova-flow-section">
-                <div className="nova-flow-section-head">
-                  <h6 className="mb-0">{activeOrderConfig.addressTitle}</h6>
-                  <small>{activeOrderConfig.addressKey}</small>
-                </div>
-                <div className="row g-3">
-                  {(orderTab === "virtual"
-                    ? VIRTUAL_ADDRESS_FIELDS
-                    : PHYSICAL_ADDRESS_FIELDS
-                  ).map((field) =>
-                    renderField({
-                      label: field.label,
-                      value: activeAddress[field.key] || "",
-                      onChange: (value) =>
-                        setOrderAddressField(orderTab, field.key, value),
-                      placeholder: field.placeholder,
-                      type: field.type || "text",
-                      rows: field.rows || 0,
-                      colClass: field.colClass || "col-md-6",
-                      inputMode: field.inputMode,
-                    }),
-                  )}
-                </div>
-              </div>
-
-              <div className="nova-flow-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleOrderSubmit}
-                  disabled={submittingAction === `order-${orderTab}`}
-                >
-                  {submittingAction === `order-${orderTab}`
-                    ? "Submitting..."
-                    : `Submit ${activeOrderConfig.shortLabel} Order`}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => {
-                    resetOrderForm(orderTab);
-                    clearResponseState();
-                  }}
-                >
-                  Reset Order Form
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-xl-5">
-            <div className="nova-flow-shell">
-              <div className="nova-flow-header">
-                <div>
-                  <h4 className="mb-1">Bind Card</h4>
-                  <p className="mb-0 text-muted">
-                    `POST /tevau/cards/bind`
-                  </p>
-                </div>
-                <span className="nova-flow-status-pill is-bind">Bind Flow</span>
-              </div>
-
-              <div className="nova-bind-helper">
-                <div className="nova-bind-helper-title">Request body fields</div>
-                <div className="nova-bind-helper-list">
-                  <span>active_code</span>
-                  <span>card_number</span>
-                  <span>address</span>
-                  <span>country_area / city / post_code</span>
-                  <span>dial_code / phone_number / email</span>
-                </div>
-              </div>
-
-              <div className="row g-3">
-                {BIND_FIELDS.map((field) =>
-                  renderField({
-                    label: field.label,
-                    value: bindForm[field.key] || "",
-                    onChange: (value) => setBindField(field.key, value),
-                    placeholder: field.placeholder,
-                    type: field.type || "text",
-                    rows: field.rows || 0,
-                    colClass: field.colClass || "col-md-6",
-                    inputMode: field.inputMode,
-                  }),
-                )}
-              </div>
-
-              <div className="nova-flow-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleBindSubmit}
-                  disabled={submittingAction === "bind"}
-                >
-                  {submittingAction === "bind" ? "Binding..." : "Bind Card"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => {
-                    resetBindForm();
-                    clearResponseState();
-                  }}
-                >
-                  Reset Bind Form
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {feedback && (
-          <div className={`nova-flow-alert is-${feedback.type} mt-3`}>
-            <i
-              className={`pi ${
-                feedback.type === "success"
-                  ? "pi-check-circle"
-                  : "pi-exclamation-triangle"
-              }`}
-            />
-            <span>{feedback.message}</span>
-          </div>
-        )}
-
-        {apiResponse && (
-          <div className="nova-flow-response mt-3">
-            <div className="nova-flow-response-head">
-              <span>API Response</span>
-              <small>{submittingAction || "latest response"}</small>
-            </div>
-            <pre>{JSON.stringify(apiResponse, null, 2)}</pre>
-          </div>
-        )}
-      </div>
+      <div className="modal-body">{content}</div>
 
       <div className="modal-footer">
         <button type="button" className="btn btn-light" onClick={clearResponseState}>

@@ -124,6 +124,15 @@ const normalizeStatus = (value) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const normalizeCardType = (value) => {
+  if (value === 1 || value === "1") return "Physical";
+  if (value === 2 || value === "2") return "Virtual";
+  const text = String(value || "").toLowerCase();
+  if (text.includes("virtual")) return "Virtual";
+  if (text.includes("physical")) return "Physical";
+  return normalizeStatus(value);
+};
+
 const isWalletAssetUsable = (asset) => {
   if (!asset || typeof asset !== "object") return false;
   const balance = toSafeNumber(asset?.balance) ?? 0;
@@ -396,6 +405,90 @@ export function CommandPage({ user }) {
   const walletTxPreview = walletTransactions.slice(0, 3);
   const showWalletBalanceLoading =
     userCardsLoading && walletLoading && !mappedWalletAsset;
+  const dashboardOverviewCards = useMemo(() => {
+    const virtualCount = userCards.filter(
+      (card) => normalizeCardType(card?.card_type || card?.type) === "Virtual",
+    ).length;
+    const physicalCount = userCards.filter(
+      (card) => normalizeCardType(card?.card_type || card?.type) === "Physical",
+    ).length;
+
+    return [
+      {
+        key: "total",
+        title: "Total Cards",
+        value: userCards.length,
+        sub: `${activeCardCount} active`,
+        tone: "is-blue",
+      },
+      {
+        key: "active",
+        title: "Active Cards",
+        value: activeCardCount,
+        sub: "Active / Normal",
+        tone: "is-slate",
+      },
+      {
+        key: "virtual",
+        title: "Virtual Cards",
+        value: virtualCount,
+        sub: "Instant issue",
+        tone: "is-purple",
+      },
+      {
+        key: "physical",
+        title: "Physical Cards",
+        value: physicalCount,
+        sub: "Courier flow",
+        tone: "is-orange",
+      },
+      {
+        key: "deposits",
+        title: "Deposits",
+        value: formatCurrencyValue(walletDeposits, walletCurrency),
+        sub: "Wallet total deposits",
+        tone: "is-green",
+      },
+      {
+        key: "total-balance",
+        title: "Total Balance",
+        value: formatCurrencyValue(walletBalanceToShow, walletCurrency),
+        sub: "Wallet total balance",
+        tone: "is-cyan",
+      },
+      {
+        key: "available",
+        title: "Available Balance",
+        value: formatCurrencyValue(walletAvailableBalance ?? walletBalanceToShow, walletCurrency),
+        sub: walletAssetName || "Wallet asset",
+        tone: "is-blue",
+      },
+      {
+        key: "withdrawals",
+        title: "Withdrawals",
+        value: formatCurrencyValue(walletWithdrawals, walletCurrency),
+        sub: "Wallet withdrawals",
+        tone: "is-rose",
+      },
+      {
+        key: "transactions",
+        title: "Transactions",
+        value: walletTotalTransactions,
+        sub: "Recent wallet activity",
+        tone: "is-slate",
+      },
+    ];
+  }, [
+    activeCardCount,
+    userCards,
+    walletDeposits,
+    walletCurrency,
+    walletBalanceToShow,
+    walletAvailableBalance,
+    walletAssetName,
+    walletWithdrawals,
+    walletTotalTransactions,
+  ]);
 
   return (
     <>
@@ -435,6 +528,63 @@ export function CommandPage({ user }) {
               </div>
             </div>
             <div className="row g-3">
+              <div className="col-12">
+                <div className=" nova-panel nova-dashboard-overview-panel">
+                  <div className="card-body nova-dashboard-overview-body">
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <h5 className="mb-0">Cards Overview</h5>
+                      <Link to="/cards" className="btn btn-sm nova-dashboard-overview-open-btn">
+                        Open Cards
+                      </Link>
+                    </div>
+                    <div className="nova-cards-overview-board nova-cards-overview-horizontal nova-dashboard-overview-board">
+                      <div className="nova-overview-stage-card nova-overview-stage-strip">
+                        <div className="nova-overview-stage-main">
+                          <div className="nova-overview-stage-head">
+                            <span className="nova-overview-stage-title">Payment Summary</span>
+                          </div>
+                          <div className="nova-overview-stage-stats">
+                            <strong>{formatCurrencyValue(walletBalanceToShow, walletCurrency)}</strong>
+                            <span />
+                            <small>{userCards.length} Cards</small>
+                          </div>
+                        </div>
+                        <div className="nova-overview-stage-cta">
+                          <i className="pi pi-wallet" />
+                          Deposits, cards & wallet activity
+                        </div>
+                      </div>
+
+                      <div className="nova-overview-horizontal-scroll">
+                        <div className="nova-overview-metric-grid nova-overview-metric-grid-horizontal">
+                          {dashboardOverviewCards.map((item) => (
+                            <div
+                              key={item.key}
+                              className={`nova-overview-metric-card ${item.tone}`}
+                            >
+                              <div className="nova-overview-metric-icon">
+                                <span />
+                              </div>
+                              <div className="nova-overview-metric-content">
+                                <h6>{item.title}</h6>
+                                <strong>{item.value}</strong>
+                                <p>{item.sub}</p>
+                              </div>
+                              <Link
+                                to="/cards"
+                                className="nova-overview-metric-arrow"
+                                aria-label={`${item.title} details`}
+                              >
+                                <i className="pi pi-angle-right" />
+                              </Link>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div className="col-12">
                 <div className="card  dz-wallet overflow-hidden">
                   <div className="boxs">

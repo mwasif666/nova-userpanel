@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Modal } from "react-bootstrap";
 import PageTitle from "../../layouts/PageTitle";
 import CardOperationsModal from "../../elements/dashboard/CardOperationsModal";
 import { AuthContext } from "../../../context/authContext";
@@ -73,10 +74,29 @@ const formatDateTime = (value) => {
 
 const Cards = () => {
   const { user } = useContext(AuthContext);
-  const [cardModalOpen, setCardModalOpen] = useState(false);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [walletSummary, setWalletSummary] = useState({
+    balance: null,
+    availableBalance: null,
+    currency: "USD",
+    assetName: "",
+    status: "",
+  });
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [tableFiltersOpen, setTableFiltersOpen] = useState(false);
+  const [tableFilters, setTableFilters] = useState({
+    type: "all",
+    status: "all",
+    bound: "all",
+  });
+  const [overviewModal, setOverviewModal] = useState({
+    open: false,
+    title: "",
+    subtitle: "",
+    rows: [],
+  });
 
   const userId = user?.id;
   const userCode = user?.tevau_user?.user_code || null;
@@ -159,9 +179,65 @@ const Cards = () => {
     [thirdId, userCode, userId],
   );
 
+  const loadWalletBalance = useCallback(async () => {
+    if (!userId && !userCode && !thirdId) {
+      setWalletSummary({
+        balance: null,
+        availableBalance: null,
+        currency: "USD",
+        assetName: "",
+        status: "",
+      });
+      return null;
+    }
+
+    setWalletLoading(true);
+    try {
+      const res = await request({
+        url: "wallet/balance",
+        method: "GET",
+        baseURL: "https://nova.innovationpixel.com/public/api/",
+        data: {
+          ...(userCode ? { user_code: userCode } : {}),
+          ...(thirdId ? { third_id: thirdId } : {}),
+          ...(userId ? { user_id: userId } : {}),
+        },
+      });
+
+      const payload = res?.data ?? {};
+      const assets = Array.isArray(payload?.assets) ? payload.assets : [];
+      const bestAsset =
+        [...assets].sort((a, b) => {
+          const aValue = Number(a?.available_balance ?? a?.balance ?? 0) || 0;
+          const bValue = Number(b?.available_balance ?? b?.balance ?? 0) || 0;
+          return bValue - aValue;
+        })[0] || null;
+
+      setWalletSummary({
+        balance: bestAsset?.balance ?? null,
+        availableBalance: bestAsset?.available_balance ?? bestAsset?.balance ?? null,
+        currency: bestAsset?.currency || "USD",
+        assetName: bestAsset?.name || "",
+        status: bestAsset?.status || "",
+      });
+
+      return bestAsset;
+    } catch (walletError) {
+      setWalletSummary((prev) => ({
+        ...prev,
+        balance: null,
+        availableBalance: null,
+      }));
+      return null;
+    } finally {
+      setWalletLoading(false);
+    }
+  }, [thirdId, userCode, userId]);
+
   useEffect(() => {
     loadCards().catch(() => undefined);
-  }, [loadCards]);
+    loadWalletBalance().catch(() => undefined);
+  }, [loadCards, loadWalletBalance]);
 
   const stats = useMemo(() => {
     const activeCount = cards.filter((card) =>
@@ -189,99 +265,339 @@ const Cards = () => {
     };
   }, [cards]);
 
+  const overviewCards = useMemo(
+    () => [
+      {
+        key: "total",
+        title: "Total Cards",
+        value: stats.total,
+        sub: `${stats.active} active`,
+        tone: "is-blue",
+      },
+      {
+        key: "active",
+        title: "Active Cards",
+        value: stats.active,
+        sub: "Active / Normal",
+        tone: "is-slate",
+      },
+      {
+        key: "virtual",
+        title: "Virtual Cards",
+        value: stats.virtual,
+        sub: "Instant issue",
+        tone: "is-purple",
+      },
+      {
+        key: "physical",
+        title: "Physical Cards",
+        value: stats.physical,
+        sub: "Courier flow",
+        tone: "is-orange",
+      },
+      {
+        key: "balance",
+        title: "Total Balance",
+        value: formatMoney(stats.totalBalance, stats.balanceCurrency),
+        sub: `${String(stats.balanceCurrency || "USD").toUpperCase()} cards`,
+        tone: "is-green",
+      },
+      {
+        key: "wallet",
+        title: "Wallet Available",
+        value: walletLoading
+          ? "Refreshing..."
+          : formatMoney(
+              walletSummary.availableBalance ?? walletSummary.balance ?? 0,
+              walletSummary.currency || "USD",
+            ),
+        sub: walletSummary.assetName || "Wallet auto refresh",
+        tone: "is-cyan",
+      },
+      {
+        key: "payment",
+        title: "Payment Mode",
+        value: "Wallet Auto Debit",
+        sub: "After order submit",
+        tone: "is-rose",
+      },
+    ],
+    [stats, walletLoading, walletSummary],
+  );
+
+  const getOverviewFilteredRows = useCallback(
+    (key) => {
+      if (!Array.isArray(cards)) return [];
+
+      if (key === "virtual") {
+        return cards.filter(
+          (card) =>
+            normalizeCardType(card?.card_type || card?.type).toLowerCase() === "virtual",
+        );
+      }
+
+      if (key === "physical") {
+        return cards.filter(
+          (card) =>
+            normalizeCardType(card?.card_type || card?.type).toLowerCase() === "physical",
+        );
+      }
+
+      if (key === "active") {
+        return cards.filter((card) =>
+          ["active", "normal"].includes(String(card?.status || "").toLowerCase()),
+        );
+      }
+
+      if (key === "balance") {
+        return cards.filter((card) => Number(card?.balance || 0) > 0);
+      }
+
+      if (key === "wallet") {
+        const walletCode = String(walletSummary.currency || "").toUpperCase();
+        return cards.filter(
+          (card) => String(card?.currency || "").toUpperCase() === walletCode,
+        );
+      }
+
+      return cards;
+    },
+    [cards, walletSummary.currency],
+  );
+
+  const openOverviewFilteredModal = useCallback(
+    (item) => {
+      const rows = getOverviewFilteredRows(item.key);
+      setOverviewModal({
+        open: true,
+        title: item.title,
+        subtitle: `${rows.length} card(s) matched`,
+        rows,
+      });
+    },
+    [getOverviewFilteredRows],
+  );
+
+  const filteredCards = useMemo(() => {
+    return cards.filter((card) => {
+      const cardType = normalizeCardType(card?.card_type || card?.type).toLowerCase();
+      const cardStatus = String(card?.status || "").trim().toLowerCase();
+      const boundValue =
+        typeof card?.is_bound === "boolean"
+          ? card.is_bound
+            ? "yes"
+            : "no"
+          : "na";
+
+      const typePass =
+        tableFilters.type === "all" || cardType === tableFilters.type;
+      const statusPass =
+        tableFilters.status === "all" || cardStatus === tableFilters.status;
+      const boundPass =
+        tableFilters.bound === "all" || boundValue === tableFilters.bound;
+
+      return typePass && statusPass && boundPass;
+    });
+  }, [cards, tableFilters]);
+
+  const tableFilterOptions = useMemo(() => {
+    const statuses = Array.from(
+      new Set(
+        cards
+          .map((card) => String(card?.status || "").trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    );
+    return {
+      statuses,
+    };
+  }, [cards]);
+
   return (
     <>
       <PageTitle motherMenu="Cards" activeMenu="Cards" />
 
       <div className="row g-3">
         <div className="col-12">
-          <div className="card nova-panel">
-            <div className="card-body">
-              <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                <div>
-                  <div className="nova-flow-kicker mb-1">Cards Management</div>
-                  <h4 className="mb-1">Order Physical / Virtual + Bind Card</h4>
-                  <p className="mb-2 text-muted">
-                    Tevau cards APIs are wired on this tab. Payment APIs can be added in the same flow once endpoints are shared.
-                  </p>
-                  <div className="nova-card-ops-launch-tags">
-                    <span className="nova-wallet-stat-chip">
-                      POST `/tevau/cards`
-                    </span>
-                    <span className="nova-wallet-stat-chip">
-                      POST `/tevau/cards/bind`
-                    </span>
-                    <span className="nova-wallet-stat-chip">
-                      User Code: {userCode || "N/A"}
-                    </span>
-                  </div>
-                </div>
-                <div className="d-flex flex-column flex-sm-row gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => setCardModalOpen(true)}
-                  >
-                    Open Cards Flow
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => loadCards()}
-                    disabled={loading}
-                  >
-                    {loading ? "Refreshing..." : "Refresh Cards"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-4">
-          <div className="card nova-panel h-100">
-            <div className="card-body">
-              <h5 className="mb-3">Cards Overview</h5>
-              <div className="nova-card-live-grid">
-                <div className="nova-card-live-item">
-                  <span>Total Cards</span>
-                  <strong>{stats.total}</strong>
-                </div>
-                <div className="nova-card-live-item">
-                  <span>Active Cards</span>
-                  <strong>{stats.active}</strong>
-                </div>
-                <div className="nova-card-live-item">
-                  <span>Virtual</span>
-                  <strong>{stats.virtual}</strong>
-                </div>
-                <div className="nova-card-live-item">
-                  <span>Physical</span>
-                  <strong>{stats.physical}</strong>
-                </div>
-                <div className="nova-card-live-item">
-                  <span>Total Balance</span>
-                  <strong>
-                    {formatMoney(stats.totalBalance, stats.balanceCurrency)}
-                  </strong>
-                </div>
-                <div className="nova-card-live-item">
-                  <span>Payments</span>
-                  <strong>Pending API</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-8">
           <div className="card nova-panel h-100">
             <div className="card-body">
               <div className="d-flex align-items-center justify-content-between mb-3">
+                <h5 className="mb-0">Cards Overview</h5>
+                <button type="button" className="btn btn-sm btn-light">
+                  <i className="pi pi-sync me-1" />
+                  Live
+                </button>
+              </div>
+
+              <div className="nova-cards-overview-board nova-cards-overview-horizontal">
+                <div className="nova-overview-stage-card nova-overview-stage-strip">
+                  <div className="nova-overview-stage-main">
+                    <div className="nova-overview-stage-head">
+                      <span className="nova-overview-stage-title">Payment Summary</span>
+                    </div>
+                    <div className="nova-overview-stage-stats">
+                      <strong>
+                        {formatMoney(stats.totalBalance, stats.balanceCurrency)}
+                      </strong>
+                      <span />
+                      <small>{stats.total} Cards</small>
+                    </div>
+                  </div>
+                  <div className="nova-overview-stage-cta">
+                    <i className="pi pi-wallet" />
+                    Wallet linked purchase flow
+                  </div>
+                </div>
+
+                <div className="nova-overview-horizontal-scroll">
+                  <div className="nova-overview-metric-grid nova-overview-metric-grid-horizontal">
+                  {overviewCards.map((item) => (
+                    <div
+                      key={item.key}
+                      className={`nova-overview-metric-card ${item.tone}`}
+                    >
+                      <div className="nova-overview-metric-icon">
+                        <span />
+                      </div>
+                      <div className="nova-overview-metric-content">
+                        <h6>{item.title}</h6>
+                        <strong>{item.value}</strong>
+                        <p>{item.sub}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="nova-overview-metric-arrow"
+                        aria-label={`${item.title} details`}
+                        onClick={() => openOverviewFilteredModal(item)}
+                      >
+                        <i className="pi pi-angle-right" />
+                      </button>
+                    </div>
+                  ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12">
+          <CardOperationsModal
+            inline
+            user={user}
+            userCards={cards}
+            walletSummary={walletSummary}
+            onCardsUpdated={() => loadCards({ silent: true })}
+            onWalletUpdated={loadWalletBalance}
+          />
+        </div>
+
+        <div className="col-12">
+          <div className="card nova-panel h-100">
+            <div className="card-body">
+              <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
                 <h5 className="mb-0">User Cards</h5>
-                <span className="text-muted small">
-                  {loading ? "Loading..." : `${cards.length} records`}
-                </span>
+                <div className="nova-table-tools">
+                  <span className="text-muted small">
+                    {loading ? "Loading..." : `${filteredCards.length} / ${cards.length} records`}
+                  </span>
+                  <div className="nova-table-filter-wrap">
+                    <button
+                      type="button"
+                      className="nova-overview-metric-arrow"
+                      aria-label="Open table filters"
+                      onClick={() => setTableFiltersOpen((prev) => !prev)}
+                    >
+                      <i className="pi pi-filter" />
+                    </button>
+                    {tableFiltersOpen && (
+                      <div className="nova-table-filter-popup">
+                        <div className="nova-table-filter-title">Filter Cards</div>
+
+                        <label className="nova-table-filter-field">
+                          <span>Type</span>
+                          <select
+                            className="form-select form-select-sm"
+                            value={tableFilters.type}
+                            onChange={(event) =>
+                              setTableFilters((prev) => ({
+                                ...prev,
+                                type: event.target.value,
+                              }))
+                            }
+                          >
+                            <option value="all">All</option>
+                            <option value="physical">Physical</option>
+                            <option value="virtual">Virtual</option>
+                          </select>
+                        </label>
+
+                        <label className="nova-table-filter-field">
+                          <span>Status</span>
+                          <select
+                            className="form-select form-select-sm"
+                            value={tableFilters.status}
+                            onChange={(event) =>
+                              setTableFilters((prev) => ({
+                                ...prev,
+                                status: event.target.value,
+                              }))
+                            }
+                          >
+                            <option value="all">All</option>
+                            {tableFilterOptions.statuses.map((status) => (
+                              <option key={status} value={status}>
+                                {normalizeLabel(status)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label className="nova-table-filter-field">
+                          <span>Bound</span>
+                          <select
+                            className="form-select form-select-sm"
+                            value={tableFilters.bound}
+                            onChange={(event) =>
+                              setTableFilters((prev) => ({
+                                ...prev,
+                                bound: event.target.value,
+                              }))
+                            }
+                          >
+                            <option value="all">All</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                            <option value="na">N/A</option>
+                          </select>
+                        </label>
+
+                        <div className="nova-table-filter-actions">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-light"
+                            onClick={() => {
+                              setTableFilters({
+                                type: "all",
+                                status: "all",
+                                bound: "all",
+                              });
+                            }}
+                          >
+                            Reset
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary"
+                            onClick={() => setTableFiltersOpen(false)}
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {error ? <div className="alert alert-warning py-2">{error}</div> : null}
@@ -299,14 +615,16 @@ const Cards = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {!loading && cards.length === 0 ? (
+                    {!loading && filteredCards.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="text-center text-muted py-4">
-                          No cards found for this user.
+                          {cards.length
+                            ? "No cards matched current filters."
+                            : "No cards found for this user."}
                         </td>
                       </tr>
                     ) : (
-                      cards.map((card) => (
+                      filteredCards.map((card) => (
                         <tr key={String(card?.id ?? card?.card_id)}>
                           <td>{card?.card_id || card?.id || "N/A"}</td>
                           <td>{normalizeCardType(card?.card_type || card?.type)}</td>
@@ -331,13 +649,74 @@ const Cards = () => {
         </div>
       </div>
 
-      <CardOperationsModal
-        show={cardModalOpen}
-        onHide={() => setCardModalOpen(false)}
-        user={user}
-        userCards={cards}
-        onCardsUpdated={() => loadCards({ silent: true })}
-      />
+      <Modal
+        show={overviewModal.open}
+        onHide={() =>
+          setOverviewModal({ open: false, title: "", subtitle: "", rows: [] })
+        }
+        centered
+        size="xl"
+      >
+        <div className="modal-header">
+          <div>
+            <h5 className="modal-title">{overviewModal.title || "Filtered Cards"}</h5>
+            <div className="text-muted small">
+              {overviewModal.subtitle || "Cards list"}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() =>
+              setOverviewModal({ open: false, title: "", subtitle: "", rows: [] })
+            }
+            aria-label="Close"
+          />
+        </div>
+        <div className="modal-body">
+          <div className="table-responsive">
+            <table className="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Card ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Balance</th>
+                  <th>Bound</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overviewModal.rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center text-muted py-4">
+                      No cards found for this filter.
+                    </td>
+                  </tr>
+                ) : (
+                  overviewModal.rows.map((card) => (
+                    <tr key={`overview-${String(card?.id ?? card?.card_id)}`}>
+                      <td>{card?.card_id || card?.id || "N/A"}</td>
+                      <td>{normalizeCardType(card?.card_type || card?.type)}</td>
+                      <td>{normalizeLabel(card?.status)}</td>
+                      <td>{formatMoney(card?.balance, card?.currency || "USD")}</td>
+                      <td>
+                        {typeof card?.is_bound === "boolean"
+                          ? card.is_bound
+                            ? "Yes"
+                            : "No"
+                          : "N/A"}
+                      </td>
+                      <td>{formatDateTime(card?.created_at)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Modal>
+
     </>
   );
 };

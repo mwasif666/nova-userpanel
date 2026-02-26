@@ -19,6 +19,8 @@
     "formik": "^2.4.3",
     "lightgallery": "^2.7.1",
     "p-min-delay": "^4.0.2",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.7",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.1",
     "react-bootstrap": "^2.8.0",

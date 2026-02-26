@@ -2206,6 +2206,470 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 }
 
 /* Nova KYC Submission */
+.nova-cards-overview-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+.nova-overview-stage-card {
+  border: 1px solid #e5e9ef;
+  border-radius: 16px;
+  background: #fbfcfe;
+  padding: 0.95rem;
+  box-shadow: 0 10px 24px rgba(20, 34, 56, 0.04);
+}
+.nova-overview-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.nova-overview-stage-title {
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #3f4754;
+  font-weight: 700;
+}
+.nova-overview-stage-menu {
+  border: 0;
+  background: transparent;
+  color: #6f7786;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-overview-stage-menu:hover {
+  background: #eef2f7;
+}
+.nova-overview-stage-stats {
+  margin-top: 0.55rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.nova-overview-stage-stats strong {
+  font-size: 1.35rem;
+  color: #303744;
+  line-height: 1.15;
+}
+.nova-overview-stage-stats span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d2d7df;
+}
+.nova-overview-stage-stats small {
+  font-size: 0.92rem;
+  color: #5d6777;
+}
+.nova-overview-stage-cta {
+  margin-top: 0.8rem;
+  border-radius: 12px;
+  background: #eef2f7;
+  color: #15839a;
+  font-weight: 600;
+  padding: 0.7rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nova-overview-stage-cta .pi {
+  font-size: 0.9rem;
+}
+
+.nova-overview-metric-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+}
+.nova-overview-metric-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #e7ebf1;
+  background: #fff;
+  border-radius: 16px;
+  padding: 0.85rem 0.95rem;
+  box-shadow: 0 10px 22px rgba(18, 28, 45, 0.035);
+}
+.nova-overview-metric-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4f8;
+}
+.nova-overview-metric-icon span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: block;
+  background: currentColor;
+  opacity: 0.9;
+}
+.nova-overview-metric-content h6 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2f3745;
+  font-weight: 700;
+}
+.nova-overview-metric-content strong {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: #2f3745;
+  word-break: break-word;
+}
+.nova-overview-metric-content p {
+  margin: 0.14rem 0 0;
+  color: #7a8495;
+  font-size: 0.85rem;
+}
+.nova-overview-metric-arrow {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef1f5;
+  color: #5f6878;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-overview-metric-arrow:hover {
+  filter: brightness(0.97);
+}
+
+.nova-overview-metric-card.is-blue .nova-overview-metric-icon {
+  background: #e8f2ff;
+  color: #2f80ed;
+}
+.nova-overview-metric-card.is-slate .nova-overview-metric-icon {
+  background: #edf1f6;
+  color: #617187;
+}
+.nova-overview-metric-card.is-purple .nova-overview-metric-icon {
+  background: #efe8ff;
+  color: #7a54e3;
+}
+.nova-overview-metric-card.is-orange .nova-overview-metric-icon {
+  background: #fff1df;
+  color: #f39a1f;
+}
+.nova-overview-metric-card.is-green .nova-overview-metric-icon {
+  background: #e4f7ee;
+  color: #19a565;
+}
+.nova-overview-metric-card.is-cyan .nova-overview-metric-icon {
+  background: #e2f6fb;
+  color: #0a97b0;
+}
+.nova-overview-metric-card.is-rose {
+  background: #fff7f8;
+}
+.nova-overview-metric-card.is-rose .nova-overview-metric-icon {
+  background: #ffe9ec;
+  color: #e1546f;
+}
+.nova-overview-metric-card.is-rose .nova-overview-metric-arrow {
+  background: #0a97b0;
+  color: #fff;
+}
+
+.nova-cards-overview-horizontal {
+  gap: 0.85rem;
+}
+.nova-overview-stage-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+}
+.nova-overview-stage-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.nova-overview-stage-strip .nova-overview-stage-stats {
+  margin-top: 0;
+}
+.nova-overview-stage-strip .nova-overview-stage-cta {
+  margin-top: 0;
+  white-space: nowrap;
+}
+.nova-overview-horizontal-scroll {
+  overflow: visible;
+  padding-bottom: 0;
+}
+.nova-overview-metric-grid-horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.nova-table-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.nova-table-filter-wrap {
+  position: relative;
+}
+.nova-table-filter-popup {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 30;
+  width: min(320px, 88vw);
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 14px;
+  box-shadow: 0 20px 42px rgba(15, 28, 45, 0.12);
+  padding: 0.85rem;
+}
+.nova-table-filter-popup::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-left: 1px solid #e5eaf1;
+  border-top: 1px solid #e5eaf1;
+  transform: rotate(45deg);
+}
+.nova-table-filter-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #3a4352;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+.nova-table-filter-field {
+  display: block;
+  margin-bottom: 0.55rem;
+}
+.nova-table-filter-field span {
+  display: block;
+  margin-bottom: 0.28rem;
+  font-size: 0.8rem;
+  color: #687284;
+  font-weight: 600;
+}
+.nova-table-filter-field .form-select {
+  border-radius: 10px;
+  border-color: #dfe5ed;
+}
+.nova-table-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+/* Dashboard Cards Overview Theme Overrides */
+.payment-bx .nova-dashboard-overview-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)),
+    radial-gradient(circle at 10% 0%, rgba(0, 194, 255, 0.08), transparent 55%);
+  box-shadow: 0 18px 40px rgba(6, 14, 41, 0.18);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.payment-bx .nova-dashboard-overview-body {
+  padding: 1rem 1.05rem 1.05rem;
+}
+.payment-bx .nova-dashboard-overview-body h5 {
+  color: #eef4ff;
+  font-weight: 700;
+}
+.payment-bx .nova-dashboard-overview-open-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  color: #eaf2ff;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  font-weight: 600;
+}
+.payment-bx .nova-dashboard-overview-open-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-stage-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-stage-title {
+  color: rgba(231, 240, 255, 0.86);
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-stage-stats strong {
+  color: #ffffff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-stage-stats span {
+  background: rgba(255, 255, 255, 0.24);
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-stage-stats small {
+  color: rgba(224, 235, 255, 0.75);
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-stage-cta {
+  background: rgba(0, 197, 219, 0.12);
+  border: 1px solid rgba(0, 197, 219, 0.2);
+  color: #6fe8ff;
+}
+
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: none;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-rose {
+  background: rgba(255, 120, 138, 0.07);
+  border-color: rgba(255, 120, 138, 0.14);
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-content h6 {
+  color: #eff4ff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-content strong {
+  color: #ffffff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-content p {
+  color: rgba(223, 233, 250, 0.72);
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-arrow {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(238, 245, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-arrow:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-rose .nova-overview-metric-arrow {
+  background: #07adc2;
+  color: #fff;
+  border-color: rgba(7, 173, 194, 0.2);
+}
+
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-blue .nova-overview-metric-icon {
+  background: rgba(74, 153, 255, 0.18);
+  color: #6db4ff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-slate .nova-overview-metric-icon {
+  background: rgba(175, 193, 215, 0.14);
+  color: #c1d0e4;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-purple .nova-overview-metric-icon {
+  background: rgba(155, 116, 255, 0.16);
+  color: #b692ff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-orange .nova-overview-metric-icon {
+  background: rgba(255, 174, 62, 0.16);
+  color: #ffc15f;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-green .nova-overview-metric-icon {
+  background: rgba(40, 207, 139, 0.15);
+  color: #52dca1;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-cyan .nova-overview-metric-icon {
+  background: rgba(0, 213, 238, 0.15);
+  color: #61e9ff;
+}
+.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-rose .nova-overview-metric-icon {
+  background: rgba(255, 118, 150, 0.15);
+  color: #ff8ea7;
+}
+
+@media (max-width: 991.98px) {
+  .payment-bx .nova-dashboard-overview-body {
+    padding: 0.9rem;
+  }
+}
+
+@media (max-width: 1399.98px) and (min-width: 1200px) {
+  .nova-overview-metric-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-areas:
+      "icon content"
+      "icon action";
+    align-items: start;
+  }
+  .nova-overview-metric-icon {
+    grid-area: icon;
+    width: 48px;
+    height: 48px;
+  }
+  .nova-overview-metric-content {
+    grid-area: content;
+  }
+  .nova-overview-metric-arrow {
+    grid-area: action;
+    margin-top: 0.35rem;
+    justify-self: start;
+  }
+}
+@media (max-width: 1199.98px) {
+  .nova-overview-stage-strip {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .nova-overview-stage-strip .nova-overview-stage-cta {
+    white-space: normal;
+  }
+  .nova-overview-metric-grid-horizontal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 575.98px) {
+  .nova-overview-stage-stats strong {
+    font-size: 1.1rem;
+  }
+  .nova-overview-metric-card {
+    padding: 0.75rem 0.8rem;
+    gap: 0.6rem;
+  }
+  .nova-overview-metric-icon {
+    width: 46px;
+    height: 46px;
+  }
+  .nova-overview-metric-content h6 {
+    font-size: 0.86rem;
+  }
+  .nova-overview-metric-content strong {
+    font-size: 0.92rem;
+  }
+  .nova-overview-metric-content p {
+    font-size: 0.78rem;
+  }
+  .nova-table-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .nova-table-filter-popup {
+    right: -6px;
+    width: min(300px, 92vw);
+  }
+  .nova-overview-metric-grid-horizontal {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Nova KYC Submission */
 .nova-kyc-submit-page {
   margin-bottom: 1.25rem;
 }
