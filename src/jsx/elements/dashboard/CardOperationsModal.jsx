@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import virtualCardImage from "../../../assets/images/virtual_card.jpeg";
 import physicalCardImage from "../../../assets/images/nova_card.png";
 import { request } from "../../../utils/api";
+import { validateSecurityCode } from "../../../services/securityCode";
 
 const CARD_ORDER_CONFIG = {
   virtual: {
@@ -262,6 +263,7 @@ const CardOperationsModal = ({
   const [submittingAction, setSubmittingAction] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [apiResponse, setApiResponse] = useState(null);
+  const [securityCode, setSecurityCode] = useState("");
 
   useEffect(() => {
     if (!inline && !show) return;
@@ -432,12 +434,21 @@ const CardOperationsModal = ({
       setFeedback({ type: "error", message: validationError });
       return;
     }
+    if (!String(securityCode || "").trim()) {
+      setFeedback({
+        type: "error",
+        message: "Security code is required before card purchase.",
+      });
+      return;
+    }
 
     const actionKey = `order-${orderTab}`;
     setSubmittingAction(actionKey);
     setFeedback(null);
 
     try {
+      await validateSecurityCode({ securityCode });
+
       const response = await request({
         url: "tevau/cards",
         method: "POST",
@@ -450,6 +461,7 @@ const CardOperationsModal = ({
         message: `${activeOrderConfig.label} order submitted successfully.`,
       });
       resetOrderForm(orderTab);
+      setSecurityCode("");
 
       if (typeof onCardsUpdated === "function") {
         await onCardsUpdated();
@@ -479,11 +491,20 @@ const CardOperationsModal = ({
       setFeedback({ type: "error", message: validationError });
       return;
     }
+    if (!String(securityCode || "").trim()) {
+      setFeedback({
+        type: "error",
+        message: "Security code is required before card bind.",
+      });
+      return;
+    }
 
     setSubmittingAction("bind");
     setFeedback(null);
 
     try {
+      await validateSecurityCode({ securityCode });
+
       const payload = {
         active_code: sanitizeText(bindForm.active_code),
         card_number: sanitizeText(bindForm.card_number),
@@ -508,6 +529,7 @@ const CardOperationsModal = ({
         message: "Card bind request submitted successfully.",
       });
       resetBindForm();
+      setSecurityCode("");
 
       if (typeof onCardsUpdated === "function") {
         await onCardsUpdated();
@@ -552,6 +574,28 @@ const CardOperationsModal = ({
             Wallet Available: {walletCurrency} {Number(walletAvailable || 0).toLocaleString("en-US")}
           </span>
         )}
+      </div>
+
+      <div className="nova-flow-shell mb-3">
+        <div className="row g-3 align-items-end">
+          <div className="col-md-8">
+            <label className="nova-flow-field">
+              <span className="nova-flow-field-label">Security Code</span>
+              <input
+                type="password"
+                className="form-control nova-flow-input"
+                value={securityCode}
+                onChange={(event) => setSecurityCode(event.target.value)}
+                placeholder="Required for card purchase/bind"
+              />
+            </label>
+          </div>
+          <div className="col-md-4">
+            <div className="text-muted small">
+              Purchase and bind requests will be blocked until code is verified.
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="row g-3">

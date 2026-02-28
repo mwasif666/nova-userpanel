@@ -19,4 +19,10 @@ export const MenuList = [
     iconStyle: SVGICON.FormIconSvg,
     to: "/kyc",
   },
+  {
+    title: "Profile",
+    classsChange: "mm-collapse",
+    iconStyle: SVGICON.FormIconSvg,
+    to: "/profile",
+  },
 ];

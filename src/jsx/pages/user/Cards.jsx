@@ -2,8 +2,13 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from "re
 import { Modal } from "react-bootstrap";
 import PageTitle from "../../layouts/PageTitle";
 import CardOperationsModal from "../../elements/dashboard/CardOperationsModal";
+import MainBalanceCard from "../../elements/dashboard/MainBalanceCard";
 import { AuthContext } from "../../../context/authContext";
 import { request } from "../../../utils/api";
+import {
+  getSecurityCodeStatus,
+  validateSecurityCode,
+} from "../../../services/securityCode";
 
 const extractCardsRows = (response) => {
   const payload = response?.data?.data ?? response?.data ?? [];
@@ -97,6 +102,14 @@ const Cards = () => {
     subtitle: "",
     rows: [],
   });
+  const [showCardOpsModal, setShowCardOpsModal] = useState(false);
+  const [securityStatusLoading, setSecurityStatusLoading] = useState(true);
+  const [hasSecurityCode, setHasSecurityCode] = useState(false);
+  const [balanceAccessUnlocked, setBalanceAccessUnlocked] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const [securityCodeInput, setSecurityCodeInput] = useState("");
+  const [securityCodeSubmitting, setSecurityCodeSubmitting] = useState(false);
+  const [securityCodeError, setSecurityCodeError] = useState("");
 
   const userId = user?.id;
   const userCode = user?.tevau_user?.user_code || null;
@@ -239,6 +252,75 @@ const Cards = () => {
     loadWalletBalance().catch(() => undefined);
   }, [loadCards, loadWalletBalance]);
 
+  const loadSecurityStatus = useCallback(async () => {
+    setSecurityStatusLoading(true);
+    try {
+      const result = await getSecurityCodeStatus();
+      setHasSecurityCode(Boolean(result?.hasSecurityCode));
+    } catch (error) {
+      setHasSecurityCode(true);
+    } finally {
+      setSecurityStatusLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSecurityStatus().catch(() => undefined);
+  }, [loadSecurityStatus]);
+
+  const openBalanceUnlockModal = () => {
+    if (securityStatusLoading) return;
+    setSecurityCodeError(
+      hasSecurityCode
+        ? ""
+        : "Security code is not configured. Set it from Profile settings first.",
+    );
+    setSecurityCodeInput("");
+    setSecurityModalOpen(true);
+  };
+
+  const verifyBalanceAccess = async () => {
+    if (!hasSecurityCode) {
+      setSecurityCodeError(
+        "Security code is not configured. Set it from Profile settings first.",
+      );
+      return;
+    }
+    if (!String(securityCodeInput || "").trim()) {
+      setSecurityCodeError("Please enter security code.");
+      return;
+    }
+
+    setSecurityCodeSubmitting(true);
+    setSecurityCodeError("");
+    try {
+      await validateSecurityCode({ securityCode: securityCodeInput });
+      setBalanceAccessUnlocked(true);
+      setSecurityModalOpen(false);
+      setSecurityCodeInput("");
+    } catch (error) {
+      setSecurityCodeError(
+        error?.response?.data?.message || "Security code validation failed.",
+      );
+    } finally {
+      setSecurityCodeSubmitting(false);
+    }
+  };
+
+  const toggleBalanceVisibility = () => {
+    if (balanceAccessUnlocked) {
+      setBalanceAccessUnlocked(false);
+      return;
+    }
+    openBalanceUnlockModal();
+  };
+
+  const formatProtectedMoney = useCallback(
+    (value, currency = "USD") =>
+      balanceAccessUnlocked ? formatMoney(value, currency) : "****",
+    [balanceAccessUnlocked],
+  );
+
   const stats = useMemo(() => {
     const activeCount = cards.filter((card) =>
       ["active", "normal"].includes(String(card?.status || "").toLowerCase()),
@@ -298,7 +380,7 @@ const Cards = () => {
       {
         key: "balance",
         title: "Total Balance",
-        value: formatMoney(stats.totalBalance, stats.balanceCurrency),
+        value: formatProtectedMoney(stats.totalBalance, stats.balanceCurrency),
         sub: `${String(stats.balanceCurrency || "USD").toUpperCase()} cards`,
         tone: "is-green",
       },
@@ -307,7 +389,7 @@ const Cards = () => {
         title: "Wallet Available",
         value: walletLoading
           ? "Refreshing..."
-          : formatMoney(
+          : formatProtectedMoney(
               walletSummary.availableBalance ?? walletSummary.balance ?? 0,
               walletSummary.currency || "USD",
             ),
@@ -322,7 +404,7 @@ const Cards = () => {
         tone: "is-rose",
       },
     ],
-    [stats, walletLoading, walletSummary],
+    [formatProtectedMoney, stats, walletLoading, walletSummary],
   );
 
   const getOverviewFilteredRows = useCallback(
@@ -423,11 +505,12 @@ const Cards = () => {
             <div className="card-body">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h5 className="mb-0">Cards Overview</h5>
-                <button type="button" className="btn btn-sm btn-light">
-                  <i className="pi pi-sync me-1" />
-                  Live
-                </button>
               </div>
+              {!hasSecurityCode && !securityStatusLoading ? (
+                <div className="alert alert-warning py-2">
+                  Security code is not configured. Setup from Profile tab first.
+                </div>
+              ) : null}
 
               <div className="nova-cards-overview-board nova-cards-overview-horizontal">
                 <div className="nova-overview-stage-card nova-overview-stage-strip">
@@ -436,16 +519,38 @@ const Cards = () => {
                       <span className="nova-overview-stage-title">Payment Summary</span>
                     </div>
                     <div className="nova-overview-stage-stats">
-                      <strong>
-                        {formatMoney(stats.totalBalance, stats.balanceCurrency)}
-                      </strong>
+                      <strong>{formatProtectedMoney(stats.totalBalance, stats.balanceCurrency)}</strong>
+                      <button
+                        type="button"
+                        className={`nova-sec-visibility-toggle is-compact ${
+                          balanceAccessUnlocked ? "is-active" : ""
+                        }`}
+                        onClick={toggleBalanceVisibility}
+                        disabled={securityStatusLoading}
+                        aria-label={
+                          balanceAccessUnlocked
+                            ? "Hide balances"
+                            : "Show balances"
+                        }
+                        title={
+                          balanceAccessUnlocked
+                            ? "Hide balances"
+                            : "Show balances"
+                        }
+                      >
+                        <i
+                          className={`pi ${
+                            balanceAccessUnlocked ? "pi-eye-slash" : "pi-eye"
+                          }`}
+                        />
+                      </button>
                       <span />
                       <small>{stats.total} Cards</small>
                     </div>
                   </div>
                   <div className="nova-overview-stage-cta">
                     <i className="pi pi-wallet" />
-                    Wallet linked purchase flow
+                    Deposits, cards & wallet activity
                   </div>
                 </div>
 
@@ -482,13 +587,44 @@ const Cards = () => {
         </div>
 
         <div className="col-12">
-          <CardOperationsModal
-            inline
-            user={user}
-            userCards={cards}
-            walletSummary={walletSummary}
-            onCardsUpdated={() => loadCards({ silent: true })}
-            onWalletUpdated={loadWalletBalance}
+          <div className="card nova-panel nova-card-ops-launch">
+            <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+              <div>
+                <div className="nova-flow-kicker mb-1">Cards Management</div>
+                <h4 className="mb-1">Card Purchase & Bind</h4>
+                <p className="mb-0 text-muted">
+                  Virtual/Physical card order and bind flow is available in a focused
+                  modal to keep this page clean.
+                </p>
+              </div>
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <span className="badge bg-light text-dark border">
+                  Security Code Required
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setShowCardOpsModal(true)}
+                >
+                  Open Card Operations
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12">
+          <MainBalanceCard
+            cards={cards}
+            userName={user?.name || user?.full_name || "User"}
+            loading={loading}
+            walletAsset={{
+              balance: walletSummary.balance,
+              available_balance: walletSummary.availableBalance,
+              currency: walletSummary.currency,
+              name: walletSummary.assetName,
+              status: walletSummary.status,
+            }}
           />
         </div>
 
@@ -629,7 +765,7 @@ const Cards = () => {
                           <td>{card?.card_id || card?.id || "N/A"}</td>
                           <td>{normalizeCardType(card?.card_type || card?.type)}</td>
                           <td>{normalizeLabel(card?.status)}</td>
-                          <td>{formatMoney(card?.balance, card?.currency || "USD")}</td>
+                          <td>{formatProtectedMoney(card?.balance, card?.currency || "USD")}</td>
                           <td>
                             {typeof card?.is_bound === "boolean"
                               ? card.is_bound
@@ -699,7 +835,7 @@ const Cards = () => {
                       <td>{card?.card_id || card?.id || "N/A"}</td>
                       <td>{normalizeCardType(card?.card_type || card?.type)}</td>
                       <td>{normalizeLabel(card?.status)}</td>
-                      <td>{formatMoney(card?.balance, card?.currency || "USD")}</td>
+                      <td>{formatProtectedMoney(card?.balance, card?.currency || "USD")}</td>
                       <td>
                         {typeof card?.is_bound === "boolean"
                           ? card.is_bound
@@ -715,6 +851,57 @@ const Cards = () => {
             </table>
           </div>
         </div>
+      </Modal>
+
+      <CardOperationsModal
+        show={showCardOpsModal}
+        onHide={() => setShowCardOpsModal(false)}
+        user={user}
+        userCards={cards}
+        walletSummary={walletSummary}
+        onCardsUpdated={() => loadCards({ silent: true })}
+        onWalletUpdated={loadWalletBalance}
+      />
+
+      <Modal show={securityModalOpen} onHide={() => setSecurityModalOpen(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Security Code Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="text-muted mb-2">
+            Enter security code to view wallet/card balances.
+          </p>
+          <input
+            type="password"
+            className="form-control"
+            value={securityCodeInput}
+            onChange={(event) => setSecurityCodeInput(event.target.value)}
+            placeholder="Security code"
+          />
+          {securityCodeError ? (
+            <div className="alert alert-danger mt-3 mb-0 py-2">
+              {securityCodeError}
+            </div>
+          ) : null}
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            type="button"
+            className="btn btn-light"
+            onClick={() => setSecurityModalOpen(false)}
+            disabled={securityCodeSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={verifyBalanceAccess}
+            disabled={securityCodeSubmitting}
+          >
+            {securityCodeSubmitting ? "Verifying..." : "Verify"}
+          </button>
+        </Modal.Footer>
       </Modal>
 
     </>

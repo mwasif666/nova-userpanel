@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const PageTitle = ({ motherMenu, activeMenu }) => {
-  
 
   return (   
 	<div className="row page-titles mx-0">

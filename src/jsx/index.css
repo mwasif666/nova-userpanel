@@ -1693,20 +1693,132 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   }
 }
 
+.nova-sec-visibility-toggle {
+  border: 1px solid #d8e4ee;
+  background: #fff;
+  color: #2a6486;
+  border-radius: 999px;
+  padding: 0.36rem 0.74rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease,
+    box-shadow 0.2s ease;
+}
+.nova-sec-visibility-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #2a6486;
+  box-shadow: 0 8px 20px rgba(42, 100, 134, 0.2);
+}
+.nova-sec-visibility-toggle:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+.nova-sec-visibility-toggle .pi {
+  font-size: 0.9rem;
+  transition: transform 0.25s ease;
+}
+.nova-sec-visibility-toggle.is-active {
+  background: #2a6486;
+  border-color: #2a6486;
+  color: #fff;
+}
+.nova-sec-visibility-toggle.is-active .pi {
+  animation: nova-eye-pulse 1.2s ease-in-out infinite;
+}
+.nova-sec-visibility-toggle.is-compact {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+.nova-sec-visibility-toggle.is-on-dark {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.nova-sec-visibility-toggle.is-on-dark.is-active {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(8, 24, 42, 0.45);
+}
+@keyframes nova-eye-pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(-7deg);
+  }
+}
+
+.nova-wallet-balance-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nova-wallet-balance-value {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.nova-wallet-balance-value > h2 {
+  margin-bottom: 0 !important;
+}
+
 .nova-main-balance-card {
   position: relative;
   overflow: hidden;
   min-height: 420px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(42, 100, 134, 0.38);
+  background:
+    linear-gradient(145deg, rgba(42, 100, 134, 0.95), rgba(42, 100, 134, 0.82)),
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 56%);
+  box-shadow: 0 18px 40px rgba(16, 35, 55, 0.16);
   --nova-deck-card-width: 468px;
   --nova-deck-card-height: 278px;
   --nova-deck-stack-rise: 14px;
+}
+.nova-main-balance-card::before,
+.nova-main-balance-card::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.nova-main-balance-card::before {
+  width: 320px;
+  height: 320px;
+  right: -140px;
+  top: -150px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.nova-main-balance-card::after {
+  width: 280px;
+  height: 280px;
+  right: -120px;
+  bottom: -170px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.nova-main-balance-card .card-header > div > span,
+.nova-main-balance-card .card-header > div > h2 {
+  color: #fff;
 }
 .nova-main-balance-card .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+}
+.nova-main-balance-card .nova-main-balance-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .nova-main-balance-card .card-body {
   position: relative;
@@ -2224,6 +2336,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   justify-content: space-between;
   gap: 0.75rem;
 }
+.nova-overview-stage-head .nova-sec-visibility-toggle {
+  margin-left: auto;
+}
 .nova-overview-stage-title {
   font-size: 0.92rem;
   letter-spacing: 0.05em;
@@ -2266,6 +2381,16 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .nova-overview-stage-stats small {
   font-size: 0.92rem;
   color: #5d6777;
+}
+.nova-overview-stage-stats .nova-sec-visibility-toggle {
+  margin-left: 0.15rem;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+}
+.nova-overview-stage-stats .nova-sec-visibility-toggle .pi {
+  font-size: 0.85rem;
 }
 .nova-overview-stage-cta {
   margin-top: 0.8rem;
@@ -3314,4 +3439,657 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   margin: 0;
   color: #5a6f7f;
   max-width: 58ch;
+}
+
+.nova-sec-status-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.nova-sec-status-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.26rem 0.62rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.nova-sec-status-chip.is-success {
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+  border: 1px solid rgba(22, 163, 74, 0.22);
+}
+.nova-sec-status-chip.is-warning {
+  background: rgba(234, 179, 8, 0.14);
+  color: #854d0e;
+  border: 1px solid rgba(234, 179, 8, 0.24);
+}
+.nova-settings-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.nova-settings-shell > .card-body {
+  padding: 1rem;
+}
+.nova-settings-shell-body {
+  border-top: 1px solid #e8eef6;
+  padding-top: 1rem;
+}
+.nova-settings-hero-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.nova-settings-side-pane {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fbff;
+  height: 100%;
+}
+.nova-settings-main-pane {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  min-height: 100%;
+  padding: 1rem;
+}
+.nova-settings-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.nova-settings-quick-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.78rem 0.85rem;
+  background: #f8fbff;
+}
+.nova-settings-quick-card span {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.nova-settings-quick-card strong {
+  display: block;
+  margin-top: 0.22rem;
+  font-size: 0.92rem;
+  color: #0f172a;
+  word-break: break-word;
+}
+.nova-settings-quick-card.is-success {
+  background: rgba(22, 163, 74, 0.06);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+.nova-settings-quick-card.is-warning {
+  background: rgba(234, 179, 8, 0.09);
+  border-color: rgba(234, 179, 8, 0.22);
+}
+.nova-settings-quick-card.is-accent {
+  background: rgba(42, 100, 134, 0.08);
+  border-color: rgba(42, 100, 134, 0.22);
+}
+.nova-settings-nav-head {
+  padding: 0.95rem 1rem 0.3rem;
+}
+.nova-settings-nav-head h6 {
+  margin: 0;
+  color: #0f172a;
+}
+.nova-settings-nav-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+.nova-settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem 0.65rem;
+}
+.nova-settings-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  padding: 0.72rem 0.78rem;
+  color: #334155;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.nova-settings-nav-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #d9e5ef;
+  background: #f8fbff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a6486;
+  flex: 0 0 auto;
+}
+.nova-settings-nav-icon i {
+  font-size: 1rem;
+  line-height: 1;
+}
+.nova-settings-nav-text {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.nova-settings-nav-arrow {
+  color: #9aa7b5;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.nova-settings-nav-btn strong {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+.nova-settings-nav-btn .nova-settings-nav-text span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.nova-settings-nav-btn:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+.nova-settings-nav-btn.is-active {
+  background: linear-gradient(135deg, #2a6486 0%, #3f87b3 100%);
+  color: #fff;
+}
+.nova-settings-nav-btn.is-active .nova-settings-nav-text span {
+  color: rgba(255, 255, 255, 0.82);
+}
+.nova-settings-nav-btn.is-active .nova-settings-nav-icon {
+  border-color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+.nova-settings-nav-btn.is-active .nova-settings-nav-arrow {
+  color: rgba(255, 255, 255, 0.82);
+}
+.nova-settings-kv {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.58rem 0.74rem;
+  background: #f8fbff;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.nova-settings-kv span {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.nova-settings-kv strong {
+  display: block;
+  margin-top: 0.08rem;
+  color: #0f172a;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.nova-settings-section {
+  border: 1px solid #e5edf4;
+  border-radius: 14px;
+  background: #fbfdff;
+  padding: 0.85rem;
+}
+.nova-settings-section h6 {
+  margin-bottom: 0.65rem;
+  color: #1e293b;
+}
+.nova-flow-chip-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.nova-flow-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #d5e2ef;
+  background: #f1f6fb;
+  color: #55657a;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.22rem 0.56rem;
+}
+.nova-flow-chip.is-done {
+  border-color: rgba(22, 163, 74, 0.22);
+  background: rgba(22, 163, 74, 0.11);
+  color: #166534;
+}
+.nova-bind-card {
+  border: 1px solid #dde7f1;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 1rem;
+  height: 100%;
+}
+.nova-bind-tab-wrap {
+  max-width: 820px;
+}
+.nova-bind-card-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+.nova-bind-card-subtitle {
+  margin: 0.45rem 0 0.9rem;
+  color: #6b7280;
+  font-size: 0.94rem;
+}
+.nova-bind-field {
+  margin-bottom: 0.8rem;
+}
+.nova-bind-field label {
+  display: block;
+  margin: 0 0 0.35rem;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.nova-bind-input {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid #dce5ee;
+  border-radius: 16px;
+  padding: 0.7rem 0.95rem;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: #0f172a;
+  background: #fff;
+}
+.nova-bind-input::placeholder {
+  color: #9ca3af;
+}
+.nova-bind-input:focus {
+  outline: none;
+  border-color: #2a6486;
+  box-shadow: 0 0 0 3px rgba(42, 100, 134, 0.12);
+}
+.nova-bind-input.is-static {
+  display: flex;
+  align-items: center;
+  color: #111827;
+  background: #f9fbfd;
+}
+.nova-bind-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.nova-bind-inline-btn {
+  min-height: 50px;
+  border-radius: 14px;
+  padding: 0.6rem 1rem;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.nova-bind-main-btn {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.nova-bind-divider {
+  height: 1px;
+  background: #e5edf5;
+  margin: 0.9rem 0;
+}
+.nova-bind-password-wrap {
+  position: relative;
+}
+.nova-bind-password-wrap .nova-bind-input {
+  padding-right: 2.8rem;
+}
+.nova-bind-eye-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  color: #6b7280;
+  font-size: 1.05rem;
+}
+.nova-bind-eye-btn:hover {
+  color: #2a6486;
+}
+
+@media (max-width: 1199.98px) {
+  .nova-settings-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .nova-settings-shell > .card-body {
+    padding: 0.8rem;
+  }
+  .nova-settings-main-pane {
+    padding: 0.8rem;
+  }
+  .nova-settings-quick-grid {
+    grid-template-columns: 1fr;
+  }
+  .nova-settings-nav-head {
+    padding: 0.85rem 0.85rem 0.25rem;
+  }
+  .nova-settings-nav {
+    padding: 0.5rem;
+  }
+  .nova-settings-nav-btn {
+    padding: 0.66rem 0.68rem;
+  }
+  .nova-bind-card {
+    padding: 0.8rem;
+  }
+  .nova-bind-card-title {
+    font-size: 1.15rem;
+  }
+  .nova-bind-input {
+    font-size: 0.95rem;
+  }
+  .nova-bind-input-group {
+    flex-direction: column;
+  }
+  .nova-bind-inline-btn {
+    width: 100%;
+  }
+}
+.nova-2fa-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+.nova-2fa-switch {
+  width: 64px;
+  height: 34px;
+  border: 1px solid #dbe7f1;
+  border-radius: 999px;
+  background: #eef4f9;
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.nova-2fa-switch span {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+  transition: transform 0.22s ease;
+}
+.nova-2fa-switch.is-on {
+  background: #2a6486;
+  border-color: #2a6486;
+}
+.nova-2fa-switch.is-on span {
+  transform: translateX(29px);
+}
+.nova-2fa-switch:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.nova-2fa-attention {
+  margin-top: 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 0.75rem 0.85rem;
+}
+.nova-2fa-attention strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #0f172a;
+}
+.nova-2fa-attention p {
+  color: #516277;
+  line-height: 1.45;
+}
+
+/* Dashboard light base + sidebar-tone glass cards */
+.payment-bx.nova-dashboard-clean {
+  --nova-sidebar-tone: #2a6486;
+  --nova-sidebar-tone-rgb: 42, 100, 134;
+  background: #fff;
+}
+.payment-bx.nova-dashboard-clean:after {
+  display: none;
+}
+.payment-bx.nova-dashboard-clean .payment-content h1,
+.payment-bx.nova-dashboard-clean .payment-content .h1 {
+  color: #0f172a;
+}
+.payment-bx.nova-dashboard-clean .dz-para {
+  color: #0f172a;
+  opacity: 0.7;
+}
+.payment-bx.nova-dashboard-clean .btn-white {
+  border: 1px solid #d8e4ee;
+}
+
+.payment-bx.nova-dashboard-clean .nova-dashboard-overview-panel {
+  border: 1px solid rgba(var(--nova-sidebar-tone-rgb), 0.34);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(var(--nova-sidebar-tone-rgb), 0.96),
+      rgba(var(--nova-sidebar-tone-rgb), 0.84)
+    ),
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.1), transparent 55%);
+  box-shadow: 0 18px 40px rgba(16, 35, 55, 0.18);
+}
+.payment-bx.nova-dashboard-clean .dz-wallet,
+.payment-bx.nova-dashboard-clean .nova-main-balance-card {
+  border: 1px solid rgba(var(--nova-sidebar-tone-rgb), 0.34);
+  background: linear-gradient(
+    145deg,
+    rgba(var(--nova-sidebar-tone-rgb), 0.95),
+    rgba(var(--nova-sidebar-tone-rgb), 0.86)
+  );
+  box-shadow: 0 18px 40px rgba(16, 35, 55, 0.16);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 24px 52px rgba(12, 30, 48, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+ 
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-header {
+  padding: 1.3rem 1.55rem 0.35rem !important;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-body {
+  padding: 0 1.55rem 1.3rem !important;
+  gap: 1rem;
+  align-items: flex-start !important;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .wallet-info {
+  max-width: min(880px, 100%);
+  width: clamp(520px, 62%, 880px);
+  padding: 1.05rem 1.15rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.1)
+  );
+  box-shadow:
+    0 16px 36px rgba(10, 26, 42, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(14px) saturate(130%);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-balance-value {
+  margin-top: 0.45rem;
+  gap: 0.55rem;
+  align-items: center;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-balance-value > h2 {
+  margin: 0 !important;
+  font-size: clamp(2.1rem, 2.8vw, 3rem);
+  line-height: 1.06;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .wallet-info > span {
+  display: block;
+  margin-top: 0.22rem;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-balance-head {
+  gap: 0.68rem;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline {
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 0;
+  min-width: 0;
+  margin-top: -2px;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline .pi {
+  font-size: 1.22rem;
+  line-height: 1;
+  display: block;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline:hover:not(:disabled) {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+  background: transparent;
+  opacity: 0.82;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline:disabled {
+  opacity: 0.55;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-stats {
+  margin-top: 0.95rem;
+  gap: 0.52rem;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-stat-chip {
+  padding: 0.34rem 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.18);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-overview {
+  margin-top: 0.9rem;
+  gap: 1rem;
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-overview span {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-quick-tx {
+  margin-top: 0.9rem;
+  gap: 0.48rem;
+  max-width: min(940px, 100%);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-quick-tx-item {
+  border-radius: 14px;
+  padding: 0.5rem 0.78rem;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .modal-btn .icon-box {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .modal-btn span:last-child {
+  color: rgba(255, 255, 255, 0.92);
+}
+@media (max-width: 1199.98px) {
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-header {
+    padding: 1.05rem 1.15rem 0.3rem !important;
+  }
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-body {
+    padding: 0 1.15rem 1.05rem !important;
+  }
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .wallet-info {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.95rem 1rem;
+  }
+}
+@media (max-width: 767.98px) {
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-header {
+    padding: 0.95rem 0.9rem 0.25rem !important;
+  }
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-body {
+    padding: 0 0.9rem 0.95rem !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .wallet-info {
+    padding: 0.85rem 0.85rem;
+    border-radius: 16px;
+  }
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .modal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .modal-btn .icon-box {
+    margin: 0 !important;
+  }
+}
+.payment-bx.nova-dashboard-clean .nova-main-balance-card .card-header h4,
+.payment-bx.nova-dashboard-clean .nova-main-balance-card .card-header h6,
+.payment-bx.nova-dashboard-clean .nova-main-balance-card .card-header .h4,
+.payment-bx.nova-dashboard-clean .nova-main-balance-card .card-header .h6 {
+  color: #fff;
+}
+.payment-bx.nova-dashboard-clean .nova-dashboard-overview-board .nova-overview-metric-card {
+  background: rgba(var(--nova-sidebar-tone-rgb), 0.35);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Sidebar bottom logout */
+.deznav .deznav-scroll {
+  display: flex;
+  flex-direction: column;
+}
+.deznav .metismenu.nova-sidebar-main-menu {
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+.deznav .metismenu.nova-sidebar-main-menu > .nova-sidebar-logout-item {
+  margin-top: auto;
+  padding-top: 0.75rem;
 }

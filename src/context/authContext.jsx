@@ -1,7 +1,8 @@
-import { createContext, useState, useEffect, useCallback } from "react";
+import { createContext, useState, useEffect, useCallback, useRef } from "react";
 import { request } from "../utils/api";
 
 export const AuthContext = createContext();
+const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api/";
 
 const isObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -80,9 +81,93 @@ const resolveRoleValue = (user) => {
   return user?.role ?? null;
 };
 
+const getApiErrorMessage = (error) => {
+  const payload = error?.response?.data || {};
+  const firstError =
+    payload?.errors && typeof payload.errors === "object"
+      ? Object.values(payload.errors).flat().find(Boolean)
+      : "";
+
+  return String(
+    payload?.message ||
+      payload?.error ||
+      payload?.msg ||
+      firstError ||
+      error?.message ||
+      "",
+  )
+    .trim()
+    .toLowerCase();
+};
+
+const hasEndpointNotFoundError = (error) => {
+  const status = Number(error?.response?.status || 0);
+  if ([404, 405].includes(status)) return true;
+
+  const message = getApiErrorMessage(error);
+  if (!message) return false;
+
+  return [
+    "endpoint not found",
+    "route",
+    "not found",
+    "does not exist",
+  ].some((token) => message.includes(token));
+};
+
+const getOrCreateDeviceToken = () => {
+  const existingToken = localStorage.getItem("nova_device_token");
+  if (existingToken) return existingToken;
+
+  const generatedToken = `web-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 12)}`;
+  localStorage.setItem("nova_device_token", generatedToken);
+  return generatedToken;
+};
+
+const getDeviceTokenPayloads = (deviceToken) => {
+  const platformName =
+    typeof navigator !== "undefined" ? navigator.platform || "browser" : "browser";
+  const deviceName = `web-${platformName}`;
+  const formData = new FormData();
+  formData.append("device_token", deviceToken);
+  formData.append("token", deviceToken);
+  formData.append("platform", "web");
+  formData.append("device_type", "web");
+  formData.append("device_name", deviceName);
+
+  return [
+    {
+      data: {
+        device_token: deviceToken,
+        token: deviceToken,
+        platform: "web",
+        device_type: "web",
+        device_name: deviceName,
+      },
+    },
+    {
+      data: {
+        device_token: deviceToken,
+        platform: "web",
+      },
+    },
+    {
+      data: {
+        token: deviceToken,
+      },
+    },
+    {
+      data: formData,
+    },
+  ];
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const hasSyncedDeviceTokenRef = useRef(false);
 
   const getStoredUser = useCallback(() => {
     const userData = localStorage.getItem("user");
@@ -97,6 +182,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const removeDataInLocalStorage = useCallback(() => {
+    hasSyncedDeviceTokenRef.current = false;
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
     localStorage.removeItem("permissions");
@@ -104,6 +190,64 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("nova_role");
     localStorage.removeItem("email");
     setUser(null);
+  }, []);
+
+  const syncDeviceToken = useCallback(async () => {
+    if (hasSyncedDeviceTokenRef.current) {
+      return { isError: false, skipped: true };
+    }
+
+    const accessToken = localStorage.getItem("access_token");
+    if (!accessToken) {
+      return { isError: true, error: new Error("No access token found") };
+    }
+
+    const deviceToken = getOrCreateDeviceToken();
+    const payloads = getDeviceTokenPayloads(deviceToken);
+    const endpointCandidates = [
+      { url: "device-token" },
+      { url: "app/device-token", baseURL: ROOT_API_BASE_URL },
+      { url: "device-token", baseURL: ROOT_API_BASE_URL },
+    ];
+
+    let lastError = null;
+
+    for (let endpointIndex = 0; endpointIndex < endpointCandidates.length; endpointIndex += 1) {
+      const endpoint = endpointCandidates[endpointIndex];
+      let endpointMissing = false;
+
+      for (let payloadIndex = 0; payloadIndex < payloads.length; payloadIndex += 1) {
+        const payload = payloads[payloadIndex];
+        try {
+          const response = await request({
+            url: endpoint.url,
+            method: "POST",
+            data: payload.data,
+            ...(endpoint.baseURL ? { baseURL: endpoint.baseURL } : {}),
+          });
+
+          hasSyncedDeviceTokenRef.current = true;
+          return { isError: false, response };
+        } catch (error) {
+          lastError = error;
+          if (hasEndpointNotFoundError(error)) {
+            endpointMissing = true;
+            break;
+          }
+
+          const status = Number(error?.response?.status || 0);
+          if ([401, 403].includes(status)) {
+            return { isError: true, error };
+          }
+        }
+      }
+
+      if (endpointMissing) {
+        continue;
+      }
+    }
+
+    return { isError: true, error: lastError || new Error("Device token sync failed") };
   }, []);
 
   const applyUserData = useCallback((userData, tokenOverride = null) => {
@@ -194,6 +338,7 @@ export const AuthProvider = ({ children }) => {
 
       if (token) {
         await refreshUser();
+        await syncDeviceToken();
       }
 
       if (isMounted) {
@@ -206,7 +351,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [getStoredUser, refreshUser]);
+  }, [getStoredUser, refreshUser, syncDeviceToken]);
 
   const verifyOTP = async (code) => {
     const formData = new FormData();
@@ -220,6 +365,7 @@ export const AuthProvider = ({ children }) => {
       });
       storeDataInLocalStorage(response);
       await refreshUser();
+      await syncDeviceToken();
       return { isError: false, response: response };
     } catch (error) {
       return { isError: true, error: error };
@@ -252,6 +398,7 @@ export const AuthProvider = ({ children }) => {
       });
       storeDataInLocalStorage(response);
       await refreshUser();
+      await syncDeviceToken();
       return { isError: false, response: response };
     } catch (error) {
       return { isError: true, error: error };
@@ -272,6 +419,7 @@ export const AuthProvider = ({ children }) => {
       });
       storeDataInLocalStorage(response);
       await refreshUser();
+      await syncDeviceToken();
       return { isError: false, response };
     } catch (error) {
       return { isError: true, error };

@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Modal } from "react-bootstrap";
 import virtualCardImage from "../../../assets/images/virtual_card.jpeg";
 import physicalCardImage from "../../../assets/images/nova_card.png";
 import virtualCardBackImage from "../../../assets/images/virtual_card_back.jpeg";
 import physicalCardBackImage from "../../../assets/images/physical_card_back.jpeg";
 import { request } from "../../../utils/api";
+import {
+  getSecurityCodeStatus,
+  validateSecurityCode,
+} from "../../../services/securityCode";
 
 const CARD_NUMBER_PLACEHOLDER = "**** **** **** ****";
 const CARD_EXPIRY_PLACEHOLDER = "**/**";
@@ -227,6 +232,14 @@ const MainBalanceCard = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [panCacheByCardId, setPanCacheByCardId] = useState({});
+  const [hasSecurityCode, setHasSecurityCode] = useState(false);
+  const [securityStatusLoading, setSecurityStatusLoading] = useState(true);
+  const [securityPromptOpen, setSecurityPromptOpen] = useState(false);
+  const [securityCodeInput, setSecurityCodeInput] = useState("");
+  const [securitySubmitting, setSecuritySubmitting] = useState(false);
+  const [securityError, setSecurityError] = useState("");
+  const [balanceUnlocked, setBalanceUnlocked] = useState(false);
+  const [panUnlocked, setPanUnlocked] = useState(false);
 
   const fallbackCard = useMemo(
     () => ({
@@ -293,6 +306,30 @@ const MainBalanceCard = ({
   );
 
   useEffect(() => {
+    let mounted = true;
+    const loadSecurityStatus = async () => {
+      setSecurityStatusLoading(true);
+      try {
+        const status = await getSecurityCodeStatus();
+        if (!mounted) return;
+        setHasSecurityCode(Boolean(status?.hasSecurityCode));
+      } catch (error) {
+        if (!mounted) return;
+        setHasSecurityCode(false);
+      } finally {
+        if (mounted) {
+          setSecurityStatusLoading(false);
+        }
+      }
+    };
+
+    loadSecurityStatus();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!availableCards.length) {
       setSelectedIndex(0);
       return;
@@ -307,10 +344,12 @@ const MainBalanceCard = ({
   const selectedCard = availableCards[safeIndex] || fallbackCard;
   const selectedPanEndpointCardId = getPanEndpointCardId(selectedCard);
   const canAttemptSelectedCardPanApi = canAttemptPanApi(selectedCard);
+  const canLoadPanWithSecurity = canAttemptSelectedCardPanApi && panUnlocked;
 
   useEffect(() => {
     if (!normalizedCards.length) return;
     if (!selectedPanEndpointCardId) return;
+    if (!panUnlocked) return;
     if (!canAttemptSelectedCardPanApi) {
       setPanCacheByCardId((prev) => {
         if (
@@ -416,9 +455,12 @@ const MainBalanceCard = ({
     // Note: intentionally exclude `panCacheByCardId` from deps to avoid
     // re-running the effect when we update the cache state inside this effect.
     // The effect should run when the selected card or eligibility changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     canAttemptSelectedCardPanApi,
+    canLoadPanWithSecurity,
     normalizedCards.length,
+    panUnlocked,
     selectedCard?.card_type,
     selectedCard?.displayType,
     selectedPanEndpointCardId,
@@ -428,7 +470,7 @@ const MainBalanceCard = ({
     ? panCacheByCardId[selectedPanEndpointCardId]
     : null;
   const isSelectedPanLoading =
-    Boolean(selectedPanData?._loading) && canAttemptSelectedCardPanApi;
+    Boolean(selectedPanData?._loading) && canLoadPanWithSecurity;
   const selectedPanErrorMessage = String(
     selectedPanData?._errorMessage || "",
   ).trim();
@@ -438,7 +480,10 @@ const MainBalanceCard = ({
   const localHasCardNumber = hasLocalCardNumberData(selectedCard);
   const isSelectedVirtualCard = selectedCard.displayType === "Virtual";
   const showPanLoaderOnSelectedCard =
-    isSelectedVirtualCard && isSelectedPanLoading && !selectedPanErrorMessage;
+    isSelectedVirtualCard &&
+    panUnlocked &&
+    isSelectedPanLoading &&
+    !selectedPanErrorMessage;
   const shouldLoadSelectedCardNumber =
     showPanLoaderOnSelectedCard && !localHasCardNumber && !panCardNumber;
   const inlinePanLoadingNode = (
@@ -454,8 +499,10 @@ const MainBalanceCard = ({
 
   const resolvedSelectedCard = useMemo(() => {
     const isVirtualCard = selectedCard.displayType === "Virtual";
-    const fallbackNumber = localHasCardNumber
-      ? selectedCard.displayNumber || CARD_NUMBER_PLACEHOLDER
+    const fallbackNumber = panUnlocked
+      ? localHasCardNumber
+        ? selectedCard.displayNumber || CARD_NUMBER_PLACEHOLDER
+        : CARD_NUMBER_PLACEHOLDER
       : CARD_NUMBER_PLACEHOLDER;
     const fallbackExpiry = isVirtualCard
       ? selectedCard.displayExpiry && selectedCard.displayExpiry !== "--/--"
@@ -463,7 +510,7 @@ const MainBalanceCard = ({
         : CARD_EXPIRY_PLACEHOLDER
       : CARD_EXPIRY_PLACEHOLDER;
 
-    const finalNumber = panCardNumber
+    const finalNumber = panUnlocked && panCardNumber
       ? resolveCardNumber({
           ...selectedCard,
           pan_details: {
@@ -474,11 +521,13 @@ const MainBalanceCard = ({
       : fallbackNumber;
 
     // Only show PAN-provided expiry/cvv for virtual cards.
-    const finalExpiry = isVirtualCard
+    const finalExpiry = isVirtualCard && panUnlocked
       ? panExpiry || fallbackExpiry || CARD_EXPIRY_PLACEHOLDER
       : CARD_EXPIRY_PLACEHOLDER;
     const finalCvv =
-      isVirtualCard && panCvv ? getCvv({ cvv: panCvv }) : CARD_CVV_PLACEHOLDER;
+      isVirtualCard && panUnlocked && panCvv
+        ? getCvv({ cvv: panCvv })
+        : CARD_CVV_PLACEHOLDER;
 
     return {
       ...selectedCard,
@@ -486,7 +535,14 @@ const MainBalanceCard = ({
       displayExpiry: finalExpiry,
       displayCvv: finalCvv,
     };
-  }, [localHasCardNumber, panCardNumber, panCvv, panExpiry, selectedCard]);
+  }, [
+    localHasCardNumber,
+    panCardNumber,
+    panCvv,
+    panExpiry,
+    panUnlocked,
+    selectedCard,
+  ]);
 
   useEffect(() => {
     if (typeof onCardChange === "function") {
@@ -517,32 +573,77 @@ const MainBalanceCard = ({
   };
 
   const showNoCards = !loading && normalizedCards.length === 0;
-  const walletCurrency = String(
-    walletAsset?.currency || resolvedSelectedCard.displayCurrency || "USD",
-  ).toUpperCase();
-  const walletBalance = formatBalance(
-    walletAsset?.balance ?? 0,
-    walletCurrency,
-  );
-  const walletAvailable = formatBalance(
-    walletAsset?.available_balance ?? 0,
-    walletCurrency,
-  );
-  const walletLocked = formatBalance(
-    walletAsset?.locked_balance ?? 0,
-    walletCurrency,
-  );
+  const visibleMainBalance = balanceUnlocked
+    ? resolvedSelectedCard.displayBalance
+    : "****";
+  const visibleCardBalance = balanceUnlocked
+    ? resolvedSelectedCard.displayBalance
+    : "****";
+  const balanceToggleLabel = balanceUnlocked ? "Hide balance" : "Show balance";
+
+  const openSecurityPrompt = () => {
+    if (securityStatusLoading) return;
+    setSecurityError(
+      hasSecurityCode
+        ? ""
+        : "Security code is not configured. Please set it in Profile settings first.",
+    );
+    setSecurityCodeInput("");
+    setSecurityPromptOpen(true);
+  };
+
+  const submitSecurityPrompt = async () => {
+    if (!hasSecurityCode) {
+      setSecurityError(
+        "Security code is not configured. Please set it in Profile settings first.",
+      );
+      return;
+    }
+    if (!String(securityCodeInput || "").trim()) {
+      setSecurityError("Please enter security code.");
+      return;
+    }
+    setSecuritySubmitting(true);
+    setSecurityError("");
+
+    try {
+      await validateSecurityCode({ securityCode: securityCodeInput });
+      setBalanceUnlocked(true);
+      setPanUnlocked(true);
+      setSecurityPromptOpen(false);
+      setSecurityCodeInput("");
+    } catch (error) {
+      setSecurityError(
+        error?.response?.data?.message ||
+          "Security code validation failed. Please try again.",
+      );
+    } finally {
+      setSecuritySubmitting(false);
+    }
+  };
+
+  const toggleBalanceVisibility = () => {
+    if (balanceUnlocked) {
+      setBalanceUnlocked(false);
+      setPanUnlocked(false);
+      return;
+    }
+    openSecurityPrompt();
+  };
+
   const detailRows = [
     { label: "Card ID", value: resolvedSelectedCard.displayId },
     {
       label: "Card Number",
-      value: shouldLoadSelectedCardNumber
+      value: !panUnlocked
+        ? CARD_NUMBER_PLACEHOLDER
+        : shouldLoadSelectedCardNumber
         ? inlinePanLoadingNode
         : resolvedSelectedCard.displayNumber,
     },
     { label: "Card Type", value: resolvedSelectedCard.displayType },
     { label: "Currency", value: resolvedSelectedCard.displayCurrency },
-    { label: "Card Balance", value: resolvedSelectedCard.displayBalance },
+    { label: "Card Balance", value: visibleCardBalance },
     {
       label: "Status",
       value: normalizeStatus(resolvedSelectedCard.displayStatus),
@@ -553,17 +654,21 @@ const MainBalanceCard = ({
             label: "Valid Thru",
             value: showPanLoaderOnSelectedCard
               ? inlinePanLoadingNode
-              : resolvedSelectedCard.displayExpiry,
+              : panUnlocked
+                ? resolvedSelectedCard.displayExpiry
+                : CARD_EXPIRY_PLACEHOLDER,
           },
           {
             label: "CVV",
             value: showPanLoaderOnSelectedCard
               ? inlinePanLoadingNode
-              : resolvedSelectedCard.displayCvv || CARD_CVV_PLACEHOLDER,
+              : panUnlocked
+                ? resolvedSelectedCard.displayCvv || CARD_CVV_PLACEHOLDER
+                : CARD_CVV_PLACEHOLDER,
           },
         ]
       : []),
-    ...(isSelectedVirtualCard && selectedPanErrorMessage
+    ...(isSelectedVirtualCard && panUnlocked && selectedPanErrorMessage
         ? [
             {
               label: "PAN Info",
@@ -628,9 +733,26 @@ const MainBalanceCard = ({
       <div className="card-header border-0 align-items-start pb-0">
         <div>
           <span className="fs-18 d-block mb-2">Main Balance</span>
-          <h2 className="fs-28 font-w600">
-            {resolvedSelectedCard.displayBalance}
-          </h2>
+          <div className="nova-main-balance-head">
+            <h2 className="fs-28 font-w600 mb-0">{visibleMainBalance}</h2>
+            <button
+              type="button"
+              className={`nova-sec-visibility-toggle is-compact is-on-dark ${
+                balanceUnlocked ? "is-active" : ""
+              }`}
+              onClick={toggleBalanceVisibility}
+              aria-label={balanceToggleLabel}
+              title={balanceToggleLabel}
+              disabled={securityStatusLoading}
+            >
+              <i className={`pi ${balanceUnlocked ? "pi-eye-slash" : "pi-eye"}`} />
+            </button>
+          </div>
+          {!hasSecurityCode && !securityStatusLoading && (
+            <div className="text-warning small mt-2">
+              Setup security code in Profile before unlocking balance.
+            </div>
+          )}
         </div>
         <div className="nova-card-controls">
           <button
@@ -671,7 +793,9 @@ const MainBalanceCard = ({
                     const showPanLoaderBadge =
                       isFrontLayer && showPanLoaderOnSelectedCard;
                     const cardNumberForRender =
-                      isFrontLayer && shouldLoadSelectedCardNumber
+                      !panUnlocked
+                        ? CARD_NUMBER_PLACEHOLDER
+                        : isFrontLayer && shouldLoadSelectedCardNumber
                         ? "Loading..."
                         : renderCard.displayNumber || CARD_NUMBER_PLACEHOLDER;
                     const cardExpiryForRender = showPanLoaderBadge
@@ -727,7 +851,11 @@ const MainBalanceCard = ({
                                   {isVirtualRenderCard ? (
                                     <div>
                                       <span>VALID THRU</span>
-                                      <strong>{cardExpiryForRender}</strong>
+                                      <strong>
+                                        {panUnlocked
+                                          ? cardExpiryForRender
+                                          : CARD_EXPIRY_PLACEHOLDER}
+                                      </strong>
                                     </div>
                                   ) : null}
                                   <div>
@@ -760,7 +888,11 @@ const MainBalanceCard = ({
                                 {isVirtualRenderCard ? (
                                   <div className="nova-card-cvv-row">
                                     <span>CVV</span>
-                                    <strong>{cardCvvForRender}</strong>
+                                    <strong>
+                                      {panUnlocked
+                                        ? cardCvvForRender
+                                        : CARD_CVV_PLACEHOLDER}
+                                    </strong>
                                   </div>
                                 ) : null}
                                 <div className="nova-card-back-meta">
@@ -788,7 +920,14 @@ const MainBalanceCard = ({
 
           <div className="col-xl-6 col-lg-6 col-12">
             <div className="nova-card-live-block h-100">
-              <h5 className="nova-card-live-title">Card Details</h5>
+              <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                <h5 className="nova-card-live-title mb-0">Card Details</h5>
+              </div>
+              {!hasSecurityCode && !securityStatusLoading && (
+                <div className="text-warning small mb-2">
+                  Setup security code in Profile before viewing PAN details.
+                </div>
+              )}
               <div className="nova-card-live-grid">
                 {detailRows.map((item) => (
                   <div className="nova-card-live-item" key={item.label}>
@@ -841,6 +980,51 @@ const MainBalanceCard = ({
           </div> */}
         </div>
       </div>
+
+      <Modal
+        show={securityPromptOpen}
+        onHide={() => setSecurityPromptOpen(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Security Code Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="text-muted mb-2">
+            Enter security code to view balance and card details.
+          </p>
+          <input
+            type="password"
+            className="form-control"
+            value={securityCodeInput}
+            onChange={(event) => setSecurityCodeInput(event.target.value)}
+            placeholder="Security code"
+          />
+          {securityError ? (
+            <div className="alert alert-danger mt-3 mb-0 py-2">
+              {securityError}
+            </div>
+          ) : null}
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            type="button"
+            className="btn btn-light"
+            onClick={() => setSecurityPromptOpen(false)}
+            disabled={securitySubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={submitSecurityPrompt}
+            disabled={securitySubmitting}
+          >
+            {securitySubmitting ? "Verifying..." : "Verify"}
+          </button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

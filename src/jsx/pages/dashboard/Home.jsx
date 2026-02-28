@@ -1,20 +1,14 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import ApexCharts from "apexcharts";
-import { Link } from "react-router-dom";
-import { SelectPicker } from "rsuite";
 import Select from "react-select";
 import { Modal } from "react-bootstrap";
 
-import { IMAGES, SVGICON } from "../../constant/theme";
-import MainBalanceCard from "../../elements/dashboard/MainBalanceCard";
-import DropdownBlog from "../../elements/DropdownBlog";
+import { SVGICON } from "../../constant/theme";
 import ProjectAreaChart from "../../elements/dashboard/ProjectAreaChart";
 import LastestTransaction from "../../elements/dashboard/LastestTransaction";
 import PieChartApex from "../../elements/dashboard/PieChartApex";
-import CalendarBlog from "../FileManager/CalendarBlog";
 import WeeklySummarChart from "../../elements/dashboard/WeeklySummarChart";
 import BarWeeklySummary from "../../elements/dashboard/BarWeeklySummary";
-import InvoiceChart from "../../elements/dashboard/InvoiceChart";
+import WalletDepositPanel from "../../elements/dashboard/WalletDepositPanel";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { AuthContext } from "../../../context/authContext";
 import { request } from "../../../utils/api";
@@ -26,69 +20,7 @@ const options = [
   { value: "4", label: "Cash On Time" },
 ];
 
-const ChartData = [
-  { label: "This Month", value: "This Month" },
-  { label: "Week", value: "Weeks" },
-  { label: "Today", value: "Today" },
-];
-
-const PieController = [
-  { color: "#D7D7D7" },
-  { color: "#9568ff" },
-  { color: "#2696FD" },
-  { color: "#252289" },
-];
-
-const weeklyData = [
-  { color: "#FF9F00", title: "Income", percent: "30" },
-  { color: "#FD5353", title: "Expense", percent: "46" },
-  { color: "#d5dfe7", title: "Unknown", percent: "10" },
-];
-
-const contactGroup = [
-  {
-    image: IMAGES.invoiceimg1,
-    title: "Dedi Cahyadi",
-    postion: "Manager",
-    price: "776",
-  },
-  {
-    image: IMAGES.invoiceimg2,
-    title: "Evans Belly",
-    postion: "Programmer",
-    price: "770",
-  },
-  {
-    image: IMAGES.invoiceimg3,
-    title: "Cahyadi Jem",
-    postion: "Graphic Designer",
-    price: "650",
-  },
-  {
-    image: IMAGES.invoiceimg4,
-    title: "Evans John",
-    postion: "Software Engineer",
-    price: "450",
-  },
-  {
-    image: IMAGES.invoiceimg3,
-    title: "Brian Brandon",
-    postion: "Developer",
-    price: "470",
-  },
-  {
-    image: IMAGES.invoiceimg2,
-    title: "Bella Brownlee",
-    postion: "Tester",
-    price: "630",
-  },
-  {
-    image: IMAGES.invoiceimg4,
-    title: "Evans Tika",
-    postion: "Team Leader",
-    price: "399",
-  },
-];
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const toSafeNumber = (value) => {
   const numeric = Number(value);
@@ -133,6 +65,16 @@ const normalizeCardType = (value) => {
   return normalizeStatus(value);
 };
 
+const formatDateTime = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
+
 const isWalletAssetUsable = (asset) => {
   if (!asset || typeof asset !== "object") return false;
   const balance = toSafeNumber(asset?.balance) ?? 0;
@@ -156,11 +98,57 @@ const extractCardsRows = (response) => {
     const parsedLastPage = Number(payload?.last_page || 1);
     return {
       rows: payload.data,
-      lastPage: Number.isFinite(parsedLastPage) && parsedLastPage > 0 ? parsedLastPage : 1,
+      lastPage:
+        Number.isFinite(parsedLastPage) && parsedLastPage > 0
+          ? parsedLastPage
+          : 1,
     };
   }
 
   return { rows: [], lastPage: 1 };
+};
+
+const getWeekdayIndex = (value) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const day = parsed.getDay(); // 0 Sun ... 6 Sat
+  return day === 0 ? 6 : day - 1; // Mon first
+};
+
+const getTransactionRawAmount = (txn) => {
+  const amountCandidates = [
+    txn?.amount,
+    txn?.transaction_amount,
+    txn?.value,
+    txn?.total,
+    txn?.net_amount,
+    txn?.debit,
+    txn?.credit,
+  ];
+  for (const candidate of amountCandidates) {
+    const parsed = toSafeNumber(candidate);
+    if (parsed !== null) return parsed;
+  }
+  return 0;
+};
+
+const getTransactionTimestamp = (txn) =>
+  txn?.created_at ||
+  txn?.createdAt ||
+  txn?.transaction_date ||
+  txn?.date ||
+  txn?.updated_at;
+
+const formatDashboardDate = (value) => {
+  if (!value) return "N/A";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "N/A";
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 };
 
 export function CommandPage({ user }) {
@@ -174,31 +162,19 @@ export function CommandPage({ user }) {
   const [walletTransactions, setWalletTransactions] = useState([]);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletError, setWalletError] = useState("");
-  const [selectedCard, setSelectedCard] = useState(null);
-
-  const projectSeries = (value) => {
-    ApexCharts.exec("assetDistribution2", "toggleSeries", value);
-  };
-  const [refreshToggle, setRefreshToggle] = useState(false);
-  const [datas, setDatas] = useState(contactGroup);
-  const hendelClick = () => {
-    setRefreshToggle(true);
-    setTimeout(() => {
-      setDatas([
-        ...datas,
-        datas[Math.floor(Math.random() * Math.floor(datas.length - 1))],
-      ]);
-      setRefreshToggle(false);
-    }, 1000);
-  };
+  const [walletBalanceUnlocked, setWalletBalanceUnlocked] = useState(true);
+  const [overviewModal, setOverviewModal] = useState({
+    open: false,
+    title: "",
+    subtitle: "",
+    rows: [],
+  });
   const [cardModal, setCardModal] = useState(false);
-  const [invoiceModal, setInvoiceModal] = useState(false);
   const userName = user?.name || "User";
   const userEmail = user?.email || "N/A";
   const userPhone = user?.phone || "N/A";
   const userCode = user?.tevau_user?.user_code || null;
   const thirdId = user?.tevau_user?.third_id || null;
-  const tevauStatus = user?.tevau_user?.status || "N/A";
   const roleRaw =
     typeof user?.role === "string"
       ? user.role
@@ -242,7 +218,9 @@ export function CommandPage({ user }) {
           );
 
           const pageResponses = await Promise.all(pageRequests);
-          const extraRows = pageResponses.flatMap((pageRes) => extractCardsRows(pageRes).rows);
+          const extraRows = pageResponses.flatMap(
+            (pageRes) => extractCardsRows(pageRes).rows,
+          );
           rows = [...rows, ...extraRows];
         }
 
@@ -259,7 +237,9 @@ export function CommandPage({ user }) {
           const rowUserCode = row?.user_code || row?.tevau_user?.user_code;
           const rowThirdId = row?.third_id || row?.tevau_user?.third_id;
           const rowUserId =
-            row?.user_id || row?.tevau_user?.user_id || row?.tevau_user?.user?.id;
+            row?.user_id ||
+            row?.tevau_user?.user_id ||
+            row?.tevau_user?.user?.id;
 
           return (
             (userCode && rowUserCode === userCode) ||
@@ -349,10 +329,6 @@ export function CommandPage({ user }) {
     ["active", "normal"].includes(String(card?.status || "").toLowerCase()),
   ).length;
 
-  const selectedCardCurrency = String(
-    selectedCard?.displayCurrency || selectedCard?.currency || "",
-  ).toUpperCase();
-
   const primaryWalletAsset = useMemo(() => {
     if (!walletAssets.length) return null;
 
@@ -361,28 +337,16 @@ export function CommandPage({ user }) {
     const source = priorityAssets.length ? priorityAssets : walletAssets;
     return [...source].sort((a, b) => {
       const scoreA =
-        (toSafeNumber(a?.balance) ?? 0) + (toSafeNumber(a?.available_balance) ?? 0);
+        (toSafeNumber(a?.balance) ?? 0) +
+        (toSafeNumber(a?.available_balance) ?? 0);
       const scoreB =
-        (toSafeNumber(b?.balance) ?? 0) + (toSafeNumber(b?.available_balance) ?? 0);
+        (toSafeNumber(b?.balance) ?? 0) +
+        (toSafeNumber(b?.available_balance) ?? 0);
       return scoreB - scoreA;
     })[0];
   }, [walletAssets]);
 
-  const mappedWalletAsset = useMemo(() => {
-    if (!walletAssets.length) return null;
-    if (selectedCardCurrency) {
-      const matched = walletAssets.find(
-        (asset) =>
-          String(asset?.currency || "").toUpperCase() === selectedCardCurrency,
-      );
-      if (matched) {
-        if (isWalletAssetUsable(matched) || !isWalletAssetUsable(primaryWalletAsset)) {
-          return matched;
-        }
-      }
-    }
-    return primaryWalletAsset;
-  }, [walletAssets, selectedCardCurrency, primaryWalletAsset]);
+  const mappedWalletAsset = primaryWalletAsset;
 
   const walletCurrency = String(
     mappedWalletAsset?.currency ||
@@ -392,123 +356,290 @@ export function CommandPage({ user }) {
   ).toUpperCase();
   const walletBalanceToShow =
     toSafeNumber(mappedWalletAsset?.balance) ?? totalCardBalance;
-  const walletAvailableBalance = toSafeNumber(mappedWalletAsset?.available_balance);
+  const walletAvailableBalance =
+    toSafeNumber(mappedWalletAsset?.available_balance) ??
+    toSafeNumber(walletStatistics?.available_balance) ??
+    toSafeNumber(walletStatistics?.available) ??
+    walletBalanceToShow;
   const walletLockedBalance = toSafeNumber(mappedWalletAsset?.locked_balance);
   const walletStatus = normalizeStatus(mappedWalletAsset?.status);
   const walletAssetName = mappedWalletAsset?.name || "N/A";
   const walletTotalTransactions = Math.max(
     0,
-    Math.trunc(toSafeNumber(walletStatistics?.transaction_count) ?? walletTransactions.length),
+    Math.trunc(
+      toSafeNumber(walletStatistics?.transaction_count) ??
+        walletTransactions.length,
+    ),
   );
   const walletDeposits = toSafeNumber(walletStatistics?.total_deposits) ?? 0;
-  const walletWithdrawals = toSafeNumber(walletStatistics?.total_withdrawals) ?? 0;
+  const walletWithdrawals =
+    toSafeNumber(walletStatistics?.total_withdrawals) ?? 0;
   const walletTxPreview = walletTransactions.slice(0, 3);
   const showWalletBalanceLoading =
     userCardsLoading && walletLoading && !mappedWalletAsset;
-  const dashboardOverviewCards = useMemo(() => {
-    const virtualCount = userCards.filter(
-      (card) => normalizeCardType(card?.card_type || card?.type) === "Virtual",
-    ).length;
-    const physicalCount = userCards.filter(
-      (card) => normalizeCardType(card?.card_type || card?.type) === "Physical",
-    ).length;
+  const balanceToggleLabel = walletBalanceUnlocked
+    ? "Hide balance details"
+    : "Show balance details";
 
-    return [
-      {
-        key: "total",
-        title: "Total Cards",
-        value: userCards.length,
-        sub: `${activeCardCount} active`,
-        tone: "is-blue",
-      },
-      {
-        key: "active",
-        title: "Active Cards",
-        value: activeCardCount,
-        sub: "Active / Normal",
-        tone: "is-slate",
-      },
-      {
-        key: "virtual",
-        title: "Virtual Cards",
-        value: virtualCount,
-        sub: "Instant issue",
-        tone: "is-purple",
-      },
-      {
-        key: "physical",
-        title: "Physical Cards",
-        value: physicalCount,
-        sub: "Courier flow",
-        tone: "is-orange",
-      },
-      {
-        key: "deposits",
-        title: "Deposits",
-        value: formatCurrencyValue(walletDeposits, walletCurrency),
-        sub: "Wallet total deposits",
-        tone: "is-green",
-      },
-      {
-        key: "total-balance",
-        title: "Total Balance",
-        value: formatCurrencyValue(walletBalanceToShow, walletCurrency),
-        sub: "Wallet total balance",
-        tone: "is-cyan",
-      },
-      {
-        key: "available",
-        title: "Available Balance",
-        value: formatCurrencyValue(walletAvailableBalance ?? walletBalanceToShow, walletCurrency),
-        sub: walletAssetName || "Wallet asset",
-        tone: "is-blue",
-      },
-      {
-        key: "withdrawals",
-        title: "Withdrawals",
-        value: formatCurrencyValue(walletWithdrawals, walletCurrency),
-        sub: "Wallet withdrawals",
-        tone: "is-rose",
-      },
-      {
-        key: "transactions",
-        title: "Transactions",
-        value: walletTotalTransactions,
-        sub: "Recent wallet activity",
-        tone: "is-slate",
-      },
-    ];
-  }, [
-    activeCardCount,
-    userCards,
-    walletDeposits,
-    walletCurrency,
-    walletBalanceToShow,
-    walletAvailableBalance,
-    walletAssetName,
-    walletWithdrawals,
-    walletTotalTransactions,
-  ]);
+  const formatProtectedCurrency = (value, currency = "USD") =>
+    walletBalanceUnlocked ? formatCurrencyValue(value, currency) : "****";
+
+  const virtualCardCount = useMemo(
+    () =>
+      userCards.filter((card) =>
+        String(card?.type || card?.card_type || "")
+          .toLowerCase()
+          .includes("virtual"),
+      ).length,
+    [userCards],
+  );
+  const physicalCardCount = useMemo(
+    () =>
+      userCards.filter((card) =>
+        String(card?.type || card?.card_type || "")
+          .toLowerCase()
+          .includes("physical"),
+      ).length,
+    [userCards],
+  );
+
+  const overviewMetrics = [
+    {
+      tone: "is-blue",
+      title: "Total Cards",
+      value: String(userCards.length),
+      note: `${activeCardCount} active`,
+      filterKey: "all",
+      subtitle: "All cards list",
+    },
+    {
+      tone: "is-slate",
+      title: "Active Cards",
+      value: String(activeCardCount),
+      note: "Cards in active/normal state",
+      filterKey: "active",
+      subtitle: "Only active/normal cards",
+    },
+    {
+      tone: "is-purple",
+      title: "Virtual Cards",
+      value: String(virtualCardCount),
+      note: "Instant issue cards",
+      filterKey: "virtual",
+      subtitle: "Only virtual cards",
+    },
+    {
+      tone: "is-orange",
+      title: "Physical Cards",
+      value: String(physicalCardCount),
+      note: "Courier flow cards",
+      filterKey: "physical",
+      subtitle: "Only physical cards",
+    },
+    {
+      tone: "is-green",
+      title: "Total Balance",
+      value: formatProtectedCurrency(walletBalanceToShow, walletCurrency),
+      note: "Wallet + card balance",
+      filterKey: "all",
+      subtitle: "All cards with balances",
+    },
+    {
+      tone: "is-cyan",
+      title: "Available Balance",
+      value: formatProtectedCurrency(walletAvailableBalance, walletCurrency),
+      note: walletAssetName,
+      filterKey: "all",
+      subtitle: "All cards with balances",
+    },
+    {
+      tone: "is-cyan",
+      title: "Deposits",
+      value: formatProtectedCurrency(walletDeposits, walletCurrency),
+      note: "All-time deposits",
+      filterKey: "all",
+      subtitle: "All cards list",
+    },
+    {
+      tone: "is-rose",
+      title: "Withdrawals",
+      value: formatProtectedCurrency(walletWithdrawals, walletCurrency),
+      note: "All-time withdrawals",
+      filterKey: "all",
+      subtitle: "All cards list",
+    },
+  ];
+
+  const transactionTrend = useMemo(() => {
+    const inflow = Array.from({ length: WEEKDAY_LABELS.length }, () => 0);
+    const outflow = Array.from({ length: WEEKDAY_LABELS.length }, () => 0);
+    const counts = Array.from({ length: WEEKDAY_LABELS.length }, () => 0);
+
+    walletTransactions.forEach((txn) => {
+      const dayIndex = getWeekdayIndex(getTransactionTimestamp(txn));
+      if (dayIndex === null) return;
+
+      const rawAmount = getTransactionRawAmount(txn);
+      const amount = Math.abs(rawAmount);
+      const type = String(
+        txn?.type || txn?.action || txn?.transaction_type || txn?.category || "",
+      ).toLowerCase();
+      const isOutflowByType = /(withdraw|purchase|debit|charge|fee|payment|transfer_out|out)/.test(
+        type,
+      );
+      const isOutflow = rawAmount < 0 || isOutflowByType;
+
+      if (isOutflow) {
+        outflow[dayIndex] += amount;
+      } else {
+        inflow[dayIndex] += amount;
+      }
+      counts[dayIndex] += 1;
+    });
+
+    return {
+      inflow: inflow.map((value) => Number(value.toFixed(2))),
+      outflow: outflow.map((value) => Number(value.toFixed(2))),
+      counts,
+    };
+  }, [walletTransactions]);
+
+  const projectChartSeries = useMemo(
+    () => [
+      { name: "Inflow", data: transactionTrend.inflow },
+      { name: "Outflow", data: transactionTrend.outflow },
+    ],
+    [transactionTrend.inflow, transactionTrend.outflow],
+  );
+
+  const transactionBarSeries = useMemo(
+    () => [{ name: "Transactions", data: transactionTrend.counts }],
+    [transactionTrend.counts],
+  );
+
+  const cardTypeChartItems = useMemo(() => {
+    const otherCards = Math.max(
+      userCards.length - virtualCardCount - physicalCardCount,
+      0,
+    );
+    const entries = [
+      { label: "Virtual", value: virtualCardCount, color: "#9568FF" },
+      { label: "Physical", value: physicalCardCount, color: "#2696FD" },
+      { label: "Other", value: otherCards, color: "#d5dfe7" },
+    ].filter((entry) => entry.value > 0);
+
+    return entries.length
+      ? entries
+      : [{ label: "No Cards", value: 1, color: "#d5dfe7" }];
+  }, [physicalCardCount, userCards.length, virtualCardCount]);
+
+  const cardStatusChartItems = useMemo(() => {
+    const buckets = { active: 0, frozen: 0, closed: 0, other: 0 };
+    userCards.forEach((card) => {
+      const status = String(card?.status || "").toLowerCase();
+      if (status.includes("active") || status.includes("normal")) {
+        buckets.active += 1;
+      } else if (status.includes("frozen") || status.includes("lock")) {
+        buckets.frozen += 1;
+      } else if (status.includes("closed")) {
+        buckets.closed += 1;
+      } else {
+        buckets.other += 1;
+      }
+    });
+
+    const entries = [
+      { label: "Active", value: buckets.active, color: "#19a565" },
+      { label: "Frozen", value: buckets.frozen, color: "#f39a1f" },
+      { label: "Closed", value: buckets.closed, color: "#e1546f" },
+      { label: "Other", value: buckets.other, color: "#d5dfe7" },
+    ].filter((entry) => entry.value > 0);
+
+    return entries.length
+      ? entries
+      : [{ label: "No Data", value: 1, color: "#d5dfe7" }];
+  }, [userCards]);
+
+  const latestTransactionRows = useMemo(
+    () =>
+      walletTransactions.slice(0, 8).map((txn, index) => {
+        const rawAmount = getTransactionRawAmount(txn);
+        const type = normalizeStatus(
+          txn?.type || txn?.action || txn?.transaction_type || "Transaction",
+        );
+        const status = normalizeStatus(txn?.status || txn?.state || "Processed");
+
+        return {
+          id:
+            txn?.id ||
+            txn?.uuid ||
+            `${type}-${index}-${getTransactionTimestamp(txn) || "na"}`,
+          title: txn?.network ? `${type} (${txn.network})` : type,
+          amountLabel: formatCurrencyValue(Math.abs(rawAmount), walletCurrency),
+          dateLabel: formatDashboardDate(getTransactionTimestamp(txn)),
+          statusLabel: status,
+        };
+      }),
+    [walletCurrency, walletTransactions],
+  );
+
+  const getMetricCardsRows = (filterKey) => {
+    if (!Array.isArray(userCards) || !userCards.length) return [];
+    switch (filterKey) {
+      case "active":
+        return userCards.filter((card) =>
+          ["active", "normal"].includes(String(card?.status || "").toLowerCase()),
+        );
+      case "virtual":
+        return userCards.filter((card) =>
+          normalizeCardType(card?.card_type || card?.type)
+            .toLowerCase()
+            .includes("virtual"),
+        );
+      case "physical":
+        return userCards.filter((card) =>
+          normalizeCardType(card?.card_type || card?.type)
+            .toLowerCase()
+            .includes("physical"),
+        );
+      default:
+        return userCards;
+    }
+  };
+
+  const openOverviewMetricModal = (metric) => {
+    const rows = getMetricCardsRows(metric?.filterKey);
+    setOverviewModal({
+      open: true,
+      title: metric?.title || "Cards",
+      subtitle: metric?.subtitle || "Cards list",
+      rows,
+    });
+  };
+
+  const toggleWalletBalanceVisibility = () => {
+    setWalletBalanceUnlocked((previous) => !previous);
+  };
 
   return (
     <>
       <div className="row">
         <div className="col-xl-12">
-          <div className="payment-bx">
+          <div className="payment-bx nova-dashboard-clean">
             <div className="d-flex justify-content-between flex-wrap">
               <div className="payment-content">
                 <h1 className="font-w500 mb-2">Good morning, {userName}</h1>
                 <p className="dz-para">
                   {roleLabel} | {userEmail} | {userPhone}
                 </p>
-                <div className="d-flex flex-wrap gap-2">
+                {/* <div className="d-flex flex-wrap gap-2">
                   <span className="badge badge-sm bg-primary">
                     Tevau Status: {tevauStatus}
                   </span>
                   <span className="badge badge-sm bg-info">
                     User Code: {userCode || "N/A"}
                   </span>
-                </div>
+                </div> */}
               </div>
               <div className="mb-4 mb-xl-0">
                 <button
@@ -529,64 +660,7 @@ export function CommandPage({ user }) {
             </div>
             <div className="row g-3">
               <div className="col-12">
-                <div className=" nova-panel nova-dashboard-overview-panel">
-                  <div className="card-body nova-dashboard-overview-body">
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <h5 className="mb-0">Cards Overview</h5>
-                      <Link to="/cards" className="btn btn-sm nova-dashboard-overview-open-btn">
-                        Open Cards
-                      </Link>
-                    </div>
-                    <div className="nova-cards-overview-board nova-cards-overview-horizontal nova-dashboard-overview-board">
-                      <div className="nova-overview-stage-card nova-overview-stage-strip">
-                        <div className="nova-overview-stage-main">
-                          <div className="nova-overview-stage-head">
-                            <span className="nova-overview-stage-title">Payment Summary</span>
-                          </div>
-                          <div className="nova-overview-stage-stats">
-                            <strong>{formatCurrencyValue(walletBalanceToShow, walletCurrency)}</strong>
-                            <span />
-                            <small>{userCards.length} Cards</small>
-                          </div>
-                        </div>
-                        <div className="nova-overview-stage-cta">
-                          <i className="pi pi-wallet" />
-                          Deposits, cards & wallet activity
-                        </div>
-                      </div>
-
-                      <div className="nova-overview-horizontal-scroll">
-                        <div className="nova-overview-metric-grid nova-overview-metric-grid-horizontal">
-                          {dashboardOverviewCards.map((item) => (
-                            <div
-                              key={item.key}
-                              className={`nova-overview-metric-card ${item.tone}`}
-                            >
-                              <div className="nova-overview-metric-icon">
-                                <span />
-                              </div>
-                              <div className="nova-overview-metric-content">
-                                <h6>{item.title}</h6>
-                                <strong>{item.value}</strong>
-                                <p>{item.sub}</p>
-                              </div>
-                              <Link
-                                to="/cards"
-                                className="nova-overview-metric-arrow"
-                                aria-label={`${item.title} details`}
-                              >
-                                <i className="pi pi-angle-right" />
-                              </Link>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="col-12">
-                <div className="card  dz-wallet overflow-hidden">
+                <div className="card dz-wallet nova-home-wallet-glass overflow-hidden">
                   <div className="boxs">
                     <span className="box one"></span>
                     <span className="box two"></span>
@@ -630,14 +704,34 @@ export function CommandPage({ user }) {
                   </div>
                   <div className="card-body py-3 pt-1 d-flex align-items-center justify-content-between flex-wrap pe-3">
                     <div className="wallet-info">
-                      <span className="fs-14 font-w400 d-block">
-                        Wallet Balance ({walletCurrency})
-                      </span>
-                      <h2 className="font-w600 mb-0">
-                        {showWalletBalanceLoading
-                          ? "Loading..."
-                          : formatCurrencyValue(walletBalanceToShow, walletCurrency)}
-                      </h2>
+                      <div className="nova-wallet-balance-head">
+                        <span className="fs-14 font-w400 d-block mb-0">
+                          Wallet Balance ({walletCurrency})
+                        </span>
+                      </div>
+                      <div className="nova-wallet-balance-value">
+                        <h2 className="font-w600 mb-0">
+                          {showWalletBalanceLoading
+                            ? "Loading..."
+                            : formatProtectedCurrency(
+                                walletBalanceToShow,
+                                walletCurrency,
+                              )}
+                        </h2>
+                        <button
+                          type="button"
+                          className="nova-sec-visibility-toggle nova-sec-visibility-inline"
+                          onClick={toggleWalletBalanceVisibility}
+                          aria-label={balanceToggleLabel}
+                          title={balanceToggleLabel}
+                        >
+                          <i
+                            className={`pi ${
+                              walletBalanceUnlocked ? "pi-eye-slash" : "pi-eye"
+                            }`}
+                          />
+                        </button>
+                      </div>
                       <span>
                         {userCardsLoading
                           ? "Cards loading..."
@@ -648,31 +742,40 @@ export function CommandPage({ user }) {
                           Asset: {walletAssetName}
                         </span>
                         <span className="nova-wallet-stat-chip">
-                          Currency: {String(walletCurrency || "USD").toUpperCase()}
+                          Currency:{" "}
+                          {String(walletCurrency || "USD").toUpperCase()}
                         </span>
                         <span className="nova-wallet-stat-chip">
                           Status: {walletStatus}
                         </span>
-                        {walletAvailableBalance !== null && (
-                          <span className="nova-wallet-stat-chip">
-                            Available: {formatCurrencyValue(walletAvailableBalance, walletCurrency)}
-                          </span>
-                        )}
+                        <span className="nova-wallet-stat-chip">
+                          Available:{" "}
+                          {formatProtectedCurrency(
+                            walletAvailableBalance,
+                            walletCurrency,
+                          )}
+                        </span>
                         {walletLockedBalance !== null && (
                           <span className="nova-wallet-stat-chip">
-                            Locked: {formatCurrencyValue(walletLockedBalance, walletCurrency)}
+                            Locked:{" "}
+                            {formatProtectedCurrency(
+                              walletLockedBalance,
+                              walletCurrency,
+                            )}
                           </span>
                         )}
-                        <span className="nova-wallet-stat-chip">
-                          API: {walletAssets.length ? "Connected" : "Fallback"}
-                        </span>
                       </div>
                       <div className="nova-wallet-overview">
                         <span>
-                          Deposits: {formatCurrencyValue(walletDeposits, walletCurrency)}
+                          Deposits:{" "}
+                          {formatProtectedCurrency(walletDeposits, walletCurrency)}
                         </span>
                         <span>
-                          Withdrawals: {formatCurrencyValue(walletWithdrawals, walletCurrency)}
+                          Withdrawals:{" "}
+                          {formatProtectedCurrency(
+                            walletWithdrawals,
+                            walletCurrency,
+                          )}
                         </span>
                         <span>Transactions: {walletTotalTransactions}</span>
                       </div>
@@ -684,10 +787,14 @@ export function CommandPage({ user }) {
                               key={txn?.id || txn?.created_at}
                             >
                               <span className="text-capitalize">
-                                {txn?.type || "txn"} {txn?.network ? `(${txn.network})` : ""}
+                                {txn?.type || "txn"}{" "}
+                                {txn?.network ? `(${txn.network})` : ""}
                               </span>
                               <strong>
-                                {formatCurrencyValue(txn?.amount || 0, walletCurrency)}
+                                {formatProtectedCurrency(
+                                  txn?.amount || 0,
+                                  walletCurrency,
+                                )}
                               </strong>
                             </div>
                           ))}
@@ -704,177 +811,149 @@ export function CommandPage({ user }) {
                         </span>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      className="modal-btn"
-                      data-bs-toggle="modal"
-                      data-bs-target="#exampleModal4"
-                    >
-                      <span
-                        className="dz-wallet icon-box icon-box-lg ms-3 mb-1 d-block"
-                        onClick={() => setInvoiceModal(true)}
-                      >
-                        {SVGICON.invoiceSvg}
-                      </span>
-                      <span>Send Invoices</span>
-                    </button>
                   </div>
                 </div>
               </div>
               <div className="col-12">
-                <MainBalanceCard
-                  cards={userCards}
-                  userName={userName}
-                  loading={userCardsLoading}
-                  onCardChange={setSelectedCard}
-                  walletAsset={mappedWalletAsset}
-                />
+                <WalletDepositPanel />
               </div>
             </div>
           </div>
-          <div className="row">
+          <div className="row g-3">
+            <div className="col-12">
+              <div className="nova-cards-overview-board nova-dashboard-overview-board">
+                <div className="nova-overview-stage-card nova-overview-stage-strip">
+                    <div className="nova-overview-stage-main">
+                      <div className="nova-overview-stage-head">
+                        <span className="nova-overview-stage-title">
+                          Payment Summary
+                        </span>
+                      </div>
+                      <div className="nova-overview-stage-stats">
+                      <strong>
+                        {showWalletBalanceLoading
+                          ? "Loading..."
+                          : formatProtectedCurrency(
+                              walletBalanceToShow,
+                              walletCurrency,
+                            )}
+                      </strong>
+                      <button
+                        type="button"
+                        className={`nova-sec-visibility-toggle is-compact ${
+                          walletBalanceUnlocked ? "is-active" : ""
+                        }`}
+                        onClick={toggleWalletBalanceVisibility}
+                        aria-label={balanceToggleLabel}
+                        title={balanceToggleLabel}
+                      >
+                        <i
+                          className={`pi ${
+                            walletBalanceUnlocked ? "pi-eye-slash" : "pi-eye"
+                          }`}
+                        />
+                      </button>
+                      <span />
+                      <small>{userCards.length} Cards</small>
+                    </div>
+                  </div>
+                  <div className="nova-overview-stage-cta">
+                    <i className="pi pi-chart-line" />
+                    Summary + stats synced from cards/wallet APIs
+                  </div>
+                </div>
+                <div className="nova-overview-horizontal-scroll">
+                  <div className="nova-overview-metric-grid nova-overview-metric-grid-horizontal">
+                    {overviewMetrics.map((metric) => (
+                      <div
+                        className={`nova-overview-metric-card ${metric.tone}`}
+                        key={metric.title}
+                      >
+                        <div className="nova-overview-metric-icon">
+                          <span />
+                        </div>
+                        <div className="nova-overview-metric-content">
+                          <h6>{metric.title}</h6>
+                          <strong>{metric.value}</strong>
+                          <p>{metric.note}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className="nova-overview-metric-arrow"
+                          onClick={() => openOverviewMetricModal(metric)}
+                          aria-label={`Open ${metric.title} cards`}
+                        >
+                          <i className="pi pi-angle-right" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="col-xl-8">
               <div className="card crypto-chart h-auto">
                 <div className="card-header pb-0 border-0 flex-wrap">
                   <div>
-                    <div className="chart-title mb-3">
-                      <h2 className="heading">Project Statistic</h2>
+                    <div className="chart-title mb-2">
+                      <h2 className="heading">Transaction Trend (7 Days)</h2>
                     </div>
-                    <div className="d-flex align-items-center mb-2">
-                      <div className="round weekly" id="dzOldSeries">
-                        <div>
-                          <input
-                            type="checkbox"
-                            id="checkbox1"
-                            name="radio"
-                            value="weekly"
-                            onClick={() => projectSeries("Persent")}
-                          />
-                          <label
-                            htmlFor="checkbox1"
-                            className="checkmark"
-                          ></label>
-                        </div>
-                        <div>
-                          <span>This Month</span>
-                          <h4 className="mb-0">1.982</h4>
-                        </div>
-                      </div>
-                      <div className="round" id="dzNewSeries">
-                        <div>
-                          <input
-                            type="checkbox"
-                            id="checkbox"
-                            name="radio"
-                            value="monthly"
-                            onClick={() => projectSeries("Visitors")}
-                          />
-                          <label
-                            htmlFor="checkbox"
-                            className="checkmark"
-                          ></label>
-                        </div>
-                        <div>
-                          <span>This Week</span>
-                          <h4 className="mb-0">1.345</h4>
-                        </div>
-                      </div>
-                    </div>
+                    <p className="mb-0 text-muted">
+                      Wallet API transactions grouped by day (inflow vs outflow).
+                    </p>
                   </div>
                   <div className="p-static">
-                    <div className="d-flex align-items-center mb-3 ">
-                      <SelectPicker
-                        className="select-data me-sm-4 me-2"
-                        data={ChartData}
-                        searchable={false}
-                        placeholder="This Month"
-                      />
-                      <DropdownBlog />
-                    </div>
                     <div className="progress-content">
-                      <div className="d-flex justify-content-between">
-                        <h6>Total</h6>
-                        <span className="pull-end">3.982</span>
+                      <div className="d-flex justify-content-between gap-4">
+                        <h6 className="mb-0">Deposits</h6>
+                        <span className="pull-end">
+                          {formatProtectedCurrency(walletDeposits, walletCurrency)}
+                        </span>
                       </div>
-                      <div className="progress mt-2">
-                        <div
-                          className="progress-bar bg-primary"
-                          style={{ width: "60%", height: "100%" }}
-                        >
-                          <span className="sr-only">60% Complete</span>
-                        </div>
+                      <div className="d-flex justify-content-between gap-4 mt-1">
+                        <h6 className="mb-0">Withdrawals</h6>
+                        <span className="pull-end">
+                          {formatProtectedCurrency(
+                            walletWithdrawals,
+                            walletCurrency,
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="card-body pt-2 custome-tooltip pb-0">
-                  <ProjectAreaChart />
+                  <ProjectAreaChart
+                    series={projectChartSeries}
+                    categories={WEEKDAY_LABELS}
+                  />
                 </div>
               </div>
-              <LastestTransaction />
-              <div className="row">
-                <div className="col-xl-6">
-                  <div className="card">
-                    <div className="card-body">
-                      <div className="d-flex align-items-center justify-content-between mb-3">
-                        <h4 className="fs-20 font-w600 mb-0">Pie Chart</h4>
-                        <DropdownBlog />
-                      </div>
-                      <div id="pieChart1">
-                        <PieChartApex />
-                      </div>
-                      <div className="chart-labels">
-                        <ul className="d-flex align-items-baseline justify-content-between mt-3">
-                          {PieController.map((item, ind) => (
-                            <li key={ind}>
-                              <svg
-                                className="me-2"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 14 14"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <rect
-                                  width="14"
-                                  height="14"
-                                  rx="7"
-                                  fill={item.color}
-                                />
-                              </svg>
-                              <span className="font-w300">Grey</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-6">
-                  <div className="card bg-primary">
-                    <div className="card-body dz-date-picker">
-                      <div className="dz-calender small-cal-blog">
-                        <CalendarBlog />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <LastestTransaction
+                rows={latestTransactionRows}
+                loading={walletLoading}
+                error={walletError}
+              />
             </div>
             <div className="col-xl-4">
               <div className="card h-auto">
-                <div className="card-header border-0 pb-1 ">
-                  <div>
-                    <h4 className="mb-0 fs-20 font-w600">Weekly Summary</h4>
-                  </div>
+                <div className="card-header border-0 pb-1">
+                  <h4 className="mb-0 fs-20 font-w600">Cards Type Summary</h4>
                 </div>
                 <div className="card-body pb-0 pt-3 px-3 d-flex align-items-center flex-wrap">
                   <div id="pieChart2">
-                    <WeeklySummarChart />
+                    <WeeklySummarChart
+                      series={cardTypeChartItems.map((item) => item.value)}
+                      labels={cardTypeChartItems.map((item) => item.label)}
+                      colors={cardTypeChartItems.map((item) => item.color)}
+                    />
                   </div>
                   <div className="weeklydata">
-                    {weeklyData.map((item, i) => (
-                      <div className=" d-flex align-items-center mb-2" key={i}>
+                    {cardTypeChartItems.map((item) => (
+                      <div
+                        className="d-flex align-items-center mb-2"
+                        key={item.label}
+                      >
                         <svg
                           className="me-2"
                           width="14"
@@ -883,90 +962,148 @@ export function CommandPage({ user }) {
                           fill="none"
                           xmlns="http://www.w3.org/2000/svg"
                         >
-                          <rect
-                            x="0.000488281"
-                            width="14"
-                            height="14"
-                            rx="3"
-                            fill={item.color}
-                          />
+                          <rect width="14" height="14" rx="3" fill={item.color} />
                         </svg>
-                        <h6 className="mb-0 fs-14 font-w400">{item.title}</h6>
+                        <h6 className="mb-0 fs-14 font-w400">{item.label}</h6>
                         <span className="text-primary font-w700 ms-auto">
-                          {item.percent}%
+                          {item.value}
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="card-body pt-0 pb-0 px-3">
+                  <h6 className="mb-2">Transactions by Weekday</h6>
                   <div id="columnChart1" className="chartjs">
-                    <BarWeeklySummary />
+                    <BarWeeklySummary
+                      series={transactionBarSeries}
+                      categories={WEEKDAY_LABELS}
+                    />
                   </div>
                 </div>
               </div>
               <div className="card h-auto">
                 <div className="card-body">
-                  <h4 className="fs-20 mb-0 mt-0">Invoices Sent</h4>
-                  <span>Lorem ipsum dolor sit amet, consectetur</span>
-                  <div id="radialchart">
-                    <InvoiceChart />
+                  <h4 className="fs-20 mb-1 mt-0">Card Status Breakdown</h4>
+                  <span className="text-muted">
+                    Distribution from cards status API data.
+                  </span>
+                  <div id="pieChart1" className="mt-2">
+                    <PieChartApex
+                      series={cardStatusChartItems.map((item) => item.value)}
+                      labels={cardStatusChartItems.map((item) => item.label)}
+                      colors={cardStatusChartItems.map((item) => item.color)}
+                    />
                   </div>
-                  <h5 className="mb-0 fs-18 font-w500 text-center">
-                    On Progress{" "}
-                    <span className="text-primary fs-18 font-w500s">70%</span>
-                  </h5>
-                </div>
-              </div>
-              <div className="card contacts h-auto">
-                <div className="card-header border-0 pb-0">
-                  <div>
-                    <h2 className="heading mb-0">Invoices Sent</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur</p>
+                  <div className="chart-labels">
+                    <ul className="mt-1 mb-0 list-unstyled">
+                      {cardStatusChartItems.map((item) => (
+                        <li
+                          className="d-flex align-items-center mb-2"
+                          key={item.label}
+                        >
+                          <svg
+                            className="me-2"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <rect width="14" height="14" rx="7" fill={item.color} />
+                          </svg>
+                          <span>{item.label}</span>
+                          <strong className="ms-auto">{item.value}</strong>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-                <div className="card-body loadmore-content  recent-activity-wrapper py-0 dz-scroll">
-                  {datas &&
-                    datas.map((item, ind) => (
-                      <div
-                        className="d-flex align-items-center student"
-                        key={ind}
-                      >
-                        <span className="dz-media">
-                          <img
-                            src={item.image}
-                            className=" avtar avtar-lg"
-                            alt=""
-                          />
-                        </span>
-                        <div className="user-info">
-                          <h6 className="name">
-                            <Link to="/app-profile">{item.title}</Link>
-                          </h6>
-                          <span className="fs-14 font-w400 text-wrap">
-                            {item.postion}
-                          </span>
-                        </div>
-                        <span className="text-primary ms-auto invoice-price">
-                          ${item.price}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-                <div className="card-footer border-0 pt-3 px-3 px-sm-4">
-                  <Link
-                    to="#"
-                    className="btn btn-block btn-primary dz-load-more"
-                    onClick={() => hendelClick()}
-                  >
-                    {refreshToggle && <i className="fa fa-refresh" />} VIEW MORE
-                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <Modal
+        show={overviewModal.open}
+        onHide={() =>
+          setOverviewModal({ open: false, title: "", subtitle: "", rows: [] })
+        }
+        centered
+        size="xl"
+      >
+        <div className="modal-header">
+          <div>
+            <h5 className="modal-title">{overviewModal.title || "Cards"}</h5>
+            <div className="text-muted small">
+              {overviewModal.subtitle || "Cards list"}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() =>
+              setOverviewModal({ open: false, title: "", subtitle: "", rows: [] })
+            }
+            aria-label="Close"
+          />
+        </div>
+        <div className="modal-body">
+          <div className="table-responsive">
+            <table className="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Card ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Balance</th>
+                  <th>Bound</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!overviewModal.rows.length ? (
+                  <tr>
+                    <td colSpan={6} className="text-center text-muted py-4">
+                      No cards found for this selection.
+                    </td>
+                  </tr>
+                ) : (
+                  overviewModal.rows.map((card, index) => {
+                    const boundRaw = String(card?.is_bound || "").toLowerCase();
+                    const boundLabel =
+                      typeof card?.is_bound === "boolean"
+                        ? card.is_bound
+                          ? "Yes"
+                          : "No"
+                        : boundRaw === "1" || boundRaw === "true" || boundRaw === "yes"
+                          ? "Yes"
+                          : boundRaw === "0" || boundRaw === "false" || boundRaw === "no"
+                            ? "No"
+                            : "N/A";
+
+                    return (
+                      <tr key={`overview-card-${String(card?.id ?? card?.card_id ?? index)}`}>
+                        <td>{card?.card_id || card?.id || "N/A"}</td>
+                        <td>{normalizeCardType(card?.card_type || card?.type)}</td>
+                        <td>{normalizeStatus(card?.status)}</td>
+                        <td>
+                          {formatCurrencyValue(
+                            card?.balance,
+                            card?.currency || walletCurrency || "USD",
+                          )}
+                        </td>
+                        <td>{boundLabel}</td>
+                        <td>{formatDateTime(card?.created_at)}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Modal>
       <Modal
         id="exampleModal1"
         show={makePayment}
@@ -1109,55 +1246,6 @@ export function CommandPage({ user }) {
             type="button"
             className="btn btn-danger light"
             onClick={() => setCardModal(false)}
-          >
-            Close
-          </button>
-          <button type="button" className="btn btn-primary">
-            Save changes
-          </button>
-        </div>
-      </Modal>
-      <Modal centered show={invoiceModal} onHide={setInvoiceModal}>
-        <div className="modal-header ">
-          <h5 className="modal-title">Send invoice</h5>
-          <button
-            type="button"
-            className="btn-close"
-            onClick={() => setInvoiceModal(false)}
-          ></button>
-        </div>
-        <div className="modal-body">
-          <label className="form-label">Send email to</label>
-          <input
-            type="email"
-            className="form-control mb-3"
-            id="exampleInputEmail10"
-            placeholder="Art Vandelay<art@vandelay.com"
-          />
-          <label className="form-label">Subject</label>
-          <input
-            type="number"
-            className="form-control mb-3"
-            id="exampleInputEmail11"
-            placeholder="invoice Vi-001 from America"
-          />
-          <div className="mb-3">
-            <label htmlFor="exampleFormControlTextarea1" className="form-label">
-              Body
-            </label>
-            <textarea
-              className="form-control"
-              id="exampleFormControlTextarea1"
-              rows="3"
-              defaultValue={"message"}
-            />
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-danger light"
-            onClick={() => setInvoiceModal(false)}
           >
             Close
           </button>

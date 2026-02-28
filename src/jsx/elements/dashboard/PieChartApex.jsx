@@ -1,71 +1,68 @@
-import React from "react";
+import React, { useMemo } from "react";
 import ReactApexChart from "react-apexcharts";
 
-class PieChartApex extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			series: [10,20,35,20],
-			options: {
-				chart: {
-					type: 'donut',
-					height: 250,     
-					innerRadius: 50,               
-				},                
-				dataLabels: {
-				  enabled: false,
-				},
-				stroke: {
-				  width: 0,
-				},
+const DEFAULT_SERIES = [10, 20, 35, 20];
+const DEFAULT_COLORS = ["#252289", "#D7D7D7", "#9568FF", "var(--primary)"];
 
-				plotOptions: {
-					pie: {
-					   startAngle: 0, 
-						endAngle: 360,
-					   donut: {
-							size: '80%',
-							labels: {
-								show:true,
-								name: {
-								   
-							  },
-								
-							},
-					   },
-					   
-				   },
-			  	},
-				colors:[ '#252289', '#D7D7D7' ,'#9568FF', 'var(--primary)'],
-				legend: {
-					position: 'bottom',
-					show:false
-				},
-				responsive: [					
-					{
-						breakpoint: 768,
-						options: { 
-						 	chart: {
-								height:200
-						  	},
-						}
-					}
-				]
-			},
-		};
-	}
+const PieChartApex = ({ series, colors, labels, height = 250 }) => {
+  const chartSeries = Array.isArray(series) && series.length ? series : DEFAULT_SERIES;
+  const chartColors =
+    Array.isArray(colors) && colors.length ? colors : DEFAULT_COLORS;
 
-	render() {
-		return (			
-			<ReactApexChart
-				options={this.state.options}
-				series={this.state.series}
-				type="donut"
-				height={250} 
-			/>
-			
-		);
-	}
-}
+  const options = useMemo(
+    () => ({
+      chart: {
+        type: "donut",
+        height,
+        innerRadius: 50,
+      },
+      labels,
+      dataLabels: {
+        enabled: false,
+      },
+      stroke: {
+        width: 0,
+      },
+      plotOptions: {
+        pie: {
+          startAngle: 0,
+          endAngle: 360,
+          donut: {
+            size: "80%",
+            labels: {
+              show: true,
+              name: {},
+            },
+          },
+        },
+      },
+      colors: chartColors,
+      legend: {
+        position: "bottom",
+        show: false,
+      },
+      responsive: [
+        {
+          breakpoint: 768,
+          options: {
+            chart: {
+              height: 200,
+            },
+          },
+        },
+      ],
+    }),
+    [chartColors, height, labels],
+  );
+
+  return (
+    <ReactApexChart
+      options={options}
+      series={chartSeries}
+      type="donut"
+      height={height}
+    />
+  );
+};
 
 export default PieChartApex;

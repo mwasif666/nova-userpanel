@@ -39285,7 +39285,7 @@ table {
   align-items: center;
   justify-content: space-between;
   padding: 1.125rem 1.875rem;
-  background: #ffffff;
+  /* background: #ffffff; */
   margin-bottom: 1.875rem;
   border-radius: 0.5rem;
   position: relative;

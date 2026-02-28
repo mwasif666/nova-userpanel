@@ -19,6 +19,7 @@ import ScrollToTop from "./../layouts/ScrollToTop";
 import Home from "../pages/dashboard/Home";
 import Kyc from "../pages/user/Kyc";
 import Cards from "../pages/user/Cards";
+import SecuritySettings from "../pages/user/SecuritySettings";
 
 /// Error pages
 import LockScreen from "./../pages/error/LockScreen";
@@ -42,6 +43,8 @@ const Markup = () => {
           <Route path="/" element={<Home />} />
           <Route path="/kyc" element={<Kyc />} />
           <Route path="/cards" element={<Cards />} />
+          <Route path="/security-settings" element={<SecuritySettings />} />
+          <Route path="/profile" element={<SecuritySettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

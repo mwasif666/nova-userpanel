@@ -1,11 +1,12 @@
 import React, { useReducer, useContext, useEffect, useState } from "react";
 import { Collapse } from "react-bootstrap";
 /// Link
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MenuList } from "./Menu";
 
 import { useScrollPosition } from "@n8tb1t/use-scroll-position";
 import { ThemeContext } from "../../../context/ThemeContext";
+import { AuthContext } from "../../../context/authContext";
 
 const reducer = (previousState, updatedState) => ({
   ...previousState,
@@ -18,6 +19,8 @@ const initialState = {
 };
 
 const SideBar = () => {
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const {
     iconHover,
     sidebarposition,
@@ -71,6 +74,11 @@ const SideBar = () => {
     });
   }, [path]);
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div
       onMouseEnter={() => ChangeIconSidebar(true)}
@@ -86,7 +94,7 @@ const SideBar = () => {
       }`}
     >
       <div className="deznav-scroll">
-        <ul className="metismenu" id="menu">
+        <ul className="metismenu nova-sidebar-main-menu" id="menu">
           {MenuList.map((data, index) => {
             let menuClass = data.classsChange;
             if (menuClass === "menu-title") {
@@ -196,6 +204,34 @@ const SideBar = () => {
               );
             }
           })}
+          <li className="nova-sidebar-logout-item">
+            <Link
+              to="#"
+              onClick={(event) => {
+                event.preventDefault();
+                handleLogout();
+              }}
+            >
+              <svg
+                id="icon-logout"
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="feather feather-log-out"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span className="nav-text">Logout</span>
+            </Link>
+          </li>
         </ul>
       </div>
     </div>

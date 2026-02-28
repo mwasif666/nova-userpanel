@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PageTitle from "../../layouts/PageTitle";
 import { request } from "../../../utils/api";
+import { validateSecurityCode } from "../../../services/securityCode";
 
 const INITIAL_FORM_VALUES = {
   country_area: "US",
@@ -12,6 +13,7 @@ const INITIAL_FORM_VALUES = {
   identity_card_validity_time: "",
   provider: "1",
   api_version: "v1",
+  security_code: "",
 };
 
 const INITIAL_FILES = {
@@ -154,6 +156,7 @@ const toFormValuesFromKyc = (record) => {
     ),
     provider: String(record?.provider || INITIAL_FORM_VALUES.provider),
     api_version: String(record?.api_version || INITIAL_FORM_VALUES.api_version),
+    security_code: "",
   };
 };
 
@@ -179,10 +182,6 @@ const Kyc = () => {
   const [kycLoading, setKycLoading] = useState(true);
   const [kycError, setKycError] = useState("");
   const [kycRows, setKycRows] = useState([]);
-  const [kycMeta, setKycMeta] = useState({
-    total: 0,
-    last_page: 1,
-  });
 
   const sortedKycRows = useMemo(() => sortByLatest(kycRows), [kycRows]);
   const isResolvingInitialView = kycLoading && kycRows.length === 0;
@@ -215,16 +214,7 @@ const Kyc = () => {
   const hasFilledKyc = Boolean(displayKyc);
   const isFormDisabledByStatus = isUnderReview;
 
-  const hydrateFormFromRecord = (record) => {
-    const next = toFormValuesFromKyc(record);
-    if (!next) return;
-    setFormValues((prev) => ({
-      ...prev,
-      ...next,
-    }));
-  };
-
-  const loadKycList = async () => {
+  const loadKycList = useCallback(async () => {
     setKycLoading(true);
     setKycError("");
 
@@ -266,11 +256,6 @@ const Kyc = () => {
       const sortedRows = sortByLatest(normalizedRows);
 
       setKycRows(sortedRows);
-      setKycMeta({
-        total: firstPage.total || sortedRows.length,
-        last_page: firstPage.lastPage,
-      });
-
       const approvedRecord =
         sortedRows.find(
           (item) => String(item?.status || "").toLowerCase() === "approved",
@@ -278,18 +263,24 @@ const Kyc = () => {
       const preferredRecord = approvedRecord || sortedRows[0] || null;
 
       if (preferredRecord) {
-        hydrateFormFromRecord(preferredRecord);
+        const next = toFormValuesFromKyc(preferredRecord);
+        if (next) {
+          setFormValues((prev) => ({
+            ...prev,
+            ...next,
+          }));
+        }
       }
     } catch (error) {
       setKycError(getApiErrorMessage(error));
     } finally {
       setKycLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadKycList();
-  }, []);
+  }, [loadKycList]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -322,8 +313,14 @@ const Kyc = () => {
       return;
     }
 
+    if (!String(formValues.security_code || "").trim()) {
+      setSubmitError("Security code is required to submit KYC.");
+      return;
+    }
+
     const formData = new FormData();
     Object.entries(formValues).forEach(([key, value]) => {
+      if (key === "security_code") return;
       formData.append(key, value ?? "");
     });
 
@@ -337,6 +334,10 @@ const Kyc = () => {
     setSubmitting(true);
 
     try {
+      await validateSecurityCode({
+        securityCode: formValues.security_code,
+      });
+
       const response = await request({
         url: "/tevau/kyc",
         method: "POST",
@@ -350,6 +351,10 @@ const Kyc = () => {
       );
 
       setFiles(INITIAL_FILES);
+      setFormValues((prev) => ({
+        ...prev,
+        security_code: "",
+      }));
       await loadKycList();
     } catch (error) {
       setSubmitError(getApiErrorMessage(error));
@@ -808,6 +813,26 @@ const Kyc = () => {
                                 onChange={handleFileChange("identity_back_pic")}
                               />
                             </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="nova-kyc-block">
+                        <h6 className="nova-kyc-block-title">
+                          Security Verification
+                        </h6>
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Security Code</label>
+                            <input
+                              type="password"
+                              className="form-control"
+                              name="security_code"
+                              value={formValues.security_code}
+                              onChange={handleInputChange}
+                              placeholder="Enter security code"
+                              required
+                            />
                           </div>
                         </div>
                       </div>
