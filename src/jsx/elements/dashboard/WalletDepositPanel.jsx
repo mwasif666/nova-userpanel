@@ -373,12 +373,7 @@ const WalletDepositPanel = ({ onWalletUpdated }) => {
       <div className="card-body">
         <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-3">
           <div>
-            <div className="nova-flow-kicker mb-1">Wallet Deposit APIs</div>
-            <h4 className="mb-1">Networks + Deposit Address + Binance Pay</h4>
-            <p className="mb-0 text-muted">
-              `/wallet/networks`, `/wallet/deposit-addresses`, and Binance Pay
-              create/status endpoints integrated.
-            </p>
+            <div className="nova-flow-kicker mb-1">Wallet</div>
           </div>
           <button
             type="button"

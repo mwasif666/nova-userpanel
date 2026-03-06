@@ -8,7 +8,6 @@ import LastestTransaction from "../../elements/dashboard/LastestTransaction";
 import PieChartApex from "../../elements/dashboard/PieChartApex";
 import WeeklySummarChart from "../../elements/dashboard/WeeklySummarChart";
 import BarWeeklySummary from "../../elements/dashboard/BarWeeklySummary";
-import WalletDepositPanel from "../../elements/dashboard/WalletDepositPanel";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { AuthContext } from "../../../context/authContext";
 import { request } from "../../../utils/api";
@@ -813,9 +812,6 @@ export function CommandPage({ user }) {
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="col-12">
-                <WalletDepositPanel />
               </div>
             </div>
           </div>

@@ -1653,6 +1653,68 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   border-radius: 999px;
   padding: 0.25rem 0.6rem;
 }
+.nova-wallet-address-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+.nova-wallet-address-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.85rem;
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  background: #fbfdff;
+}
+.nova-wallet-address-qr {
+  width: 124px;
+  height: 124px;
+  border: 1px solid #dbe5ef;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-wallet-address-qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.nova-wallet-address-qr-empty {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+.nova-wallet-address-info {
+  min-width: 0;
+}
+.nova-wallet-address-chain {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  background: #eef6ff;
+  color: #1d4f74;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  padding: 0.2rem 0.58rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.nova-wallet-address-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.nova-wallet-address-value {
+  color: #0f172a;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  word-break: break-all;
+}
 
 @media (max-width: 991.98px) {
   .nova-flow-header {
@@ -1674,6 +1736,13 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 @media (max-width: 575.98px) {
   .nova-flow-switch {
     grid-template-columns: 1fr;
+  }
+  .nova-wallet-address-card {
+    grid-template-columns: 1fr;
+  }
+  .nova-wallet-address-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .nova-flow-hero-stats {
     grid-template-columns: 1fr;

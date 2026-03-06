@@ -19,6 +19,7 @@ import ScrollToTop from "./../layouts/ScrollToTop";
 import Home from "../pages/dashboard/Home";
 import Kyc from "../pages/user/Kyc";
 import Cards from "../pages/user/Cards";
+import Wallet from "../pages/user/Wallet";
 import SecuritySettings from "../pages/user/SecuritySettings";
 
 /// Error pages
@@ -43,6 +44,7 @@ const Markup = () => {
           <Route path="/" element={<Home />} />
           <Route path="/kyc" element={<Kyc />} />
           <Route path="/cards" element={<Cards />} />
+          <Route path="/wallet" element={<Wallet />} />
           <Route path="/security-settings" element={<SecuritySettings />} />
           <Route path="/profile" element={<SecuritySettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />

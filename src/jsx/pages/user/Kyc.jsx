@@ -470,11 +470,6 @@ const Kyc = () => {
               <div>
                 <div className="nova-kyc-eyebrow">Tevau Verification</div>
                 <h3 className="nova-kyc-hero-title">KYC Submission Form</h3>
-                <p className="nova-kyc-hero-text">
-                  Existing KYC records are auto-loaded, form fields are
-                  prefilled, and approved/pending status is shown from the GET
-                  /tevau/kyc response.
-                </p>
                 <div className="nova-kyc-pill-row">
                   <span className={`nova-kyc-pill is-${statusTone}`}>
                     <span className="nova-kyc-pill-dot" />
@@ -523,11 +518,7 @@ const Kyc = () => {
                 Images should not be blurred or cropped; all corners must be
                 visible.
               </li>
-              <li>ID Card type `1` requires both front and back images.</li>
-              <li>
-                Approved status and existing filled fields are auto-loaded from
-                GET `/tevau/kyc`.
-              </li>
+              <li>ID Card requires both front and back images.</li>
               <li>
                 Verify existing approved KYC details before submitting a new
                 request.
@@ -893,10 +884,6 @@ const Kyc = () => {
                   <div>
                     <div className="nova-kyc-eyebrow">KYC Status</div>
                     <h5 className="mb-1">Filled / Approved Status</h5>
-                    <p className="mb-0 text-muted">
-                      Status is shown from the latest and approved KYC records
-                      returned by GET /tevau/kyc.
-                    </p>
                   </div>
                   <span className={`nova-kyc-status-chip is-${statusTone}`}>
                     {approvedBadgeText}

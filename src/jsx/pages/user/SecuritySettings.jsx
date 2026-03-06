@@ -1088,7 +1088,7 @@ const SecuritySettings = () => {
                   <div className="nova-settings-main-pane">
               {activeTab === "profile" && (
                 <div>
-                  <h5 className="mb-3">Profile Details (API: `GET /me`)</h5>
+                  <h5 className="mb-3">Profile Details</h5>
                   {profileLoading ? (
                     <div className="d-flex align-items-center gap-2 text-muted">
                       <span className="spinner-border spinner-border-sm" />

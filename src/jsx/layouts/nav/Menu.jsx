@@ -14,6 +14,12 @@ export const MenuList = [
     to: "/cards",
   },
   {
+    title: "Wallet",
+    classsChange: "mm-collapse",
+    iconStyle: SVGICON.WalletSvg,
+    to: "/wallet",
+  },
+  {
     title: "KYC",
     classsChange: "mm-collapse",
     iconStyle: SVGICON.FormIconSvg,
