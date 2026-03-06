@@ -9,8 +9,6 @@ const CARD_ORDER_CONFIG = {
   virtual: {
     label: "Virtual Card",
     shortLabel: "Virtual",
-    cardCode: 1100,
-    addressKey: "billing_address",
     addressTitle: "Billing Address",
     hint: "Instant issue flow with billing address verification.",
     image: virtualCardImage,
@@ -18,8 +16,6 @@ const CARD_ORDER_CONFIG = {
   physical: {
     label: "Physical Card",
     shortLabel: "Physical",
-    cardCode: 2100,
-    addressKey: "postal_address",
     addressTitle: "Postal Address",
     hint: "Courier delivery flow with full recipient details.",
     image: physicalCardImage,
@@ -255,6 +251,7 @@ const CardOperationsModal = ({
   walletSummary = null,
   onWalletUpdated,
   inline = false,
+  screen = "all",
 }) => {
   const prefill = useMemo(() => buildPrefill(user), [user]);
   const [orderTab, setOrderTab] = useState("virtual");
@@ -556,6 +553,19 @@ const CardOperationsModal = ({
   const walletCurrency = String(walletSummary?.currency || "USD").toUpperCase();
   const walletAvailable =
     walletSummary?.availableBalance ?? walletSummary?.balance ?? null;
+  const selectedScreen =
+    screen === "order" || screen === "bind" || screen === "all"
+      ? screen
+      : "all";
+  const isOrderScreen = selectedScreen === "order";
+  const isBindScreen = selectedScreen === "bind";
+  const showOrderPanel = selectedScreen === "all" || isOrderScreen;
+  const showBindPanel = selectedScreen === "all" || isBindScreen;
+  const modalTitle = isOrderScreen
+    ? "Cards: Order"
+    : isBindScreen
+      ? "Cards: Bind"
+      : "Cards: Order & Bind";
 
   const content = (
     <>
@@ -599,14 +609,12 @@ const CardOperationsModal = ({
       </div>
 
       <div className="row g-3">
-        <div className="col-xl-7">
+        {showOrderPanel && (
+        <div className={showBindPanel ? "col-xl-7" : "col-12"}>
           <div className="nova-flow-shell">
             <div className="nova-flow-header">
               <div>
                 <h4 className="mb-1">Order Card</h4>
-                <p className="mb-0 text-muted">
-                  `POST /tevau/cards` with physical or virtual payload
-                </p>
               </div>
               <span
                 className={`nova-flow-status-pill ${
@@ -639,23 +647,9 @@ const CardOperationsModal = ({
               }`}
             >
               <div className="nova-flow-hero-copy">
-                <div className="nova-flow-kicker">Card Order API</div>
+                <div className="nova-flow-kicker">Card Order</div>
                 <h5>{activeOrderConfig.label}</h5>
                 <p>{activeOrderConfig.hint}</p>
-                <div className="nova-flow-hero-stats">
-                  <div>
-                    <span>Endpoint</span>
-                    <strong>/tevau/cards</strong>
-                  </div>
-                  <div>
-                    <span>Card Code</span>
-                    <strong>{activeOrderForm.card_code}</strong>
-                  </div>
-                  <div>
-                    <span>Address Key</span>
-                    <strong>{activeOrderConfig.addressKey}</strong>
-                  </div>
-                </div>
               </div>
               <div className="nova-flow-hero-visual">
                 <img
@@ -714,16 +708,6 @@ const CardOperationsModal = ({
             <div className="nova-flow-actions">
               <button
                 type="button"
-                className="btn btn-primary"
-                onClick={handleOrderSubmit}
-                disabled={submittingAction === `order-${orderTab}`}
-              >
-                {submittingAction === `order-${orderTab}`
-                  ? "Submitting..."
-                  : `Submit ${activeOrderConfig.shortLabel} Order`}
-              </button>
-              <button
-                type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => {
                   resetOrderForm(orderTab);
@@ -732,31 +716,29 @@ const CardOperationsModal = ({
               >
                 Reset Order Form
               </button>
+               <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOrderSubmit}
+                disabled={submittingAction === `order-${orderTab}`}
+              >
+                {submittingAction === `order-${orderTab}`
+                  ? "Submitting..."
+                  : `Submit ${activeOrderConfig.shortLabel} Order`}
+              </button>
             </div>
           </div>
         </div>
+        )}
 
-        <div className="col-xl-5">
+        {showBindPanel && (
+        <div className={showOrderPanel ? "col-xl-5" : "col-12"}>
           <div className="nova-flow-shell">
             <div className="nova-flow-header">
               <div>
                 <h4 className="mb-1">Bind Card</h4>
-                <p className="mb-0 text-muted">
-                  `POST /tevau/cards/bind`
-                </p>
               </div>
               <span className="nova-flow-status-pill is-bind">Bind Flow</span>
-            </div>
-
-            <div className="nova-bind-helper">
-              <div className="nova-bind-helper-title">Request body fields</div>
-              <div className="nova-bind-helper-list">
-                <span>active_code</span>
-                <span>card_number</span>
-                <span>address</span>
-                <span>country_area / city / post_code</span>
-                <span>dial_code / phone_number / email</span>
-              </div>
             </div>
 
             <div className="row g-3">
@@ -777,14 +759,6 @@ const CardOperationsModal = ({
             <div className="nova-flow-actions">
               <button
                 type="button"
-                className="btn btn-primary"
-                onClick={handleBindSubmit}
-                disabled={submittingAction === "bind"}
-              >
-                {submittingAction === "bind" ? "Binding..." : "Bind Card"}
-              </button>
-              <button
-                type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => {
                   resetBindForm();
@@ -793,9 +767,18 @@ const CardOperationsModal = ({
               >
                 Reset Bind Form
               </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleBindSubmit}
+                disabled={submittingAction === "bind"}
+              >
+                {submittingAction === "bind" ? "Binding..." : "Bind Card"}
+              </button>
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {feedback && (
@@ -859,10 +842,7 @@ const CardOperationsModal = ({
     >
       <div className="modal-header">
         <div>
-          <h5 className="modal-title">Cards: Order & Bind</h5>
-          <div className="text-muted small">
-            Tevau API flows for physical / virtual / bind card
-          </div>
+          <h5 className="modal-title">{modalTitle}</h5>
         </div>
         <button
           type="button"

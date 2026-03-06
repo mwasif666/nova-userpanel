@@ -103,6 +103,7 @@ const Cards = () => {
     rows: [],
   });
   const [showCardOpsModal, setShowCardOpsModal] = useState(false);
+  const [cardOpsScreen, setCardOpsScreen] = useState("all");
   const [securityStatusLoading, setSecurityStatusLoading] = useState(true);
   const [hasSecurityCode, setHasSecurityCode] = useState(false);
   const [balanceAccessUnlocked, setBalanceAccessUnlocked] = useState(false);
@@ -603,10 +604,23 @@ const Cards = () => {
                 </span>
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  onClick={() => setShowCardOpsModal(true)}
+                  className="btn btn-outline-primary"
+                  onClick={() => {
+                    setCardOpsScreen("order");
+                    setShowCardOpsModal(true);
+                  }}
                 >
-                  Open Card Operations
+                  Open Card Order
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setCardOpsScreen("bind");
+                    setShowCardOpsModal(true);
+                  }}
+                >
+                  Open Card Bind
                 </button>
               </div>
             </div>
@@ -855,7 +869,11 @@ const Cards = () => {
 
       <CardOperationsModal
         show={showCardOpsModal}
-        onHide={() => setShowCardOpsModal(false)}
+        onHide={() => {
+          setShowCardOpsModal(false);
+          setCardOpsScreen("all");
+        }}
+        screen={cardOpsScreen}
         user={user}
         userCards={cards}
         walletSummary={walletSummary}

@@ -629,16 +629,8 @@ export function CommandPage({ user }) {
               <div className="payment-content">
                 <h1 className="font-w500 mb-2">Good morning, {userName}</h1>
                 <p className="dz-para">
-                  {roleLabel} | {userEmail} | {userPhone}
+                   {userEmail} | {userPhone}
                 </p>
-                {/* <div className="d-flex flex-wrap gap-2">
-                  <span className="badge badge-sm bg-primary">
-                    Tevau Status: {tevauStatus}
-                  </span>
-                  <span className="badge badge-sm bg-info">
-                    User Code: {userCode || "N/A"}
-                  </span>
-                </div> */}
               </div>
               <div className="mb-4 mb-xl-0">
                 <button
@@ -646,14 +638,21 @@ export function CommandPage({ user }) {
                   className="btn btn-primary me-3"
                   onClick={() => setMakePayment(true)}
                 >
-                  Make a payment
+                  Deposit 
                 </button>
                 <button
                   type="button"
-                  className="btn btn-white"
-                  onClick={() => setWithdrowModal(true)}
+                  className="btn btn-primary me-3"
+                  onClick={() => setMakePayment(true)}
                 >
                   Withdraw
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setWithdrowModal(true)}
+                >
+                  Transfer
                 </button>
               </div>
             </div>
@@ -691,15 +690,6 @@ export function CommandPage({ user }) {
                         />
                       </svg>
                     </div>
-                    <button type="button" className="modal-btn">
-                      <span
-                        className="dz-wallet icon-box icon-box-lg m-auto mb-1 d-block"
-                        onClick={() => setCardModal(true)}
-                      >
-                        {SVGICON.transferSvg}
-                      </span>
-                      <span>Transfer </span>
-                    </button>
                   </div>
                   <div className="card-body py-3 pt-1 d-flex align-items-center justify-content-between flex-wrap pe-3">
                     <div className="wallet-info">
@@ -787,7 +777,6 @@ export function CommandPage({ user }) {
                             >
                               <span className="text-capitalize">
                                 {txn?.type || "txn"}{" "}
-                                {txn?.network ? `(${txn.network})` : ""}
                               </span>
                               <strong>
                                 {formatProtectedCurrency(
@@ -855,7 +844,7 @@ export function CommandPage({ user }) {
                   </div>
                   <div className="nova-overview-stage-cta">
                     <i className="pi pi-chart-line" />
-                    Summary + stats synced from cards/wallet APIs
+                    Summary
                   </div>
                 </div>
                 <div className="nova-overview-horizontal-scroll">
