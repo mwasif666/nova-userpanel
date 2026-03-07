@@ -132,4 +132,3 @@ export const getUsdtWalletBinancePayStatus = async ({ merchantTradeNo }) =>
       { url: "usdt/wallet/binance-pay/status", baseURL: ROOT_API_BASE_URL },
     ],
   });
-
