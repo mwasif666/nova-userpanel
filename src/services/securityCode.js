@@ -4,7 +4,7 @@ const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api/";
 
 const endpointCandidates = (suffix) => [
   {
-    url: `security-code/${suffix}`,
+    url: `app/security-code/${suffix}`,
   },
   {
     url: `app/security-code/${suffix}`,

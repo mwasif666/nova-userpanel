@@ -2,7 +2,7 @@ const DashboardActionHeader = ({
   userName,
   userEmail,
   userPhone,
-  onOpenDeposit,
+  onClickDeposit,
   onOpenTransfer,
   onOpenWithdraw,
 }) => (
@@ -14,7 +14,7 @@ const DashboardActionHeader = ({
       </p>
     </div>
     <div className="mb-4 mb-xl-0">
-      <button type="button" className="btn btn-primary me-3" onClick={onOpenDeposit}>
+      <button type="button" className="btn btn-primary me-3" onClick={onClickDeposit}>
         Deposit
       </button>
       <button type="button" className="btn btn-primary me-3" onClick={onOpenTransfer}>

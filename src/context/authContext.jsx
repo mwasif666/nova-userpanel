@@ -307,7 +307,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const response = await request({
-        url: "me",
+        url: "app/me",
         method: "GET",
       });
 

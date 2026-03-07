@@ -131,7 +131,7 @@ const Cards = () => {
 
       try {
         const firstResponse = await request({
-          url: "tevau/cards",
+          url: "app/tevau/cards",
           method: "GET",
         });
 
@@ -143,7 +143,7 @@ const Cards = () => {
             { length: firstPage.lastPage - 1 },
             (_, index) =>
               request({
-                url: `tevau/cards?page=${index + 2}`,
+                url: `app/tevau/cards?page=${index + 2}`,
                 method: "GET",
               }),
           );

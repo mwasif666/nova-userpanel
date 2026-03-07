@@ -1,6 +1,6 @@
 import { request } from "../utils/api";
 
-const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api/";
+const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api";
 
 const callCandidates = async ({ candidates, method = "GET", data = null }) => {
   let lastError = null;
@@ -136,102 +136,102 @@ const infer2faEnabled = (payload) => {
   return asBool(payload?.status);
 };
 
-const profileEndpoints = [{ url: "me" }];
+const profileEndpoints = [{ url: "app/me" }];
 
 const passwordEndpoints = [
-  { url: "change-password" },
-  { url: "password/change" },
-  { url: "profile/change-password" },
-  { url: "/app/change-password", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/password/change", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-password" },
+  { url: "app/password/change" },
+  { url: "app/profile/change-password" },
+  { url: "app/change-password", baseURL: ROOT_API_BASE_URL },
+  { url: "app/password/change", baseURL: ROOT_API_BASE_URL },
 ];
 
 const passwordSendCodeEndpoints = [
   { url: "app/change-password/send-code", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-password/send-code", baseURL: ROOT_API_BASE_URL },
-  { url: "change-password/send-code" },
+  { url: "app/change-password/send-code", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-password/send-code" },
 ];
 
 const passwordConfirmEndpoints = [
   { url: "app/change-password/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-password/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "change-password/confirm" },
+  { url: "app/change-password/confirm", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-password/confirm" },
 ];
 
 const changeEmailSendCodeCurrentEndpoints = [
   { url: "app/change-email/send-code-current", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-email/send-code-current", baseURL: ROOT_API_BASE_URL },
-  { url: "change-email/send-code-current" },
+  { url: "app/change-email/send-code-current", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-email/send-code-current" },
 ];
 
 const changeEmailVerifyCurrentEndpoints = [
   { url: "app/change-email/verify-current", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-email/verify-current", baseURL: ROOT_API_BASE_URL },
-  { url: "change-email/verify-current" },
+  { url: "app/change-email/verify-current", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-email/verify-current" },
 ];
 
 const changeEmailSendCodeNewEndpoints = [
   { url: "app/change-email/send-code-new", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-email/send-code-new", baseURL: ROOT_API_BASE_URL },
-  { url: "change-email/send-code-new" },
+  { url: "app/change-email/send-code-new", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-email/send-code-new" },
 ];
 
 const changeEmailConfirmEndpoints = [
   { url: "app/change-email/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-email/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "change-email/confirm" },
+  { url: "app/change-email/confirm", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-email/confirm" },
 ];
 
 const changePhoneSendCodeEndpoints = [
   { url: "app/change-phone/send-code", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-phone/send-code", baseURL: ROOT_API_BASE_URL },
-  { url: "change-phone/send-code" },
+  { url: "app/change-phone/send-code", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-phone/send-code" },
 ];
 
 const changePhoneConfirmEndpoints = [
   { url: "app/change-phone/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "/app/change-phone/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "change-phone/confirm" },
+  { url: "app/change-phone/confirm", baseURL: ROOT_API_BASE_URL },
+  { url: "app/change-phone/confirm" },
 ];
 
 const googleStatusEndpoints = [
-  { url: "2fa/status" },
+  { url: "app/2fa/status" },
   { url: "app/2fa/status", baseURL: ROOT_API_BASE_URL },
-  { url: "google-auth/status" },
-  { url: "google-2fa/status" },
-  { url: "two-factor/status" },
+  { url: "app/google-auth/status" },
+  { url: "app/google-2fa/status" },
+  { url: "app/two-factor/status" },
   { url: "app/google-auth/status", baseURL: ROOT_API_BASE_URL },
 ];
 
 const googleSetupEndpoints = [
-  { url: "2fa/setup" },
+  { url: "app/2fa/setup" },
   { url: "app/2fa/setup", baseURL: ROOT_API_BASE_URL },
-  { url: "google-auth/setup" },
-  { url: "google-2fa/setup" },
-  { url: "two-factor/setup" },
+  { url: "app/google-auth/setup" },
+  { url: "app/google-2fa/setup" },
+  { url: "app/two-factor/setup" },
   { url: "app/google-auth/setup", baseURL: ROOT_API_BASE_URL },
 ];
 
 const googleVerifyEndpoints = [
-  { url: "2fa/confirm" },
+  { url: "app/2fa/confirm" },
   { url: "app/2fa/confirm", baseURL: ROOT_API_BASE_URL },
-  { url: "google-auth/verify" },
-  { url: "google-2fa/verify" },
-  { url: "two-factor/verify" },
+  { url: "app/google-auth/verify" },
+  { url: "app/google-2fa/verify" },
+  { url: "app/two-factor/verify" },
   { url: "app/google-auth/verify", baseURL: ROOT_API_BASE_URL },
 ];
 
 const googleDisableEndpoints = [
-  { url: "2fa/disable" },
+  { url: "app/2fa/disable" },
   { url: "app/2fa/disable", baseURL: ROOT_API_BASE_URL },
-  { url: "google-auth/disable" },
-  { url: "google-2fa/disable" },
-  { url: "two-factor/disable" },
+  { url: "app/google-auth/disable" },
+  { url: "app/google-2fa/disable" },
+  { url: "app/two-factor/disable" },
   { url: "app/google-auth/disable", baseURL: ROOT_API_BASE_URL },
 ];
 
 const googleForgetEndpoints = [
-  { url: "2fa/forget" },
+  { url: "app/2fa/forget" },
   { url: "app/2fa/forget", baseURL: ROOT_API_BASE_URL },
 ];
 

@@ -26,10 +26,12 @@ import {
   normalizeStatus,
   toSafeNumber,
 } from "../../../utils";
+import { useNavigate } from "react-router-dom";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function CommandPage({ user }) {
+  const navigate = useNavigate();
   const [walletDepositModal, setWalletDepositModal] = useState(false);
   const [withdrowModal, setWithdrowModal] = useState(false);
   const [userCards, setUserCards] = useState([]);
@@ -120,7 +122,7 @@ export function CommandPage({ user }) {
           setWalletTransactions(recentTransactions);
 
           if (!assets.length) {
-            setWalletError("Wallet assets API se nahi mil sakin.");
+            setWalletError("Getting Error in fetching wallet details.");
           }
         }
       } catch (error) {
@@ -128,7 +130,7 @@ export function CommandPage({ user }) {
           setWalletAssets([]);
           setWalletStatistics(null);
           setWalletTransactions([]);
-          setWalletError("Wallet details load nahi ho sakin.");
+          setWalletError("Getting Error in fetching wallet details.");
         }
       } finally {
         if (mounted) {
@@ -472,7 +474,7 @@ export function CommandPage({ user }) {
               userName={userName}
               userEmail={userEmail}
               userPhone={userPhone}
-              onOpenDeposit={() => setWalletDepositModal(true)}
+              onClickDeposit={() => navigate("/wallet")}
               onOpenTransfer={() => setTransferModal(true)}
               onOpenWithdraw={() => setWithdrowModal(true)}
             />

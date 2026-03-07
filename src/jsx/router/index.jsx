@@ -18,8 +18,8 @@ import ScrollToTop from "./../layouts/ScrollToTop";
 /// User pages
 import Home from "../pages/dashboard/Home";
 import Kyc from "../pages/user/Kyc";
+import Wallet from "../elements/Wallet/Wallet";
 import Cards from "../pages/user/Cards";
-import Wallet from "../pages/user/Wallet";
 import SecuritySettings from "../pages/user/SecuritySettings";
 
 /// Error pages
