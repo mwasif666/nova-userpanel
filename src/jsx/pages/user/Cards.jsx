@@ -182,7 +182,7 @@ const Cards = () => {
         return filtered;
       } catch (fetchError) {
         setCards([]);
-        setError("Cards API se data load nahi ho saka.");
+        setError("Failed to load cards");
         return [];
       } finally {
         if (!silent) {
@@ -886,9 +886,6 @@ const Cards = () => {
           <Modal.Title>Security Code Required</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p className="text-muted mb-2">
-            Enter security code to view wallet/card balances.
-          </p>
           <input
             type="password"
             className="form-control"

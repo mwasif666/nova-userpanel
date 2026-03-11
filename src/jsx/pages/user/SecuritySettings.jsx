@@ -798,7 +798,7 @@ const SecuritySettings = () => {
     if (!key) {
       setFeedback({
         type: "error",
-        message: "Secret key available nahi hai.",
+        message: "Secret key is not available.",
       });
       return;
     }
@@ -806,7 +806,7 @@ const SecuritySettings = () => {
     if (!navigator?.clipboard?.writeText) {
       setFeedback({
         type: "error",
-        message: "Clipboard access available nahi hai. Secret key manually copy karein.",
+        message: "Clipboard access is not available. Copy the secret key manually.",
       });
       return;
     }
@@ -815,12 +815,12 @@ const SecuritySettings = () => {
       await navigator.clipboard.writeText(key);
       setFeedback({
         type: "success",
-        message: "Secret key copied. Google Authenticator app mein paste karein.",
+        message: "Secret key copied. Paste it into the Google Authenticator app.",
       });
     } catch (error) {
       setFeedback({
         type: "error",
-        message: getApiError(error, "Secret key copy nahi ho saki."),
+        message: getApiError(error, "Unable to copy the secret key."),
       });
     }
   };
@@ -832,7 +832,7 @@ const SecuritySettings = () => {
     if (!googleEnabled && !googleQr && !googleSecret) {
       setFeedback({
         type: "error",
-        message: "Pehle setup generate karein, phir code confirm karein.",
+        message: "Generate the setup first, then confirm the code.",
       });
       return;
     }
@@ -841,8 +841,8 @@ const SecuritySettings = () => {
       setFeedback({
         type: "error",
         message: googleEnabled
-          ? "Disable ke liye authenticator code required hai."
-          : "Enable confirm ke liye authenticator code required hai.",
+          ? "Authenticator code is required to disable 2FA."
+          : "Authenticator code is required to enable 2FA.",
       });
       return;
     }
@@ -948,7 +948,7 @@ const SecuritySettings = () => {
     if (googleEnabled) {
       setFeedback({
         type: "error",
-        message: "Disable karne ke liye niche code enter karke submit karein.",
+        message: "Enter the code below and submit to disable 2FA.",
       });
       return;
     }
@@ -1086,9 +1086,25 @@ const SecuritySettings = () => {
 
                 <div className="col-xl-9 col-12">
                   <div className="nova-settings-main-pane">
+              {feedback.message ? (
+                <div
+                  className={`alert ${
+                    feedback.type === "error" ? "alert-danger" : "alert-success"
+                  } mb-3`}
+                >
+                  {feedback.message}
+                </div>
+              ) : null}
               {activeTab === "profile" && (
-                <div>
-                  <h5 className="mb-3">Profile Details</h5>
+                <div className="nova-settings-section nova-settings-panel">
+                  <div className="nova-settings-section-head">
+                    <div>
+                      <h5 className="mb-1">Profile Details</h5>
+                      <p className="text-muted mb-0">
+                        Review the account information currently available from the API.
+                      </p>
+                    </div>
+                  </div>
                   {profileLoading ? (
                     <div className="d-flex align-items-center gap-2 text-muted">
                       <span className="spinner-border spinner-border-sm" />
@@ -1150,17 +1166,19 @@ const SecuritySettings = () => {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      className="btn btn-primary nova-bind-main-btn"
-                      onClick={onVerifyEmailCurrent}
-                      disabled={
-                        !emailChangeState.currentCodeSent ||
-                        submittingAction === "email-verify-current"
-                      }
-                    >
-                      {submittingAction === "email-verify-current" ? "Verifying..." : "Next"}
-                    </button>
+                    <div className="nova-settings-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary nova-bind-main-btn"
+                        onClick={onVerifyEmailCurrent}
+                        disabled={
+                          !emailChangeState.currentCodeSent ||
+                          submittingAction === "email-verify-current"
+                        }
+                      >
+                        {submittingAction === "email-verify-current" ? "Verifying..." : "Next"}
+                      </button>
+                    </div>
 
                     <div className="nova-bind-divider" />
 
@@ -1215,17 +1233,19 @@ const SecuritySettings = () => {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      className="btn btn-primary nova-bind-main-btn"
-                      onClick={onConfirmEmailChange}
-                      disabled={
-                        !emailChangeState.newCodeSent ||
-                        submittingAction === "email-confirm"
-                      }
-                    >
-                      {submittingAction === "email-confirm" ? "Confirming..." : "Confirm Email"}
-                    </button>
+                    <div className="nova-settings-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary nova-bind-main-btn"
+                        onClick={onConfirmEmailChange}
+                        disabled={
+                          !emailChangeState.newCodeSent ||
+                          submittingAction === "email-confirm"
+                        }
+                      >
+                        {submittingAction === "email-confirm" ? "Confirming..." : "Confirm Email"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1277,11 +1297,11 @@ const SecuritySettings = () => {
                       </div>
 
                       <div className="nova-bind-field">
-                        <div className="d-flex align-items-center justify-content-between">
+                        <div className="nova-settings-inline-head">
                           <label>Security Code</label>
                           <button
                             type="button"
-                            className="btn btn-link p-0 text-decoration-none"
+                            className="btn btn-link p-0 text-decoration-none nova-settings-link-action"
                             onClick={() => setActiveTab("security")}
                           >
                             Forgot?
@@ -1311,14 +1331,16 @@ const SecuritySettings = () => {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        className="btn btn-primary nova-bind-main-btn"
-                        onClick={onPhoneSendCode}
-                        disabled={submittingAction === "phone-send-code"}
-                      >
-                        {submittingAction === "phone-send-code" ? "Sending..." : "Get Verify Code"}
-                      </button>
+                      <div className="nova-settings-actions">
+                        <button
+                          type="button"
+                          className="btn btn-primary nova-bind-main-btn"
+                          onClick={onPhoneSendCode}
+                          disabled={submittingAction === "phone-send-code"}
+                        >
+                          {submittingAction === "phone-send-code" ? "Sending..." : "Get Verify Code"}
+                        </button>
+                      </div>
 
                       <div className="nova-bind-field mb-0">
                         <label>Verification Code</label>
@@ -1336,25 +1358,31 @@ const SecuritySettings = () => {
                         />
                       </div>
 
-                      <button
-                        type="submit"
-                        className="btn btn-outline-primary nova-bind-main-btn mt-3"
-                        disabled={submittingAction === "phone-confirm"}
-                      >
-                        {submittingAction === "phone-confirm" ? "Confirming..." : "Confirm Phone"}
-                      </button>
+                      <div className="nova-settings-actions">
+                        <button
+                          type="submit"
+                          className="btn btn-outline-primary nova-bind-main-btn mt-3"
+                          disabled={submittingAction === "phone-confirm"}
+                        >
+                          {submittingAction === "phone-confirm" ? "Confirming..." : "Confirm Phone"}
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
               )}
 
               {activeTab === "password" && (
-                <div>
-                  <h5 className="mb-3">Change Password</h5>
-                  <p className="text-muted small mb-3">
-                    First send verification code from `/app/change-password/send-code`,
-                    then confirm new password with verification code.
-                  </p>
+                <div className="nova-settings-section nova-settings-panel">
+                  <div className="nova-settings-section-head">
+                    <div>
+                      <h5 className="mb-1">Change Password</h5>
+                      <p className="text-muted small mb-0">
+                        First send a verification code from `/app/change-password/send-code`,
+                        then confirm the new password with that code.
+                      </p>
+                    </div>
+                  </div>
                   <form onSubmit={onPasswordSubmit} className="row g-3">
                     <div className="col-md-4">
                       <label className="form-label">New Password</label>
@@ -1401,7 +1429,7 @@ const SecuritySettings = () => {
                         placeholder="Enter code"
                       />
                     </div>
-                    <div className="col-12 d-flex flex-wrap gap-2">
+                    <div className="col-12 nova-settings-actions">
                       <button
                         type="button"
                         className="btn btn-outline-primary"
@@ -1429,12 +1457,16 @@ const SecuritySettings = () => {
               {activeTab === "security" && (
                 <div className="row g-3">
                   <div className="col-12">
-                    <h5 className="mb-0">Security Code</h5>
-                    <p className="text-muted mb-0">
-                      {hasSecurityCode
-                        ? "Current security code change karein ya forgot flow use karein."
-                        : "Naya security code setup karein."}
-                    </p>
+                    <div className="nova-settings-section-head">
+                      <div>
+                        <h5 className="mb-1">Security Code</h5>
+                        <p className="text-muted mb-0">
+                          {hasSecurityCode
+                            ? "Change your current security code or use the forgot flow."
+                            : "Set up a new security code."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="col-12">
@@ -1493,7 +1525,20 @@ const SecuritySettings = () => {
                           />
                         </div>
 
-                        <div className="col-12 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div className="col-12 nova-settings-actions nova-settings-actions-split">
+                          {hasSecurityCode ? (
+                            <button
+                              type="button"
+                              className="btn btn-link p-0 text-decoration-none fw-semibold nova-settings-link-action"
+                              onClick={() => setShowForgetSecurity((prev) => !prev)}
+                            >
+                              {showForgetSecurity
+                                ? "Cancel"
+                                : "Forgot original security code?"}
+                            </button>
+                          ) : (
+                            <span />
+                          )}
                           <button
                             type="submit"
                             className="btn btn-primary"
@@ -1505,18 +1550,6 @@ const SecuritySettings = () => {
                                 ? "Confirm"
                                 : "Create Security Code"}
                           </button>
-
-                          {hasSecurityCode ? (
-                            <button
-                              type="button"
-                              className="btn btn-link p-0 text-decoration-none fw-semibold"
-                              onClick={() => setShowForgetSecurity((prev) => !prev)}
-                            >
-                              {showForgetSecurity
-                                ? "Cancel"
-                                : "Forgot original security code?"}
-                            </button>
-                          ) : null}
                         </div>
                       </form>
 
@@ -1537,7 +1570,7 @@ const SecuritySettings = () => {
                               placeholder="Enter account password"
                             />
                           </div>
-                          <div className="col-12">
+                          <div className="col-12 nova-settings-actions">
                             <button
                               type="submit"
                               className="btn btn-outline-danger"
@@ -1558,11 +1591,14 @@ const SecuritySettings = () => {
               {activeTab === "google" && (
                 <div className="row g-3">
                   <div className="col-12">
-                    <h5 className="mb-0">Google Authentication (2FA)</h5>
-                    <p className="text-muted mb-0">
-                      APIs: `/app/2fa/status`, `/app/2fa/setup`,
-                      `/app/2fa/confirm`, `/app/2fa/disable`, `/app/2fa/forget`.
-                    </p>
+                    <div className="nova-settings-section-head">
+                      <div>
+                        <h5 className="mb-1">Google Authentication (2FA)</h5>
+                        <p className="text-muted mb-0">
+                          Configure two-factor authentication for higher-risk actions.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="col-12">
@@ -1592,8 +1628,8 @@ const SecuritySettings = () => {
                       <div className="nova-2fa-attention">
                         <strong>Attention</strong>
                         <p className="mb-0">
-                          Login, card purchase/top-up, CVV/PAN view, withdrawal and transfer
-                          jese critical actions par 2FA verification require hogi.
+                          2FA verification will be required for critical actions such as
+                          login, card purchase/top-up, CVV/PAN view, withdrawal, and transfer.
                         </p>
                       </div>
 
@@ -1601,9 +1637,10 @@ const SecuritySettings = () => {
                         <div className="alert alert-info py-2 px-3 mt-3 mb-2">
                           <strong>Setup Flow</strong>
                           <p className="small mb-0 mt-1">
-                            Step 1: Generate setup. Step 2: Google Authenticator app mein QR scan karein
-                            ya <strong>Enter a setup key</strong> se secret key add karein. Step 3: App ka
-                            6-digit code neeche enter karke <strong>Confirm &amp; Enable</strong> karein.
+                            Step 1: Generate the setup. Step 2: Scan the QR code in the
+                            Google Authenticator app or add the secret key using
+                            <strong> Enter a setup key</strong>. Step 3: Enter the app's
+                            6-digit code below and click <strong>Confirm &amp; Enable</strong>.
                           </p>
                         </div>
                       ) : null}
@@ -1622,8 +1659,9 @@ const SecuritySettings = () => {
                             </div>
                           ) : null}
                           {googleSecret ? (
-                            <div className="col-md-8">
-                              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                            <div className="col-md-12">
+                              <div className="nova-settings-secret-panel">
+                              <div className="nova-settings-inline-head mb-1">
                                 <div className="small text-muted">Secret Key</div>
                                 <button
                                   type="button"
@@ -1634,10 +1672,11 @@ const SecuritySettings = () => {
                                 </button>
                               </div>
                               <p className="small text-muted mb-1">
-                                Google Authenticator app mein <strong>Enter a setup key</strong> select
-                                karke yeh secret key paste karein.
+                                In the Google Authenticator app, select
+                                <strong> Enter a setup key</strong> and paste this secret key.
                               </p>
                               <code>{googleSecret}</code>
+                              </div>
                             </div>
                           ) : null}
                         </div>
@@ -1659,7 +1698,8 @@ const SecuritySettings = () => {
                             placeholder="Enter 6-digit code"
                           />
                           <div className="form-text">
-                            Code Google Authenticator app se ayega after QR scan / secret key setup.
+                            The code will come from the Google Authenticator app after QR
+                            scan or secret key setup.
                           </div>
                         </div>
                         <div className="col-md-4 d-flex align-items-end">
@@ -1684,7 +1724,7 @@ const SecuritySettings = () => {
                         </div>
                       </form>
 
-                      <div className="d-flex flex-wrap gap-2 mt-3">
+                      <div className="nova-settings-actions nova-settings-actions-split mt-3">
                         <button
                           type="button"
                           className="btn btn-outline-primary btn-sm"
@@ -1713,7 +1753,7 @@ const SecuritySettings = () => {
 
                         <button
                           type="button"
-                          className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
+                          className="btn btn-outline-warning btn-sm nova-settings-secondary-btn"
                           onClick={() => setShowForgetGoogle((prev) => !prev)}
                         >
                           {showForgetGoogle ? "Cancel Forget" : "Forget 2FA"}
@@ -1758,15 +1798,6 @@ const SecuritySettings = () => {
                 </div>
               </div>
 
-              {feedback.message ? (
-                <div
-                  className={`alert ${
-                    feedback.type === "error" ? "alert-danger" : "alert-success"
-                  } mt-3 mb-0`}
-                >
-                  {feedback.message}
-                </div>
-              ) : null}
             </div>
           </div>
         </div>

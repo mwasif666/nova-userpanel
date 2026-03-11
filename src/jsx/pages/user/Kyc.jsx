@@ -12,7 +12,6 @@ const INITIAL_FORM_VALUES = {
   identity_card: "",
   identity_card_validity_time: "",
   provider: "1",
-  api_version: "v1",
   security_code: "",
 };
 
@@ -220,7 +219,7 @@ const Kyc = () => {
 
     try {
       const firstResponse = await request({
-        url: "/tevau/kyc",
+        url: "app/tevau/kyc",
         method: "GET",
         data: {
           page: 1,
@@ -236,7 +235,7 @@ const Kyc = () => {
           { length: firstPage.lastPage - 1 },
           (_, index) =>
             request({
-              url: "/tevau/kyc",
+              url: "app/tevau/kyc",
               method: "GET",
               data: {
                 page: index + 2,
@@ -688,26 +687,6 @@ const Kyc = () => {
                               required
                             />
                           </div>
-                          <div className="col-md-3">
-                            <label className="form-label">Provider</label>
-                            <input
-                              className="form-control"
-                              name="provider"
-                              value={formValues.provider}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          <div className="col-md-3">
-                            <label className="form-label">API Version</label>
-                            <input
-                              className="form-control"
-                              name="api_version"
-                              value={formValues.api_version}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
                         </div>
                       </div>
 
@@ -848,11 +827,12 @@ const Kyc = () => {
 
                     <div className="nova-kyc-form-actions">
                       <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={submitting || isFormDisabledByStatus}
+                        type="button"
+                        className="btn btn-outline-primary"
+                        onClick={loadKycList}
+                        disabled={submitting || kycLoading}
                       >
-                        {submitting ? "Submitting..." : "Submit KYC"}
+                        {kycLoading ? "Refreshing..." : "Refresh KYC Data"}
                       </button>
                       <button
                         type="button"
@@ -862,13 +842,12 @@ const Kyc = () => {
                       >
                         Reset Form
                       </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary"
-                        onClick={loadKycList}
-                        disabled={submitting || kycLoading}
+                       <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={submitting || isFormDisabledByStatus}
                       >
-                        {kycLoading ? "Refreshing..." : "Refresh KYC Data"}
+                        {submitting ? "Submitting..." : "Submit KYC"}
                       </button>
                     </div>
                   </form>

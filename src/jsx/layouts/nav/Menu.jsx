@@ -28,7 +28,7 @@ export const MenuList = [
   {
     title: "Profile",
     classsChange: "mm-collapse",
-    iconStyle: SVGICON.FormIconSvg,
+    iconStyle: SVGICON.ProfileSvg,
     to: "/profile",
   },
 ];

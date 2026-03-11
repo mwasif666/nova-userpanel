@@ -205,9 +205,9 @@ export const AuthProvider = ({ children }) => {
     const deviceToken = getOrCreateDeviceToken();
     const payloads = getDeviceTokenPayloads(deviceToken);
     const endpointCandidates = [
-      { url: "device-token" },
+      { url: "app/device-token" },
       { url: "app/device-token", baseURL: ROOT_API_BASE_URL },
-      { url: "device-token", baseURL: ROOT_API_BASE_URL },
+      { url: "app/device-token", baseURL: ROOT_API_BASE_URL },
     ];
 
     let lastError = null;
@@ -359,7 +359,7 @@ export const AuthProvider = ({ children }) => {
     formData.append("email", localStorage.getItem("email"));
     try {
       const response = await request({
-        url: "verify-login",
+        url: "app/verify-login",
         method: "POST",
         data: formData,
       });
@@ -375,7 +375,7 @@ export const AuthProvider = ({ children }) => {
   const getOTP = async () => {
     try {
       const response = await request({
-        url: "get-otp",
+        url: "app/get-otp",
         method: "GET",
       });
       return { isError: false, response: response };
@@ -389,7 +389,7 @@ export const AuthProvider = ({ children }) => {
     let response = [];
     try {
       response = await request({
-        url: "login",
+        url: "app/login",
         method: "POST",
         data: {
           email,
@@ -410,7 +410,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const response = await request({
-        url: "login-with-code",
+        url: "app/login-with-code",
         method: "POST",
         data: {
           email,
@@ -439,7 +439,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const response = await request({
-        url: "signup",
+        url: "app/signup",
         method: "POST",
         data: signupPayload,
       });
@@ -453,7 +453,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("email", email);
     try {
       const response = await request({
-        url: "send-verification-code",
+        url: "app/send-verification-code",
         method: "POST",
         data: {
           email,
@@ -471,7 +471,7 @@ export const AuthProvider = ({ children }) => {
     formData.append("token", token);
     try {
       await request({
-        url: "logout",
+        url: "app/logout",
         method: "POST",
         data: formData
       });
