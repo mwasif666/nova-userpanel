@@ -3817,6 +3817,15 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   white-space: normal;
   word-break: break-all;
 }
+.nova-card-access-notice {
+  padding: 0.6rem 0.2rem;
+}
+.nova-card-access-notice h4 {
+  color: #0f172a;
+}
+.nova-card-access-notice p {
+  max-width: 680px;
+}
 .nova-flow-chip-row {
   display: inline-flex;
   flex-wrap: wrap;

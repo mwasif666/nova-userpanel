@@ -1,4 +1,4 @@
-import React, { useReducer, useContext, useEffect, useState } from "react";
+import React, { useReducer, useContext, useEffect, useMemo, useState } from "react";
 import { Collapse } from "react-bootstrap";
 /// Link
 import { Link, useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { MenuList } from "./Menu";
 import { useScrollPosition } from "@n8tb1t/use-scroll-position";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { AuthContext } from "../../../context/authContext";
+import useCardKycFlow from "../../hooks/useCardKycFlow";
 
 const reducer = (previousState, updatedState) => ({
   ...previousState,
@@ -20,6 +21,7 @@ const initialState = {
 
 const SideBar = () => {
   const { logout } = useContext(AuthContext);
+  const { canAccessWallet, loading: cardFlowLoading } = useCardKycFlow();
   const navigate = useNavigate();
   const {
     iconHover,
@@ -58,9 +60,20 @@ const SideBar = () => {
   path = path.split("/");
   path = path[path.length - 1];
   const normalizePath = (value) => (value || "").replace(/^\//, "");
+  const visibleMenuList = useMemo(
+    () =>
+      MenuList.filter((item) => {
+        if (cardFlowLoading) return true;
+        if (!canAccessWallet && ["/wallet"].includes(item.to)) {
+          return false;
+        }
+        return true;
+      }),
+    [canAccessWallet, cardFlowLoading],
+  );
 
   useEffect(() => {
-    MenuList.forEach((data) => {
+    visibleMenuList.forEach((data) => {
       data.content?.forEach((item) => {
         if (path === normalizePath(item.to)) {
           setState({ active: data.title });
@@ -72,7 +85,7 @@ const SideBar = () => {
         });
       });
     });
-  }, [path]);
+  }, [path, visibleMenuList]);
 
   const handleLogout = () => {
     logout();
@@ -95,7 +108,7 @@ const SideBar = () => {
     >
       <div className="deznav-scroll">
         <ul className="metismenu nova-sidebar-main-menu" id="menu">
-          {MenuList.map((data, index) => {
+          {visibleMenuList.map((data, index) => {
             let menuClass = data.classsChange;
             if (menuClass === "menu-title") {
               return (

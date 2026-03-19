@@ -252,6 +252,10 @@ const CardOperationsModal = ({
   onWalletUpdated,
   inline = false,
   screen = "all",
+  canOrderCards = true,
+  canBindCards = true,
+  orderDisabledReason = "KYC approval is required before card purchase.",
+  bindDisabledReason = "Bind flow is not available yet.",
 }) => {
   const prefill = useMemo(() => buildPrefill(user), [user]);
   const [orderTab, setOrderTab] = useState("virtual");
@@ -426,6 +430,14 @@ const CardOperationsModal = ({
   };
 
   const handleOrderSubmit = async () => {
+    if (!canOrderCards) {
+      setFeedback({
+        type: "error",
+        message: orderDisabledReason,
+      });
+      return;
+    }
+
     const validationError = validateOrder(orderTab);
     if (validationError) {
       setFeedback({ type: "error", message: validationError });
@@ -483,6 +495,14 @@ const CardOperationsModal = ({
   };
 
   const handleBindSubmit = async () => {
+    if (!canBindCards) {
+      setFeedback({
+        type: "error",
+        message: bindDisabledReason,
+      });
+      return;
+    }
+
     const validationError = validateBind();
     if (validationError) {
       setFeedback({ type: "error", message: validationError });
@@ -665,6 +685,11 @@ const CardOperationsModal = ({
                 <h6 className="mb-0">Requester Details</h6>
                 <small>Common for both physical and virtual order requests</small>
               </div>
+              {!canOrderCards ? (
+                <div className="alert alert-warning py-2 mb-3">
+                  {orderDisabledReason}
+                </div>
+              ) : null}
               <div className="row g-3">
                 {ORDER_COMMON_FIELDS.map((field) =>
                   renderField({
@@ -720,11 +745,15 @@ const CardOperationsModal = ({
                 type="button"
                 className="btn btn-primary"
                 onClick={handleOrderSubmit}
-                disabled={submittingAction === `order-${orderTab}`}
+                disabled={
+                  !canOrderCards || submittingAction === `order-${orderTab}`
+                }
               >
                 {submittingAction === `order-${orderTab}`
                   ? "Submitting..."
-                  : `Submit ${activeOrderConfig.shortLabel} Order`}
+                  : !canOrderCards
+                    ? "KYC Approval Required"
+                    : `Submit ${activeOrderConfig.shortLabel} Order`}
               </button>
             </div>
           </div>
@@ -740,6 +769,12 @@ const CardOperationsModal = ({
               </div>
               <span className="nova-flow-status-pill is-bind">Bind Flow</span>
             </div>
+
+            {!canBindCards ? (
+              <div className="alert alert-warning py-2 mb-3">
+                {bindDisabledReason}
+              </div>
+            ) : null}
 
             <div className="row g-3">
               {BIND_FIELDS.map((field) =>
@@ -771,9 +806,13 @@ const CardOperationsModal = ({
                 type="button"
                 className="btn btn-primary"
                 onClick={handleBindSubmit}
-                disabled={submittingAction === "bind"}
+                disabled={!canBindCards || submittingAction === "bind"}
               >
-                {submittingAction === "bind" ? "Binding..." : "Bind Card"}
+                {submittingAction === "bind"
+                  ? "Binding..."
+                  : !canBindCards
+                    ? "Bind Locked"
+                    : "Bind Card"}
               </button>
             </div>
           </div>

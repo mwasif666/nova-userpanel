@@ -2,10 +2,18 @@ import { useEffect, useState } from "react";
 import { getApiErrorMessage } from "../../../utils";
 import { request } from "../../../utils/api";
 import PageTitle from "../../layouts/PageTitle";
+import CardAccessNotice from "../../components/CardAccessNotice";
+import useCardKycFlow from "../../hooks/useCardKycFlow";
 import WalletBinancePayPanel from "./WalletBinancePayPanel";
 import WalletDepositAddressesPanel from "./WalletDepositAddressesPanel";
 
 const Wallet = () => {
+  const {
+    canAccessWallet,
+    loading: cardFlowLoading,
+    title: flowTitle,
+    walletBlockedReason,
+  } = useCardKycFlow();
   const [activeTab, setActiveTab] = useState("addresses");
 
   const [networks, setNetworks] = useState([]);
@@ -49,6 +57,12 @@ const Wallet = () => {
     <>
       <PageTitle motherMenu="Wallet" activeMenu="Wallet" />
 
+      {!cardFlowLoading && !canAccessWallet ? (
+        <CardAccessNotice
+          title={flowTitle}
+          message={walletBlockedReason}
+        />
+      ) : (
       <div className="row g-3">
         <div className="col-12">
           <div className="card nova-panel h-100">
@@ -131,6 +145,7 @@ const Wallet = () => {
         )}
 
       </div>
+      )}
     </>
   );
 };

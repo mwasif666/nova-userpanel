@@ -3,8 +3,11 @@ import { Modal } from "react-bootstrap";
 import PageTitle from "../../layouts/PageTitle";
 import CardOperationsModal from "../../elements/dashboard/CardOperationsModal";
 import MainBalanceCard from "../../elements/dashboard/MainBalanceCard";
+import CardAccessNotice from "../../components/CardAccessNotice";
 import { AuthContext } from "../../../context/authContext";
 import { request } from "../../../utils/api";
+import useKycApprovalStatus from "../../hooks/useKycApprovalStatus";
+import { buildCardKycFlowState } from "../../hooks/useCardKycFlow";
 import {
   getSecurityCodeStatus,
   validateSecurityCode,
@@ -79,6 +82,13 @@ const formatDateTime = (value) => {
 
 const Cards = () => {
   const { user } = useContext(AuthContext);
+  const {
+    loading: kycLoading,
+    error: kycError,
+    isApproved: isKycApproved,
+    hasSubmittedKyc,
+    statusLabel: kycStatusLabel,
+  } = useKycApprovalStatus();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -495,12 +505,34 @@ const Cards = () => {
       statuses,
     };
   }, [cards]);
+  const hasPurchasedCard = cards.length > 0;
+  const cardFlow = useMemo(
+    () =>
+      buildCardKycFlowState({
+        hasSubmittedKyc,
+        isKycApproved,
+        kycStatusLabel,
+        hasPurchasedCard,
+      }),
+    [hasPurchasedCard, hasSubmittedKyc, isKycApproved, kycStatusLabel],
+  );
 
   return (
     <>
       <PageTitle motherMenu="Cards" activeMenu="Cards" />
 
       <div className="row g-3">
+        {!loading && !hasPurchasedCard && !cardFlow.canOrderCard ? (
+          <div className="col-12">
+            <CardAccessNotice
+              title={cardFlow.title}
+              message={cardFlow.message}
+            />
+          </div>
+        ) : null}
+
+        {hasPurchasedCard ? (
+          <>
         <div className="col-12">
           <div className="card nova-panel h-100">
             <div className="card-body">
@@ -598,31 +630,37 @@ const Cards = () => {
                   modal to keep this page clean.
                 </p>
               </div>
-              <div className="d-flex align-items-center gap-2 flex-wrap">
-                <span className="badge bg-light text-dark border">
-                  Security Code Required
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-outline-primary"
-                  onClick={() => {
-                    setCardOpsScreen("order");
-                    setShowCardOpsModal(true);
-                  }}
-                >
-                  Open Card Order
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    setCardOpsScreen("bind");
-                    setShowCardOpsModal(true);
-                  }}
-                >
-                  Open Card Bind
-                </button>
-              </div>
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  <span className="badge bg-light text-dark border">
+                    {cardFlow.canOrderCard
+                      ? "Security Code Required"
+                      : `Order Locked`}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={() => {
+                      if (!cardFlow.canOrderCard) return;
+                      setCardOpsScreen("order");
+                      setShowCardOpsModal(true);
+                    }}
+                    disabled={!cardFlow.canOrderCard}
+                  >
+                    Open Card Order
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (!cardFlow.canBindCard) return;
+                      setCardOpsScreen("bind");
+                      setShowCardOpsModal(true);
+                    }}
+                    disabled={!cardFlow.canBindCard}
+                  >
+                    Open Card Bind
+                  </button>
+                </div>
             </div>
           </div>
         </div>
@@ -797,6 +835,52 @@ const Cards = () => {
             </div>
           </div>
         </div>
+          </>
+        ) : (
+          <div className="col-12">
+            <div className="card nova-panel nova-card-ops-launch">
+              <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <div>
+                  <div className="nova-flow-kicker mb-1">First Card</div>
+                  <h4 className="mb-1">Buy Your First Card</h4>
+                  <p className="mb-0 text-muted">
+                    {cardFlow.message}
+                  </p>
+                  {kycError ? (
+                    <div className="alert alert-warning py-2 mt-3 mb-0">
+                      {kycError}
+                    </div>
+                  ) : null}
+                </div>
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  <span className="badge bg-light text-dark border">
+                    {kycLoading
+                      ? "Checking KYC..."
+                      : cardFlow.canOrderCard
+                        ? "Security Code Required"
+                        : `KYC: ${kycStatusLabel}`}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (!cardFlow.canOrderCard) return;
+                      setCardOpsScreen("order");
+                      setShowCardOpsModal(true);
+                    }}
+                    disabled={!cardFlow.canOrderCard || kycLoading}
+                  >
+                    {kycLoading
+                      ? "Checking..."
+                      : cardFlow.canOrderCard
+                        ? "Buy First Card"
+                        : cardFlow.title}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal
@@ -873,10 +957,14 @@ const Cards = () => {
           setShowCardOpsModal(false);
           setCardOpsScreen("all");
         }}
-        screen={cardOpsScreen}
+        screen={hasPurchasedCard ? cardOpsScreen : "order"}
         user={user}
         userCards={cards}
         walletSummary={walletSummary}
+        canOrderCards={cardFlow.canOrderCard}
+        canBindCards={cardFlow.canBindCard}
+        orderDisabledReason={cardFlow.orderBlockedReason}
+        bindDisabledReason={cardFlow.bindBlockedReason}
         onCardsUpdated={() => loadCards({ silent: true })}
         onWalletUpdated={loadWalletBalance}
       />

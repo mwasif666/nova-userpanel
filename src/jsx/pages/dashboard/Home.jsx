@@ -8,6 +8,7 @@ import DashboardChartsPanel from "../../elements/dashboard/DashboardChartsPanel"
 import OverviewCardsModal from "../../elements/dashboard/OverviewCardsModal";
 import WithdrawModal from "../../elements/Modals/WithdrawModal";
 import TransferModal from "../../elements/Modals/TransferModal";
+import CardAccessNotice from "../../components/CardAccessNotice";
 import { ThemeContext } from "../../../context/ThemeContext";
 import { AuthContext } from "../../../context/authContext";
 import {
@@ -32,7 +33,6 @@ const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function CommandPage({ user }) {
   const navigate = useNavigate();
-  const [walletDepositModal, setWalletDepositModal] = useState(false);
   const [withdrowModal, setWithdrowModal] = useState(false);
   const [userCards, setUserCards] = useState([]);
   const [userCardsLoading, setUserCardsLoading] = useState(false);
@@ -461,9 +461,7 @@ export function CommandPage({ user }) {
     setWithdrowModal(false);
   };
 
-  const closeWalletDepositModal = () => {
-    setWalletDepositModal(false);
-  };
+  const hasPurchasedCard = userCards.length > 0;
 
   return (
     <>
@@ -477,64 +475,76 @@ export function CommandPage({ user }) {
               onClickDeposit={() => navigate("/wallet")}
               onOpenTransfer={() => setTransferModal(true)}
               onOpenWithdraw={() => setWithdrowModal(true)}
+              disableFinancialActions={!hasPurchasedCard}
+              disabledActionReason="Buy at least one card first. Until then, only Profile and KYC are available."
             />
-            <div className="row g-3">
-              <div className="col-12">
-                <WalletSummaryCard
-                  walletCurrency={walletCurrency}
-                  showWalletBalanceLoading={showWalletBalanceLoading}
-                  walletBalanceToShow={walletBalanceToShow}
-                  formatProtectedCurrency={formatProtectedCurrency}
-                  walletBalanceUnlocked={walletBalanceUnlocked}
-                  toggleWalletBalanceVisibility={toggleWalletBalanceVisibility}
-                  balanceToggleLabel={balanceToggleLabel}
-                  userCardsLoading={userCardsLoading}
-                  activeCardCount={activeCardCount}
-                  userCardsCount={userCards.length}
-                  walletAssetName={walletAssetName}
-                  walletStatus={walletStatus}
-                  walletAvailableBalance={walletAvailableBalance}
-                  walletLockedBalance={walletLockedBalance}
-                  walletDeposits={walletDeposits}
-                  walletWithdrawals={walletWithdrawals}
-                  walletTotalTransactions={walletTotalTransactions}
-                  walletTxPreview={walletTxPreview}
-                  userCardsError={userCardsError}
-                  walletError={walletError}
-                />
+            {hasPurchasedCard ? (
+              <div className="row g-3">
+                <div className="col-12">
+                  <WalletSummaryCard
+                    walletCurrency={walletCurrency}
+                    showWalletBalanceLoading={showWalletBalanceLoading}
+                    walletBalanceToShow={walletBalanceToShow}
+                    formatProtectedCurrency={formatProtectedCurrency}
+                    walletBalanceUnlocked={walletBalanceUnlocked}
+                    toggleWalletBalanceVisibility={toggleWalletBalanceVisibility}
+                    balanceToggleLabel={balanceToggleLabel}
+                    userCardsLoading={userCardsLoading}
+                    activeCardCount={activeCardCount}
+                    userCardsCount={userCards.length}
+                    walletAssetName={walletAssetName}
+                    walletStatus={walletStatus}
+                    walletAvailableBalance={walletAvailableBalance}
+                    walletLockedBalance={walletLockedBalance}
+                    walletDeposits={walletDeposits}
+                    walletWithdrawals={walletWithdrawals}
+                    walletTotalTransactions={walletTotalTransactions}
+                    walletTxPreview={walletTxPreview}
+                    userCardsError={userCardsError}
+                    walletError={walletError}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-3">
+                <CardAccessNotice message="This dashboard wallet area is available after the user has purchased at least one card. For a new account, continue with Profile and KYC first." />
+              </div>
+            )}
           </div>
-          <div className="row g-3">
-            <div className="col-12">
-              <OverviewMetricsBoard
-                showWalletBalanceLoading={showWalletBalanceLoading}
-                walletBalanceToShow={walletBalanceToShow}
+          {hasPurchasedCard ? (
+            <>
+              <div className="row g-3">
+                <div className="col-12">
+                  <OverviewMetricsBoard
+                    showWalletBalanceLoading={showWalletBalanceLoading}
+                    walletBalanceToShow={walletBalanceToShow}
+                    walletCurrency={walletCurrency}
+                    formatProtectedCurrency={formatProtectedCurrency}
+                    walletBalanceUnlocked={walletBalanceUnlocked}
+                    toggleWalletBalanceVisibility={toggleWalletBalanceVisibility}
+                    balanceToggleLabel={balanceToggleLabel}
+                    userCardsCount={userCards.length}
+                    overviewMetrics={overviewMetrics}
+                    onOpenMetric={openOverviewMetricModal}
+                  />
+                </div>
+              </div>
+              <DashboardChartsPanel
+                walletDeposits={walletDeposits}
+                walletWithdrawals={walletWithdrawals}
                 walletCurrency={walletCurrency}
                 formatProtectedCurrency={formatProtectedCurrency}
-                walletBalanceUnlocked={walletBalanceUnlocked}
-                toggleWalletBalanceVisibility={toggleWalletBalanceVisibility}
-                balanceToggleLabel={balanceToggleLabel}
-                userCardsCount={userCards.length}
-                overviewMetrics={overviewMetrics}
-                onOpenMetric={openOverviewMetricModal}
+                projectChartSeries={projectChartSeries}
+                latestTransactionRows={latestTransactionRows}
+                walletLoading={walletLoading}
+                walletError={walletError}
+                cardTypeChartItems={cardTypeChartItems}
+                transactionBarSeries={transactionBarSeries}
+                weekdayLabels={WEEKDAY_LABELS}
+                cardStatusChartItems={cardStatusChartItems}
               />
-            </div>
-          </div>
-          <DashboardChartsPanel
-            walletDeposits={walletDeposits}
-            walletWithdrawals={walletWithdrawals}
-            walletCurrency={walletCurrency}
-            formatProtectedCurrency={formatProtectedCurrency}
-            projectChartSeries={projectChartSeries}
-            latestTransactionRows={latestTransactionRows}
-            walletLoading={walletLoading}
-            walletError={walletError}
-            cardTypeChartItems={cardTypeChartItems}
-            transactionBarSeries={transactionBarSeries}
-            weekdayLabels={WEEKDAY_LABELS}
-            cardStatusChartItems={cardStatusChartItems}
-          />
+            </>
+          ) : null}
         </div>
       </div>
       <Modal
