@@ -164,6 +164,37 @@ const WalletDepositAddressesPanel = ({ networks = [] }) => {
             </div>
           </div>
 
+          {addressForm.network && (
+            <div className="mt-3">
+              <div className="card border-primary shadow-sm">
+                <div className="card-body p-3">
+                  <h6 className="card-title text-primary mb-3">
+                    <i className="bi bi-info-circle-fill me-2"></i>
+                    Withdrawal Information
+                  </h6>
+                  <div className="row g-2">
+                    <div className="col-6">
+                      <div className="text-center">
+                        <div className="fw-bold text-muted small">Min Withdrawal Fee</div>
+                        <div className="h5 text-primary mb-0">
+                          {networks.find(n => n.value === addressForm.network)?.withdrawal_fee || 'N/A'} USDT
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="text-center">
+                        <div className="fw-bold text-muted small">Min Withdrawal Amount</div>
+                        <div className="h5 text-primary mb-0">
+                          {networks.find(n => n.value === addressForm.network)?.min_withdrawal || 'N/A'} USDT
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {addressError && (
             <div className="nova-flow-alert is-error">
               <span>{addressError}</span>

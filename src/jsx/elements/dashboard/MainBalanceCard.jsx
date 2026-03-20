@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import virtualCardImage from "../../../assets/images/virtual_card.jpeg";
 import physicalCardImage from "../../../assets/images/nova_card.png";
 import virtualCardBackImage from "../../../assets/images/virtual_card_back.jpeg";
@@ -9,6 +9,7 @@ import {
   getSecurityCodeStatus,
   validateSecurityCode,
 } from "../../../services/securityCode";
+import Swal from "sweetalert2";
 
 const CARD_NUMBER_PLACEHOLDER = "**** **** **** ****";
 const CARD_EXPIRY_PLACEHOLDER = "**/**";
@@ -389,7 +390,7 @@ const MainBalanceCard = ({
     const fetchPan = async () => {
       try {
         const response = await request({
-          url: `/tevau/cards/${encodeURIComponent(selectedPanEndpointCardId)}/pan`,
+          url: `app/tevau/cards/${encodeURIComponent(selectedPanEndpointCardId)}/pan`,
           method: "GET",
         });
 
@@ -692,13 +693,6 @@ const MainBalanceCard = ({
         resolvedSelectedCard?.tevau_user?.user_code ||
         "N/A",
     },
-    {
-      label: "Third ID",
-      value:
-        resolvedSelectedCard.third_id ||
-        resolvedSelectedCard?.tevau_user?.third_id ||
-        "N/A",
-    },
     { label: "Bound At", value: formatDateTime(resolvedSelectedCard.bound_at) },
     ...(resolvedSelectedCard?.frozen_at
       ? [
@@ -728,13 +722,38 @@ const MainBalanceCard = ({
       : []),
   ];
 
+
+  const [topupLoading, setTopupLoading] = useState(false);
+  const topup = async (id) =>{
+    try {
+      setTopupLoading(true);
+      const res = await request({
+        url:`app/tevau/cards/:${id}/topup`,
+        method:'POST',
+        data:{}
+      })       
+    } catch (error) { 
+      Swal.fire({
+        icon: "error",
+        title: "Topup Failed",
+        text: "Failed to make topup, Please try again.",
+        timer: 2500,
+        showConfirmButton: false,
+      });
+    }finally{
+      setTopupLoading(false);
+    }
+  }
+
+  
+
   return (
     <div className="card dz-wallet nova-main-balance-card">
       <div className="card-header border-0 align-items-start pb-0">
-        <div>
-          <span className="fs-18 d-block mb-2">Main Balance</span>
+        <div className="nova-main-balance-summary">
+          <span className="nova-main-balance-label">Main Balance</span>
           <div className="nova-main-balance-head">
-            <h2 className="fs-28 font-w600 mb-0">{visibleMainBalance}</h2>
+            <h2 className="nova-main-balance-value mb-0">{visibleMainBalance}</h2>
             <button
               type="button"
               className={`nova-sec-visibility-toggle is-compact is-on-dark ${
@@ -747,6 +766,10 @@ const MainBalanceCard = ({
             >
               <i className={`pi ${balanceUnlocked ? "pi-eye-slash" : "pi-eye"}`} />
             </button>
+          </div>
+          <div className="nova-main-balance-meta">
+            <span>{resolvedSelectedCard.displayCurrency}</span>
+            <span>{resolvedSelectedCard.displayType}</span>
           </div>
           {!hasSecurityCode && !securityStatusLoading && (
             <div className="text-warning small mt-2">
@@ -917,8 +940,22 @@ const MainBalanceCard = ({
               </div>
             </div>
           </div>
-
+          
           <div className="col-xl-6 col-lg-6 col-12">
+            <div className="nova-main-balance-actions">
+              <Button
+                variant="light"
+                className="nova-main-balance-action-btn is-primary"
+              >
+                Topup
+              </Button>
+              <Button
+                variant="light"
+                className="nova-main-balance-action-btn is-primary"
+              >
+                Card Management
+              </Button>
+            </div>
             <div className="nova-card-live-block h-100">
               <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
                 <h5 className="nova-card-live-title mb-0">Card Details</h5>

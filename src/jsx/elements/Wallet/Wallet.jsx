@@ -37,6 +37,7 @@ const Wallet = () => {
         value: item.network,
         label: item.name,
         withdrawal_fee: item.withdrawal_fee,
+        min_withdrawal: item.min_withdrawal,
       }));
 
       setNetworks(normalized);

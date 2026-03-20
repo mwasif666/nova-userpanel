@@ -852,10 +852,6 @@ const CardOperationsModal = ({
           <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-3">
             <div>
               <div className="nova-flow-kicker mb-1">Cards Management</div>
-              <h4 className="mb-1">Card Purchasing + Bind Flow</h4>
-              <p className="mb-0 text-muted">
-                Card order submit `POST /tevau/cards` karta hai. Successful submit ke baad wallet summary refresh hoti hai taake auto deduction front par nazar aaye.
-              </p>
             </div>
             <button
               type="button"

@@ -1843,14 +1843,14 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .nova-main-balance-card {
   position: relative;
   overflow: hidden;
-  min-height: 420px;
+  min-height: 700px;
   border: 1px solid rgba(42, 100, 134, 0.38);
   background:
     linear-gradient(145deg, rgba(42, 100, 134, 0.95), rgba(42, 100, 134, 0.82)),
     radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 56%);
   box-shadow: 0 18px 40px rgba(16, 35, 55, 0.16);
   --nova-deck-card-width: 468px;
-  --nova-deck-card-height: 278px;
+  --nova-deck-card-height: 308px;
   --nova-deck-stack-rise: 14px;
 }
 .nova-main-balance-card::before,
@@ -1884,10 +1884,52 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   align-items: center;
   gap: 1rem;
 }
+.nova-main-balance-card .nova-main-balance-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.nova-main-balance-card .nova-main-balance-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.76);
+}
 .nova-main-balance-card .nova-main-balance-head {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+.nova-main-balance-card .nova-main-balance-value {
+  font-size: clamp(1.85rem, 3vw, 2.55rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: -0.03em;
+}
+.nova-main-balance-card .nova-main-balance-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.nova-main-balance-card .nova-main-balance-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .nova-main-balance-card .card-body {
   position: relative;
@@ -2196,6 +2238,29 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   border-radius: 14px;
   padding: 1rem;
 }
+.nova-main-balance-card .nova-main-balance-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+.nova-main-balance-card .nova-main-balance-action-btn {
+  min-width: 160px;
+  height: 44px;
+  border-radius: 999px;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: none !important;
+}
+.nova-main-balance-card .nova-main-balance-action-btn.is-primary {
+  color: #16395c;
+}
+.nova-main-balance-card .nova-main-balance-action-btn:not(.is-primary) {
+  background: rgba(255, 255, 255, 0.04);
+}
 .nova-main-balance-card .nova-card-live-title {
   margin: 0 0 0.45rem;
   font-size: 0.78rem;
@@ -2324,9 +2389,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 }
 @media (max-width: 991.98px) {
   .nova-main-balance-card {
-    min-height: 392px;
+    min-height: 560px;
     --nova-deck-card-width: 430px;
-    --nova-deck-card-height: 256px;
+    --nova-deck-card-height: 286px;
   }
   .nova-main-balance-card .nova-main-balance-bootstrap {
     margin-top: 0.65rem;
@@ -2340,10 +2405,13 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
     flex-direction: column;
     align-items: flex-start !important;
   }
+  .nova-main-balance-card .nova-main-balance-head {
+    align-items: flex-start;
+  }
   .nova-main-balance-card {
-    min-height: 354px;
+    min-height: 500px;
     --nova-deck-card-width: 340px;
-    --nova-deck-card-height: 212px;
+    --nova-deck-card-height: 236px;
     --nova-deck-stack-rise: 10px;
   }
   .nova-main-balance-card .nova-deck-layer {
@@ -2383,6 +2451,14 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   }
   .nova-main-balance-card .nova-card-live-grid {
     grid-template-columns: 1fr;
+  }
+  .nova-main-balance-card .nova-main-balance-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .nova-main-balance-card .nova-main-balance-action-btn {
+    width: 100%;
+    min-width: 0;
   }
 }
 
