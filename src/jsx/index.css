@@ -4115,6 +4115,135 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   opacity: 0.65;
   cursor: not-allowed;
 }
+.nova-card-management-shell > .card-body {
+  padding: 1rem;
+}
+.nova-card-management-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.nova-card-management-summary {
+  border: 1px solid #d9e5ef;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f5f9fc 100%);
+  padding: 1rem;
+}
+.nova-card-management-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.nova-card-management-summary-label {
+  display: block;
+  color: #64748b;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+.nova-card-management-summary-head h4 {
+  margin: 0;
+  color: #0f172a;
+}
+.nova-card-management-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.nova-card-management-summary-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.8rem 0.9rem;
+}
+.nova-card-management-summary-item span {
+  display: block;
+  font-size: 0.74rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nova-card-management-summary-item strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #0f172a;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+.nova-card-management-section .card-body {
+  padding: 1rem;
+}
+.nova-card-management-section-head {
+  margin-bottom: 1rem;
+}
+.nova-card-management-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.nova-card-management-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  padding: 0.9rem 1rem;
+}
+.nova-card-management-row.is-danger {
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(254, 242, 242, 0.5);
+}
+.nova-card-management-row-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #d9e5ef;
+  background: #f8fbff;
+  color: #2a6486;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.nova-card-management-row.is-danger .nova-card-management-row-icon {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(254, 242, 242, 0.8);
+}
+.nova-card-management-row-icon i {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.nova-card-management-row-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.nova-card-management-row-copy strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.96rem;
+}
+.nova-card-management-row-copy span {
+  display: block;
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+@media (max-width: 767.98px) {
+  .nova-card-management-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .nova-card-management-row {
+    padding: 0.85rem 0.9rem;
+  }
+}
 .nova-2fa-attention {
   margin-top: 0.85rem;
   border: 1px solid #e2e8f0;

@@ -34,6 +34,12 @@ const Register = lazy(() =>
   })
 );
 
+const ForgotPassword = lazy(() =>
+  new Promise(resolve => {
+    setTimeout(() => resolve(import('./jsx/pages/authentication/ForgotPassword')), 500);
+  })
+);
+
 const Loader = () => (
   <Loading/>
 );
@@ -68,6 +74,16 @@ function App() {
             <PublicRoute>
               <div className="vh-100">
                 <Register />
+              </div>
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <div className="vh-100">
+                <ForgotPassword />
               </div>
             </PublicRoute>
           }

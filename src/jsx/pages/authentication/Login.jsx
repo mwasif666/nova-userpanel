@@ -188,6 +188,10 @@ function Login() {
                               )}
                             </div>
 
+                            <div className="d-flex justify-content-end mb-4">
+                              <Link to="/forgot-password">Forgot password?</Link>
+                            </div>
+
                             <button
                               type="submit"
                               disabled={passwordLoading}

@@ -3030,7 +3030,7 @@ textarea.form-control-lg {
 .input-group-text {
   display: flex;
   align-items: center;
-  padding: 0.6875rem 1.25rem;
+  padding: 0.45rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5;
@@ -40587,8 +40587,14 @@ button:focus {
     padding: 1rem;
   }
 }
+.card-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222222;
+  text-transform: capitalize;
+}
 .card-title {
-  font-size: 1.375rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #222222;
   text-transform: capitalize;
@@ -54207,4 +54213,183 @@ select.form-control,
 }
 .nova-filter-bar .nova-range-panel .p-calendar {
   box-shadow: none;
+}
+.nova-card-topup-modal .modal-content {
+  border-radius: 24px;
+  border: 0;
+  overflow: hidden;
+}
+
+.nova-topup-amount-group .input-group-text,
+.nova-topup-amount-group .form-control,
+.nova-topup-amount-group .btn {
+  border-color: #2f6f96;
+  min-height: 52px;
+}
+
+.nova-topup-amount-group .input-group-text {
+  background: #fff;
+  border-radius: 12px 0 0 12px;
+  color: #6a7894;
+  font-size: 1.35rem;
+  font-weight: 600;
+  justify-content: center;
+  min-width: 88px;
+}
+
+.nova-topup-amount-group .form-control {
+  border-left: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.nova-topup-amount-group .form-control:focus {
+  border-color: #2f6f96;
+  box-shadow: none;
+}
+
+.nova-topup-amount-group .btn {
+  background: #fff;
+  border-left: 0;
+  border-radius: 0 12px 12px 0;
+  color: #2f6f96;
+  font-size: 1.1rem;
+  font-weight: 600;
+  min-width: 82px;
+}
+
+.nova-topup-amount-group .btn:hover,
+.nova-topup-amount-group .btn:focus {
+  background: #f5f9fc;
+  color: #255975;
+}
+
+.nova-topup-card-summary {
+  background: linear-gradient(180deg, #f9fbfd 0%, #f3f7fb 100%);
+  border: 2px solid #2f6f96;
+  border-radius: 28px;
+  padding: 1.5rem;
+}
+
+.nova-topup-card-title {
+  color: #163247;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.nova-topup-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.nova-topup-card-meta strong {
+  color: #10263a;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+}
+
+.nova-topup-balance-label {
+  color: #5d6d7e;
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.nova-topup-balance-value {
+  color: #0c2335;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.nova-topup-amount-shell {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d9e1ea;
+  border-radius: 26px;
+  display: flex;
+  gap: 0.75rem;
+  min-height: 72px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+}
+
+.nova-topup-amount-shell .form-control {
+  background: transparent;
+  font-size: 1.2rem;
+  min-width: 0;
+  padding-left: 0;
+}
+
+.nova-topup-amount-shell .form-control:focus {
+  box-shadow: none;
+}
+
+.nova-topup-currency {
+  color: #20384b;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.nova-topup-max-btn {
+  background: #2f6f96;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-width: 96px;
+  padding: 0.85rem 1.25rem;
+}
+
+.nova-topup-max-btn:hover,
+.nova-topup-max-btn:focus {
+  background: #255975;
+  color: #fff;
+}
+
+.nova-topup-breakdown {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.nova-topup-breakdown-row {
+  align-items: center;
+  color: #11283a;
+  display: flex;
+  font-size: 1.05rem;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nova-topup-breakdown-row strong {
+  font-size: 1.1rem;
+}
+
+.nova-topup-breakdown-row.is-subtle {
+  color: #617487;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 575.98px) {
+  .nova-topup-card-meta strong {
+    font-size: 1.4rem;
+  }
+
+  .nova-topup-balance-value {
+    font-size: 1.65rem;
+  }
+
+  .nova-topup-amount-shell {
+    min-height: 64px;
+  }
+
+  .nova-topup-max-btn {
+    min-width: 84px;
+    padding: 0.75rem 1rem;
+  }
 }

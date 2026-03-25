@@ -18,7 +18,7 @@ const DashboardChartsPanel = ({
   weekdayLabels,
   cardStatusChartItems,
 }) => (
-  <div className="row g-3">
+  <div className="row g-3" style={{marginTop:"6px"}}>
     <div className="col-xl-8">
       <div className="card crypto-chart h-auto">
         <div className="card-header pb-0 border-0 flex-wrap">

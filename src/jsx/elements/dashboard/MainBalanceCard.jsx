@@ -9,7 +9,8 @@ import {
   getSecurityCodeStatus,
   validateSecurityCode,
 } from "../../../services/securityCode";
-import Swal from "sweetalert2";
+import CardTopUpModal from "./CardTopUpModal";
+import { useNavigate } from "react-router-dom";
 
 const CARD_NUMBER_PLACEHOLDER = "**** **** **** ****";
 const CARD_EXPIRY_PLACEHOLDER = "**/**";
@@ -230,6 +231,8 @@ const MainBalanceCard = ({
   loading = false,
   onCardChange = null,
   walletAsset = null,
+  onCardsUpdated = null,
+  onWalletUpdated = null,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [panCacheByCardId, setPanCacheByCardId] = useState({});
@@ -241,6 +244,8 @@ const MainBalanceCard = ({
   const [securityError, setSecurityError] = useState("");
   const [balanceUnlocked, setBalanceUnlocked] = useState(false);
   const [panUnlocked, setPanUnlocked] = useState(false);
+  const [topUpModalOpen, setTopUpModalOpen] = useState(false);
+  const navigation  = useNavigate();
 
   const fallbackCard = useMemo(
     () => ({
@@ -723,30 +728,6 @@ const MainBalanceCard = ({
   ];
 
 
-  const [topupLoading, setTopupLoading] = useState(false);
-  const topup = async (id) =>{
-    try {
-      setTopupLoading(true);
-      const res = await request({
-        url:`app/tevau/cards/:${id}/topup`,
-        method:'POST',
-        data:{}
-      })       
-    } catch (error) { 
-      Swal.fire({
-        icon: "error",
-        title: "Topup Failed",
-        text: "Failed to make topup, Please try again.",
-        timer: 2500,
-        showConfirmButton: false,
-      });
-    }finally{
-      setTopupLoading(false);
-    }
-  }
-
-  
-
   return (
     <div className="card dz-wallet nova-main-balance-card">
       <div className="card-header border-0 align-items-start pb-0">
@@ -946,12 +927,22 @@ const MainBalanceCard = ({
               <Button
                 variant="light"
                 className="nova-main-balance-action-btn is-primary"
+                onClick={() => setTopUpModalOpen(true)}
+                disabled={showNoCards}
               >
                 Topup
               </Button>
               <Button
                 variant="light"
                 className="nova-main-balance-action-btn is-primary"
+                onClick={() =>
+                  !showNoCards &&
+                  selectedCard?.id &&
+                  navigation("/card-management", {
+                    state: { selectedCardId: String(selectedCard.id) },
+                  })
+                }
+                disabled={showNoCards || !selectedCard?.id}
               >
                 Card Management
               </Button>
@@ -1062,6 +1053,21 @@ const MainBalanceCard = ({
           </button>
         </Modal.Footer>
       </Modal>
+
+      <CardTopUpModal
+        show={topUpModalOpen}
+        onHide={() => setTopUpModalOpen(false)}
+        card={showNoCards ? null : resolvedSelectedCard}
+        walletAsset={walletAsset}
+        onSuccess={async () => {
+          if (typeof onCardsUpdated === "function") {
+            await onCardsUpdated();
+          }
+          if (typeof onWalletUpdated === "function") {
+            await onWalletUpdated();
+          }
+        }}
+      />
     </div>
   );
 };

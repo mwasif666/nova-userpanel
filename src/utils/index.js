@@ -232,3 +232,38 @@ export const isWalletAssetUsable = (asset) => {
     (!asset?.coming_soon && status !== "coming_soon")
   );
 };
+
+export const maskCardLast4 = (card) => {
+  const digits = String(
+    card?.card_id ||
+      card?.displayId ||
+      card?.id ||
+      card?.card_number ||
+      card?.masked_card_number ||
+      "",
+  )
+    .replace(/\D/g, "")
+    .slice(-4);
+
+  return digits ? `**** ${digits}` : "****";
+};
+
+export const formatMoney = (value, currency = "USD") => {
+  const numeric = Number(value ?? 0);
+  const safeValue = Number.isFinite(numeric) ? numeric : 0;
+  const safeCurrency = String(currency || "USD").toUpperCase();
+
+  try {
+    return safeValue.toLocaleString("en-US", {
+      style: "currency",
+      currency: safeCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  } catch (error) {
+    return `${safeCurrency} ${safeValue.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+};

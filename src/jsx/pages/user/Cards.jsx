@@ -12,6 +12,7 @@ import {
   getSecurityCodeStatus,
   validateSecurityCode,
 } from "../../../services/securityCode";
+import { formatMoney } from "../../../utils";
 
 const extractCardsRows = (response) => {
   const payload = response?.data?.data ?? response?.data ?? [];
@@ -51,23 +52,6 @@ const normalizeCardType = (value) => {
   if (text.includes("virtual")) return "Virtual";
   if (text.includes("physical")) return "Physical";
   return normalizeLabel(value);
-};
-
-const formatMoney = (value, currency = "USD") => {
-  const numeric = Number(value ?? 0);
-  const safe = Number.isFinite(numeric) ? numeric : 0;
-  const code = String(currency || "USD").toUpperCase();
-
-  try {
-    return safe.toLocaleString("en-US", {
-      style: "currency",
-      currency: code,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  } catch (error) {
-    return `${code} ${safe.toLocaleString("en-US")}`;
-  }
 };
 
 const formatDateTime = (value) => {
@@ -602,14 +586,14 @@ const Cards = () => {
                         <strong>{item.value}</strong>
                         <p>{item.sub}</p>
                       </div>
-                      <button
+                      {/* <button
                         type="button"
                         className="nova-overview-metric-arrow"
                         aria-label={`${item.title} details`}
                         onClick={() => openOverviewFilteredModal(item)}
                       >
                         <i className="pi pi-angle-right" />
-                      </button>
+                      </button> */}
                     </div>
                   ))}
                   </div>
@@ -670,6 +654,8 @@ const Cards = () => {
             cards={cards}
             userName={user?.name || user?.full_name || "User"}
             loading={loading}
+            onCardsUpdated={() => loadCards({ silent: true })}
+            onWalletUpdated={loadWalletBalance}
             walletAsset={{
               balance: walletSummary.balance,
               available_balance: walletSummary.availableBalance,

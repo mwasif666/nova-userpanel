@@ -20,6 +20,7 @@ import Home from "../pages/dashboard/Home";
 import Kyc from "../pages/user/Kyc";
 import Wallet from "../elements/Wallet/Wallet";
 import Cards from "../pages/user/Cards";
+import CardManagement from "../pages/user/CardManagement";
 import SecuritySettings from "../pages/user/SecuritySettings";
 
 /// Error pages
@@ -43,6 +44,7 @@ const Markup = () => {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/kyc" element={<Kyc />} />
+          <Route path="/card-management" element={<CardManagement />} />
           <Route path="/cards" element={<Cards />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/security-settings" element={<SecuritySettings />} />

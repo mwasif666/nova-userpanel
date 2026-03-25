@@ -3,8 +3,11 @@ import { Modal } from "react-bootstrap";
 import { getApiErrorMessage } from "../../../utils";
 import { walletTransferValidationSchema } from "../../../utils/validate/validate";
 import { request } from "../../../utils/api";
+import { useEffect, useState } from "react";
 
 const TransferModal = ({ show, onHide }) => {
+  const [fee, setFee] = useState({});
+  const [feeLoading, setFeeLoading] = useState(false);
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -71,6 +74,28 @@ const TransferModal = ({ show, onHide }) => {
 
   const statusError = formik.status?.error || "";
   const statusSuccess = formik.status?.success || "";
+  const transferFeeValue =
+    fee?.value !== undefined && fee?.value !== null ? fee.value : "N/A";
+  const transferFeeType = fee?.value_type || "N/A";
+
+  const getTransferFee = async()=>{
+    try {
+      setFeeLoading(true);
+      const res = await request({
+        method:"GET",
+        url: "app/platform-fees"
+      })    
+      setFee(res.data.transfer);
+    } catch (error) {
+      
+    }finally{
+      setFeeLoading(false);
+    }
+  }
+
+  useEffect(()=>{
+    getTransferFee();
+  },[])
 
   return (
     <Modal centered show={show} onHide={closeModal}>
@@ -102,9 +127,39 @@ const TransferModal = ({ show, onHide }) => {
             value={formik.values.amount}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="100"
+            placeholder="Enter amount"
           />
           {renderFieldError("amount")}
+
+          <div className="card border-primary shadow-sm mb-3">
+            <div className="card-body p-3">
+              <h6 className="card-subtitle text-primary mb-3">
+                Transfer Information
+              </h6>
+              <div className="row g-2">
+                <div className="col-6">
+                  <div className="text-center">
+                    <div className="fw-bold text-muted small">
+                      Transfer Fee
+                    </div>
+                    <div className="h5 text-primary mb-0">
+                      {feeLoading ? "Loading..." : transferFeeValue}
+                    </div>
+                  </div>
+                </div>
+                {/* <div className="col-6">
+                  <div className="text-center">
+                    <div className="fw-bold text-muted small">
+                      Fee Type
+                    </div>
+                    <div className="h5 text-primary mb-0 text-capitalize">
+                      {feeLoading ? "Loading..." : transferFeeType}
+                    </div>
+                  </div>
+                </div> */}
+              </div>
+            </div>
+          </div>
 
           {statusError && (
             <div className="alert alert-danger mt-3">{statusError}</div>

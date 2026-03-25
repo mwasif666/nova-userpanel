@@ -105,6 +105,10 @@ const WithdrawModal = ({ show, onHide }) => {
   const hasFieldError = (field) =>
     (formik.touched[field] || formik.submitCount > 0) && Boolean(formik.errors[field]);
 
+  const selectedNetwork = networks.find(
+    (net) => net.network === formik.values.network,
+  );
+
   return (
     <Modal centered show={show} onHide={closeModal}>
       <div className="modal-header">
@@ -137,7 +141,7 @@ const WithdrawModal = ({ show, onHide }) => {
             value={formik.values.amount}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="100.50"
+            placeholder="Enter Amount"
           />
           {renderFieldError("amount")}
 
@@ -158,6 +162,38 @@ const WithdrawModal = ({ show, onHide }) => {
             ))}
           </select>
           {renderFieldError("network")}
+
+          {selectedNetwork && (
+            <div className="card border-primary shadow-sm mb-3">
+              <div className="card-body p-3">
+                <h6 className="card-subtitle text-primary mb-3">
+                  Withdrawal Information
+                </h6>
+                <div className="row g-2">
+                  <div className="col-6">
+                    <div className="text-center">
+                      <div className="fw-bold text-muted small">
+                        Withdrawal Fee
+                      </div>
+                      <div className="h5 text-primary mb-0">
+                        {selectedNetwork.withdrawal_fee || "N/A"} USDT
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="text-center">
+                      <div className="fw-bold text-muted small">
+                        Min Withdrawal
+                      </div>
+                      <div className="h5 text-primary mb-0">
+                        {selectedNetwork.min_withdrawal || "N/A"} USDT
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Currency */}
           <label className="form-label">Currency</label>
