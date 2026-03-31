@@ -15,9 +15,11 @@ import {
   getAllDashboardCards,
   getDashboardWalletBalance,
 } from "../../../services/dashboardWallet";
+import { request } from "../../../utils/api";
 
 const filterCardsForUser = ({ rows, userId, userCode, thirdId }) =>
   rows.filter((row) => {
+    
     const rowUserCode = row?.user_code || row?.tevau_user?.user_code;
     const rowThirdId = row?.third_id || row?.tevau_user?.third_id;
     const rowUserId =
@@ -61,6 +63,7 @@ const CardManagement = () => {
     assetName: "",
   });
   const [freezeEnabled, setFreezeEnabled] = useState(false);
+  const [freezeLoading, setFreezeLoading] = useState(false);
 
   const userId = user?.id;
   const userCode = user?.tevau_user?.user_code || null;
@@ -207,6 +210,83 @@ const CardManagement = () => {
     });
   };
 
+  const [closeLoading, setCloseLoading] = useState(false);
+
+  const handleFreezeCard = async () => {
+    const cardId = getCardIdentity(selectedCard);
+
+    if (!cardId || freezeLoading) return;
+
+    const isCurrentlyFrozen = freezeEnabled;
+    const actionLabel = isCurrentlyFrozen ? "unfreeze" : "freeze";
+    const resultLabel = isCurrentlyFrozen ? "unfrozen" : "frozen";
+
+    try {
+      setFreezeLoading(true);
+
+      await request({
+        url: `app/tevau/cards/${cardId}/${actionLabel}`,
+        method: "POST",
+      });
+
+      setFreezeEnabled((prev) => !prev);
+
+      Swal.fire({
+        icon: "success",
+        title: `Card ${isCurrentlyFrozen ? "Unfrozen" : "Frozen"}`,
+        text: `The card has been successfully ${resultLabel}.`,
+        timer: 2200,
+        showConfirmButton: false,
+      });
+
+      await loadCards();
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: `${isCurrentlyFrozen ? "Unfreeze" : "Freeze"} Failed`,
+        text: `An error occurred while trying to ${actionLabel} the card. Please try again later.`,
+      });
+    } finally {
+      setFreezeLoading(false);
+    }
+  };
+
+  const handleCloseCard = async () => {
+    const cardId = getCardIdentity(selectedCard);
+
+    if (!cardId) {
+      Swal.fire({
+        icon: "error",
+        title: "Card Not Found",
+        text: "Unable to find the selected card. Please refresh and try again.",
+      });
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      icon: "warning",
+      title: "Close this card?",
+      html: `
+        <div class="text-start">
+          <p class="fw-semibold mb-2">Attention:</p>
+          <ol class="mb-0 ps-3">
+            <li class="mb-2">The operation of closing the card is irreversible.</li>
+            <li class="mb-2">A handling fee of 2 USD will be charged for closing the card.</li>
+            <li class="mb-0">Please note that before closing the card, the card balance should be kept at 2 USD to pay the fee, otherwise the card will fail to be closed.</li>
+          </ol>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Yes, close it",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc3545",
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    await closeCard(cardId);
+  };
+
   const managementSections = [
     {
       title: "Security",
@@ -239,6 +319,7 @@ const CardManagement = () => {
           title: "Freeze Card",
           subtitle: "Temporarily block transactions on this card.",
           type: "toggle",
+          onClick: handleFreezeCard,
         },
         {
           icon: "pi pi-sliders-h",
@@ -260,11 +341,38 @@ const CardManagement = () => {
           subtitle: "Permanently close this card and disable future use.",
           actionLabel: "Close",
           tone: "danger",
-          onClick: () => showComingSoon("Close Card"),
+          onClick: handleCloseCard,
         },
       ],
     },
   ];
+
+  const closeCard = async (card_id) => {
+    try {
+      setCloseLoading(true);
+      await request({
+        url: `app/tevau/cards/${card_id}/destroy`,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Card Closed",
+        text: "The card has been successfully closed.",
+        timer: 2400,
+        showConfirmButton: false,
+      });
+
+      await loadCards();
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Close Card Failed",
+        text: "An error occurred while attempting to close the card. Please try again later.",
+      });
+    } finally {
+      setCloseLoading(false);
+    }
+  };
 
   return (
     <>
@@ -316,22 +424,6 @@ const CardManagement = () => {
           <div className="col-xl-4">
             <div className="card nova-panel h-100">
               <div className="card-body">
-                <div className="mb-3">
-                  <label className="form-label">Select Card</label>
-                  <select
-                    className="form-select"
-                    value={getCardIdentity(selectedCard)}
-                    onChange={(event) => setSelectedCardId(event.target.value)}
-                    disabled={loading || !cards.length}
-                  >
-                    {cards.map((card, index) => (
-                      <option key={getCardIdentity(card)} value={getCardIdentity(card)}>
-                        {`${getCardName(card, index)} - ${maskCardLast4(card)}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div className="nova-card-management-summary">
                   <div className="nova-card-management-summary-head">
                     <div>
@@ -415,7 +507,8 @@ const CardManagement = () => {
                           <button
                             type="button"
                             className={`nova-2fa-switch ${freezeEnabled ? "is-on" : ""}`}
-                            onClick={() => setFreezeEnabled((prev) => !prev)}
+                            onClick={item.onClick}
+                            disabled={freezeLoading}
                             aria-label="Toggle freeze card"
                           >
                             <span />
@@ -428,9 +521,12 @@ const CardManagement = () => {
                                 ? "btn-outline-danger"
                                 : "btn-outline-primary"
                             } btn-sm`}
+                            disabled={item.title === "Close Card" && closeLoading}
                             onClick={item.onClick}
                           >
-                            {item.actionLabel}
+                            {item.title === "Close Card" && closeLoading
+                              ? "Closing..."
+                              : item.actionLabel}
                           </button>
                         )}
                       </div>
