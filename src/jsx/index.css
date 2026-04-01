@@ -4236,12 +4236,140 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   color: #64748b;
   font-size: 0.78rem;
 }
+.nova-card-limits-panel > .card-body {
+  padding: 1rem;
+}
+.nova-card-limits-panel .modal-body {
+  padding: 1rem;
+}
+.nova-card-limits-panel .modal-header {
+  padding: 1rem;
+}
+.nova-card-limits-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.nova-card-limits-state {
+  margin-top: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #516277;
+  padding: 0.8rem 0.95rem;
+}
+.nova-card-limits-group {
+  border: 1px solid #dce8f2;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f9fcff 0%, #f4f8fc 100%);
+  padding: 0.9rem;
+  min-height: 100%;
+}
+.nova-card-limits-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.nova-card-limits-group-head h6 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.98rem;
+}
+.nova-card-limits-group-head i {
+  color: #2a6486;
+  font-size: 1rem;
+}
+.nova-card-limits-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  background: #fff;
+  overflow: hidden;
+}
+.nova-card-limits-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.75rem 0.9rem;
+}
+.nova-card-limits-row + .nova-card-limits-row {
+  border-top: 1px solid #eef3f8;
+}
+.nova-card-limits-row span {
+  color: #64748b;
+  font-size: 0.86rem;
+}
+.nova-card-limits-row strong {
+  color: #0f172a;
+  font-size: 0.96rem;
+}
+.nova-card-pin-modal .modal-header,
+.nova-card-pin-modal .modal-body {
+  padding: 1rem;
+}
+.nova-card-pin-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.nova-card-pin-state {
+  margin-top: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #516277;
+  padding: 0.8rem 0.95rem;
+}
+.nova-card-pin-panel {
+  border: 1px solid #dce8f2;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f9fcff 0%, #f4f8fc 100%);
+  padding: 0.9rem;
+}
+.nova-card-pin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+.nova-card-pin-row span {
+  color: #64748b;
+  font-size: 0.88rem;
+}
+.nova-sensitive-value {
+  color: #0f172a;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  filter: blur(8px);
+  user-select: none;
+  transition: filter 0.18s ease;
+}
+.nova-sensitive-value.is-revealed {
+  filter: blur(0);
+}
+@media print {
+  .nova-sensitive-value,
+  .nova-sensitive-value.is-revealed {
+    filter: blur(8px) !important;
+  }
+}
 @media (max-width: 767.98px) {
   .nova-card-management-summary-grid {
     grid-template-columns: 1fr;
   }
   .nova-card-management-row {
     padding: 0.85rem 0.9rem;
+  }
+  .nova-card-limits-row {
+    padding: 0.72rem 0.8rem;
+  }
+  .nova-card-limits-row strong {
+    font-size: 0.9rem;
   }
 }
 .nova-2fa-attention {
