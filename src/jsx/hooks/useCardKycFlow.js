@@ -57,15 +57,14 @@ export const buildCardKycFlowState = ({
       hasPurchasedCard: false,
       canOrderCard: true,
       canBindCard: false,
-      canAccessWallet: false,
+      canAccessWallet: true,
       title: "Buy Your First Card",
       message:
-        "KYC is approved. The user can now order the first card. Wallet and bind flow unlock after the first card is issued.",
+        "KYC is approved. You can deposit funds and order your first card.",
       orderBlockedReason: "",
       bindBlockedReason:
         "Buy the first card before opening the bind flow for additional card actions.",
-      walletBlockedReason:
-        "Wallet access unlocks after the first card is issued.",
+      walletBlockedReason: "",
     };
   }
 

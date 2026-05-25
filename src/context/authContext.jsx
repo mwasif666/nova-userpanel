@@ -2,7 +2,6 @@ import { createContext, useState, useEffect, useCallback, useRef } from "react";
 import { request } from "../utils/api";
 
 export const AuthContext = createContext();
-const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api/";
 
 const isObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -81,87 +80,11 @@ const resolveRoleValue = (user) => {
   return user?.role ?? null;
 };
 
-const getApiErrorMessage = (error) => {
-  const payload = error?.response?.data || {};
-  const firstError =
-    payload?.errors && typeof payload.errors === "object"
-      ? Object.values(payload.errors).flat().find(Boolean)
-      : "";
+const getStoredPushToken = () => {
+  const token = String(localStorage.getItem("nova_device_token") || "").trim();
 
-  return String(
-    payload?.message ||
-      payload?.error ||
-      payload?.msg ||
-      firstError ||
-      error?.message ||
-      "",
-  )
-    .trim()
-    .toLowerCase();
-};
-
-const hasEndpointNotFoundError = (error) => {
-  const status = Number(error?.response?.status || 0);
-  if ([404, 405].includes(status)) return true;
-
-  const message = getApiErrorMessage(error);
-  if (!message) return false;
-
-  return [
-    "endpoint not found",
-    "route",
-    "not found",
-    "does not exist",
-  ].some((token) => message.includes(token));
-};
-
-const getOrCreateDeviceToken = () => {
-  const existingToken = localStorage.getItem("nova_device_token");
-  if (existingToken) return existingToken;
-
-  const generatedToken = `web-${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 12)}`;
-  localStorage.setItem("nova_device_token", generatedToken);
-  return generatedToken;
-};
-
-const getDeviceTokenPayloads = (deviceToken) => {
-  const platformName =
-    typeof navigator !== "undefined" ? navigator.platform || "browser" : "browser";
-  const deviceName = `web-${platformName}`;
-  const formData = new FormData();
-  formData.append("device_token", deviceToken);
-  formData.append("token", deviceToken);
-  formData.append("platform", "web");
-  formData.append("device_type", "web");
-  formData.append("device_name", deviceName);
-
-  return [
-    {
-      data: {
-        device_token: deviceToken,
-        token: deviceToken,
-        platform: "web",
-        device_type: "web",
-        device_name: deviceName,
-      },
-    },
-    {
-      data: {
-        device_token: deviceToken,
-        platform: "web",
-      },
-    },
-    {
-      data: {
-        token: deviceToken,
-      },
-    },
-    {
-      data: formData,
-    },
-  ];
+  // Older web builds generated local placeholders, which are not push tokens.
+  return token && !token.startsWith("web-") ? token : "";
 };
 
 export const AuthProvider = ({ children }) => {
@@ -202,52 +125,32 @@ export const AuthProvider = ({ children }) => {
       return { isError: true, error: new Error("No access token found") };
     }
 
-    const deviceToken = getOrCreateDeviceToken();
-    const payloads = getDeviceTokenPayloads(deviceToken);
-    const endpointCandidates = [
-      { url: "app/device-token" },
-      { url: "app/device-token", baseURL: ROOT_API_BASE_URL },
-      { url: "app/device-token", baseURL: ROOT_API_BASE_URL },
-    ];
-
-    let lastError = null;
-
-    for (let endpointIndex = 0; endpointIndex < endpointCandidates.length; endpointIndex += 1) {
-      const endpoint = endpointCandidates[endpointIndex];
-      let endpointMissing = false;
-
-      for (let payloadIndex = 0; payloadIndex < payloads.length; payloadIndex += 1) {
-        const payload = payloads[payloadIndex];
-        try {
-          const response = await request({
-            url: endpoint.url,
-            method: "POST",
-            data: payload.data,
-            ...(endpoint.baseURL ? { baseURL: endpoint.baseURL } : {}),
-          });
-
-          hasSyncedDeviceTokenRef.current = true;
-          return { isError: false, response };
-        } catch (error) {
-          lastError = error;
-          if (hasEndpointNotFoundError(error)) {
-            endpointMissing = true;
-            break;
-          }
-
-          const status = Number(error?.response?.status || 0);
-          if ([401, 403].includes(status)) {
-            return { isError: true, error };
-          }
-        }
-      }
-
-      if (endpointMissing) {
-        continue;
-      }
+    const deviceToken = getStoredPushToken();
+    if (!deviceToken) {
+      hasSyncedDeviceTokenRef.current = true;
+      return { isError: false, skipped: true };
     }
 
-    return { isError: true, error: lastError || new Error("Device token sync failed") };
+    const deviceName = `web-${typeof navigator !== "undefined" ? navigator.platform || "browser" : "browser"}`;
+
+    try {
+      const response = await request({
+        url: "app/device-token",
+        method: "POST",
+        data: {
+          device_token: deviceToken,
+          token: deviceToken,
+          platform: "web",
+          device_type: "web",
+          device_name: deviceName,
+        },
+      });
+      hasSyncedDeviceTokenRef.current = true;
+      return { isError: false, response };
+    } catch (error) {
+      hasSyncedDeviceTokenRef.current = true;
+      return { isError: true, error };
+    }
   }, []);
 
   const applyUserData = useCallback((userData, tokenOverride = null) => {

@@ -265,17 +265,23 @@ const CardOperationsModal = ({
   const [feedback, setFeedback] = useState(null);
   const [apiResponse, setApiResponse] = useState(null);
   const [securityCode, setSecurityCode] = useState("");
+  const [securityVisible, setSecurityVisible] = useState(false);
+  const [bindUiStep, setBindUiStep] = useState(1);
+  const [bindStepError, setBindStepError] = useState("");
+  const [bindSecurityChecking, setBindSecurityChecking] = useState(false);
 
   useEffect(() => {
     if (!inline && !show) return;
     setOrderForms((prev) => mergeUserPrefillIntoOrderForms(prev, prefill));
     setBindForm((prev) => mergeUserPrefillIntoBindForm(prev, prefill));
+    setBindUiStep(1);
+    setBindStepError("");
+    setSecurityCode("");
   }, [inline, prefill, show]);
 
   const activeOrderConfig = CARD_ORDER_CONFIG[orderTab];
   const activeOrderForm = orderForms[orderTab];
-  const activeAddress =
-    activeOrderForm?.[activeOrderConfig.addressKey] || {};
+  const activeAddress = activeOrderForm?.[activeOrderConfig.addressKey] || {};
 
   const renderField = ({
     label,
@@ -288,12 +294,12 @@ const CardOperationsModal = ({
     inputMode,
   }) => (
     <div className={colClass} key={label}>
-      <label className="nova-flow-field">
-        <span className="nova-flow-field-label">{label}</span>
+      <div className="nova-bind-field">
+        <label>{label}</label>
         {rows > 0 ? (
           <textarea
             rows={rows}
-            className="form-control nova-flow-input"
+            className="nova-bind-input"
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
@@ -301,14 +307,14 @@ const CardOperationsModal = ({
         ) : (
           <input
             type={type}
-            className="form-control nova-flow-input"
+            className="nova-bind-input"
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
             inputMode={inputMode}
           />
         )}
-      </label>
+      </div>
     </div>
   );
 
@@ -459,7 +465,7 @@ const CardOperationsModal = ({
       await validateSecurityCode({ securityCode });
 
       const response = await request({
-        url: "tevau/cards",
+        url: "app/tevau/cards",
         method: "POST",
         data: buildOrderPayload(orderTab),
       });
@@ -535,7 +541,7 @@ const CardOperationsModal = ({
       };
 
       const response = await request({
-        url: "tevau/cards/bind",
+        url: "app/tevau/cards/bind",
         method: "POST",
         data: payload,
       });
@@ -587,236 +593,287 @@ const CardOperationsModal = ({
       ? "Cards: Bind"
       : "Cards: Order & Bind";
 
+  const BIND_STEPS = [
+    { n: 1, label: "Verify Security" },
+    { n: 2, label: "Bind Card" },
+  ];
+
   const content = (
     <>
-      <div className="nova-card-ops-modal-summary mb-3">
-        <span className="nova-wallet-stat-chip">
-          User: {sanitizeText(user?.email) || "N/A"}
-        </span>
-        <span className="nova-wallet-stat-chip">
-          User Code: {user?.tevau_user?.user_code || "N/A"}
-        </span>
-        <span className="nova-wallet-stat-chip">
-          Current Cards: {userCardCount}
-        </span>
-        {walletAvailable !== null && (
-          <span className="nova-wallet-stat-chip">
-            Wallet Available: {walletCurrency} {Number(walletAvailable || 0).toLocaleString("en-US")}
-          </span>
-        )}
-      </div>
-
-      <div className="nova-flow-shell mb-3">
-        <div className="row g-3 align-items-end">
-          <div className="col-md-8">
-            <label className="nova-flow-field">
-              <span className="nova-flow-field-label">Security Code</span>
-              <input
-                type="password"
-                className="form-control nova-flow-input"
-                value={securityCode}
-                onChange={(event) => setSecurityCode(event.target.value)}
-                placeholder="Required for card purchase/bind"
-              />
-            </label>
-          </div>
-          <div className="col-md-4">
-            <div className="text-muted small">
-              Purchase and bind requests will be blocked until code is verified.
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="row g-3">
         {showOrderPanel && (
-        <div className={showBindPanel ? "col-xl-7" : "col-12"}>
-          <div className="nova-flow-shell">
-            <div className="nova-flow-header">
-              <div>
-                <h4 className="mb-1">Order Card</h4>
+          <div className={showBindPanel ? "col-xl-7" : "col-12"}>
+            <div className="nova-flow-shell">
+              <div className="nova-flow-header">
+                <div>
+                  <h4 className="mb-1">Order Card</h4>
+                </div>
+                <span
+                  className={`nova-flow-status-pill ${
+                    orderTab === "virtual" ? "is-virtual" : "is-physical"
+                  }`}
+                >
+                  {activeOrderConfig.shortLabel}
+                </span>
               </div>
-              <span
-                className={`nova-flow-status-pill ${
+
+              <div
+                className="nova-flow-switch"
+                role="tablist"
+                aria-label="Order card type"
+              >
+                {Object.entries(CARD_ORDER_CONFIG).map(([key, config]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`nova-flow-switch-btn ${
+                      orderTab === key ? "is-active" : ""
+                    } ${key === "virtual" ? "is-virtual" : "is-physical"}`}
+                    onClick={() => setOrderTab(key)}
+                  >
+                    <span className="nova-flow-switch-title">
+                      {config.label}
+                    </span>
+                    <span className="nova-flow-switch-sub">{config.hint}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className={`nova-flow-hero ${
                   orderTab === "virtual" ? "is-virtual" : "is-physical"
                 }`}
               >
-                {activeOrderConfig.shortLabel}
-              </span>
-            </div>
-
-            <div className="nova-flow-switch" role="tablist" aria-label="Order card type">
-              {Object.entries(CARD_ORDER_CONFIG).map(([key, config]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={`nova-flow-switch-btn ${
-                    orderTab === key ? "is-active" : ""
-                  } ${key === "virtual" ? "is-virtual" : "is-physical"}`}
-                  onClick={() => setOrderTab(key)}
-                >
-                  <span className="nova-flow-switch-title">{config.label}</span>
-                  <span className="nova-flow-switch-sub">{config.hint}</span>
-                </button>
-              ))}
-            </div>
-
-            <div
-              className={`nova-flow-hero ${
-                orderTab === "virtual" ? "is-virtual" : "is-physical"
-              }`}
-            >
-              <div className="nova-flow-hero-copy">
-                <div className="nova-flow-kicker">Card Order</div>
-                <h5>{activeOrderConfig.label}</h5>
-                <p>{activeOrderConfig.hint}</p>
-              </div>
-              <div className="nova-flow-hero-visual">
-                <img
-                  src={activeOrderConfig.image}
-                  alt={activeOrderConfig.label}
-                  className="nova-flow-hero-image"
-                />
-              </div>
-            </div>
-
-            <div className="nova-flow-section">
-              <div className="nova-flow-section-head">
-                <h6 className="mb-0">Requester Details</h6>
-                <small>Common for both physical and virtual order requests</small>
-              </div>
-              {!canOrderCards ? (
-                <div className="alert alert-warning py-2 mb-3">
-                  {orderDisabledReason}
+                <div className="nova-flow-hero-copy">
+                  <div className="nova-flow-kicker">Card Order</div>
+                  <h5>{activeOrderConfig.label}</h5>
+                  <p>{activeOrderConfig.hint}</p>
                 </div>
-              ) : null}
-              <div className="row g-3">
-                {ORDER_COMMON_FIELDS.map((field) =>
-                  renderField({
-                    label: field.label,
-                    value: activeOrderForm[field.key] || "",
-                    onChange: (value) => setOrderField(orderTab, field.key, value),
-                    placeholder: field.placeholder,
-                    type: field.type || "text",
-                    colClass: field.colClass || "col-md-6",
-                    inputMode: field.inputMode,
-                  }),
-                )}
+                <div className="nova-flow-hero-visual">
+                  <img
+                    src={activeOrderConfig.image}
+                    alt={activeOrderConfig.label}
+                    className="nova-flow-hero-image"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="nova-flow-section">
-              <div className="nova-flow-section-head">
-                <h6 className="mb-0">{activeOrderConfig.addressTitle}</h6>
-                <small>{activeOrderConfig.addressKey}</small>
+              <div className="nova-flow-section">
+                <div className="nova-flow-section-head">
+                  <h6 className="mb-0">Requester Details</h6>
+                  <small>
+                    Common for both physical and virtual order requests
+                  </small>
+                </div>
+                {!canOrderCards ? (
+                  <div className="alert alert-warning py-2 mb-3">
+                    {orderDisabledReason}
+                  </div>
+                ) : null}
+                <div className="row g-3">
+                  {ORDER_COMMON_FIELDS.map((field) =>
+                    renderField({
+                      label: field.label,
+                      value: activeOrderForm[field.key] || "",
+                      onChange: (value) =>
+                        setOrderField(orderTab, field.key, value),
+                      placeholder: field.placeholder,
+                      type: field.type || "text",
+                      colClass: field.colClass || "col-md-6",
+                      inputMode: field.inputMode,
+                    }),
+                  )}
+                </div>
               </div>
-              <div className="row g-3">
-                {(orderTab === "virtual"
-                  ? VIRTUAL_ADDRESS_FIELDS
-                  : PHYSICAL_ADDRESS_FIELDS
-                ).map((field) =>
-                  renderField({
-                    label: field.label,
-                    value: activeAddress[field.key] || "",
-                    onChange: (value) =>
-                      setOrderAddressField(orderTab, field.key, value),
-                    placeholder: field.placeholder,
-                    type: field.type || "text",
-                    rows: field.rows || 0,
-                    colClass: field.colClass || "col-md-6",
-                    inputMode: field.inputMode,
-                  }),
-                )}
-              </div>
-            </div>
 
-            <div className="nova-flow-actions">
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => {
-                  resetOrderForm(orderTab);
-                  clearResponseState();
-                }}
-              >
-                Reset Order Form
-              </button>
-               <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleOrderSubmit}
-                disabled={
-                  !canOrderCards || submittingAction === `order-${orderTab}`
-                }
-              >
-                {submittingAction === `order-${orderTab}`
-                  ? "Submitting..."
-                  : !canOrderCards
-                    ? "KYC Approval Required"
-                    : `Submit ${activeOrderConfig.shortLabel} Order`}
-              </button>
+              <div className="nova-flow-section">
+                <div className="nova-flow-section-head">
+                  <h6 className="mb-0">{activeOrderConfig.addressTitle}</h6>
+                  <small>{activeOrderConfig.addressKey}</small>
+                </div>
+                <div className="row g-3">
+                  {(orderTab === "virtual"
+                    ? VIRTUAL_ADDRESS_FIELDS
+                    : PHYSICAL_ADDRESS_FIELDS
+                  ).map((field) =>
+                    renderField({
+                      label: field.label,
+                      value: activeAddress[field.key] || "",
+                      onChange: (value) =>
+                        setOrderAddressField(orderTab, field.key, value),
+                      placeholder: field.placeholder,
+                      type: field.type || "text",
+                      rows: field.rows || 0,
+                      colClass: field.colClass || "col-md-6",
+                      inputMode: field.inputMode,
+                    }),
+                  )}
+                </div>
+              </div>
+
+              <div className="nova-flow-actions">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    resetOrderForm(orderTab);
+                    clearResponseState();
+                  }}
+                >
+                  Reset Order Form
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleOrderSubmit}
+                  disabled={
+                    !canOrderCards || submittingAction === `order-${orderTab}`
+                  }
+                >
+                  {submittingAction === `order-${orderTab}`
+                    ? "Submitting..."
+                    : !canOrderCards
+                      ? "KYC Approval Required"
+                      : `Submit ${activeOrderConfig.shortLabel} Order`}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {showBindPanel && (
-        <div className={showOrderPanel ? "col-xl-5" : "col-12"}>
-          <div className="nova-flow-shell">
-            <div className="nova-flow-header">
-              <div>
-                <h4 className="mb-1">Bind Card</h4>
+          <div className={showOrderPanel ? "col-xl-5" : "col-12"}>
+            <div className="nova-email-stepper-wrap" style={{ maxWidth: "100%", padding: "0" }}>
+              <div className="nova-email-stepper-head">
+                <h5 className="nova-email-stepper-title">Bind Your Card</h5>
+                <p className="nova-email-stepper-sub">Link a physical card to your account</p>
               </div>
-              <span className="nova-flow-status-pill is-bind">Bind Flow</span>
-            </div>
 
-            {!canBindCards ? (
-              <div className="alert alert-warning py-2 mb-3">
-                {bindDisabledReason}
+              {/* Step bar */}
+              <div className="nova-email-stepper-bar">
+                {BIND_STEPS.map(({ n, label }) => {
+                  const done = n < bindUiStep;
+                  const active = n === bindUiStep;
+                  return (
+                    <React.Fragment key={n}>
+                      <div className={`nova-email-stepper-step ${done ? "is-done" : active ? "is-active" : ""}`}>
+                        <div className="nova-email-stepper-circle">
+                          {done ? <i className="pi pi-check" /> : n}
+                        </div>
+                        <span className="nova-email-stepper-label">{label}</span>
+                      </div>
+                      {n < 2 && <div className={`nova-email-stepper-connector ${done ? "is-done" : ""}`} />}
+                    </React.Fragment>
+                  );
+                })}
               </div>
-            ) : null}
 
-            <div className="row g-3">
-              {BIND_FIELDS.map((field) =>
-                renderField({
-                  label: field.label,
-                  value: bindForm[field.key] || "",
-                  onChange: (value) => setBindField(field.key, value),
-                  placeholder: field.placeholder,
-                  type: field.type || "text",
-                  rows: field.rows || 0,
-                  colClass: field.colClass || "col-md-6",
-                  inputMode: field.inputMode,
-                }),
+              {/* Step 1 — Security code */}
+              {bindUiStep === 1 && (
+                <div className="nova-email-stepper-panel">
+                  {!canBindCards && (
+                    <div className="nova-kyc-feedback is-error mb-3">
+                      <i className="fa fa-exclamation-circle" /><span>{bindDisabledReason}</span>
+                    </div>
+                  )}
+                  <div className="nova-bind-field">
+                    <label>Security Code</label>
+                    <div className="nova-bind-password-wrap">
+                      <input
+                        type={securityVisible ? "text" : "password"}
+                        className="nova-bind-input"
+                        value={securityCode}
+                        onChange={(e) => { setSecurityCode(e.target.value); setBindStepError(""); }}
+                        placeholder="Enter your security code"
+                      />
+                      <button type="button" className="nova-bind-eye-btn" onClick={() => setSecurityVisible((p) => !p)}>
+                        <i className={`pi ${securityVisible ? "pi-eye-slash" : "pi-eye"}`} />
+                      </button>
+                    </div>
+                    <p className="nova-email-stepper-hint mt-1"><i className="pi pi-info-circle me-1" />Your security code is required before card bind.</p>
+                  </div>
+                  {bindStepError && (
+                    <div className="nova-kyc-feedback is-error mt-2">
+                      <i className="fa fa-exclamation-circle" /><span>{bindStepError}</span>
+                    </div>
+                  )}
+                  <div className="nova-email-stepper-actions">
+                    <button
+                      type="button"
+                      className="nova-email-stepper-next-btn"
+                      disabled={!canBindCards || bindSecurityChecking}
+                      onClick={async () => {
+                        if (!sanitizeText(securityCode)) { setBindStepError("Security code is required."); return; }
+                        setBindStepError("");
+                        setBindSecurityChecking(true);
+                        try {
+                          await validateSecurityCode({ securityCode });
+                          setBindUiStep(2);
+                        } catch (err) {
+                          const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Invalid security code.";
+                          setBindStepError(String(msg));
+                        } finally {
+                          setBindSecurityChecking(false);
+                        }
+                      }}
+                    >
+                      {bindSecurityChecking
+                        ? <><span className="spinner-border spinner-border-sm me-2" />Verifying...</>
+                        : <>Next <i className="pi pi-arrow-right ms-2" /></>}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2 — Bind form */}
+              {bindUiStep === 2 && (
+                <div className="nova-email-stepper-panel">
+                  <div className="nova-email-stepper-verified-badge mb-3">
+                    <i className="pi pi-check-circle me-2" />Security code verified
+                  </div>
+
+                  <div className="nova-bind-section-label">Card Details</div>
+                  <div className="row g-3 mb-3">
+                    {BIND_FIELDS.filter((f) => ["active_code", "card_number"].includes(f.key)).map((field) =>
+                      renderField({ label: field.label, value: bindForm[field.key] || "", onChange: (v) => setBindField(field.key, v), placeholder: field.placeholder, inputMode: field.inputMode, colClass: "col-6" }),
+                    )}
+                  </div>
+
+                  <div className="nova-bind-section-label">Contact Info</div>
+                  <div className="row g-3 mb-3">
+                    {BIND_FIELDS.filter((f) => ["dial_code", "phone_number", "email"].includes(f.key)).map((field) =>
+                      renderField({ label: field.label, value: bindForm[field.key] || "", onChange: (v) => setBindField(field.key, v), placeholder: field.placeholder, type: field.type || "text", inputMode: field.inputMode, colClass: field.colClass || "col-6" }),
+                    )}
+                  </div>
+
+                  <div className="nova-bind-section-label">Address</div>
+                  <div className="row g-3 mb-3">
+                    {BIND_FIELDS.filter((f) => ["address", "country_area", "city", "post_code"].includes(f.key)).map((field) =>
+                      renderField({ label: field.label, value: bindForm[field.key] || "", onChange: (v) => setBindField(field.key, v), placeholder: field.placeholder, rows: field.rows || 0, inputMode: field.inputMode, colClass: field.colClass || "col-6" }),
+                    )}
+                  </div>
+
+                  <div className="nova-email-stepper-actions">
+                    <button type="button" className="nova-email-stepper-back-btn"
+                      onClick={() => { setBindUiStep(1); setBindStepError(""); clearResponseState(); }}>
+                      <i className="pi pi-arrow-left me-2" />Back
+                    </button>
+                    <button
+                      type="button"
+                      className="nova-email-stepper-next-btn is-confirm"
+                      onClick={handleBindSubmit}
+                      disabled={submittingAction === "bind"}
+                    >
+                      {submittingAction === "bind"
+                        ? <><span className="spinner-border spinner-border-sm me-2" />Binding...</>
+                        : <><i className="pi pi-link me-2" />Bind Card</>}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
-
-            <div className="nova-flow-actions">
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => {
-                  resetBindForm();
-                  clearResponseState();
-                }}
-              >
-                Reset Bind Form
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleBindSubmit}
-                disabled={!canBindCards || submittingAction === "bind"}
-              >
-                {submittingAction === "bind"
-                  ? "Binding..."
-                  : !canBindCards
-                    ? "Bind Locked"
-                    : "Bind Card"}
-              </button>
-            </div>
           </div>
-        </div>
         )}
       </div>
 
@@ -890,7 +947,11 @@ const CardOperationsModal = ({
       <div className="modal-body">{content}</div>
 
       <div className="modal-footer">
-        <button type="button" className="btn btn-light" onClick={clearResponseState}>
+        <button
+          type="button"
+          className="btn btn-light"
+          onClick={clearResponseState}
+        >
           Clear Status
         </button>
         <button type="button" className="btn btn-secondary" onClick={onHide}>

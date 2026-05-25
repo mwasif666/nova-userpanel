@@ -608,43 +608,25 @@ const Cards = () => {
             <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
               <div>
                 <div className="nova-flow-kicker mb-1">Cards Management</div>
-                <h4 className="mb-1">Card Purchase & Bind</h4>
+                <h4 className="mb-1">Bind Your Card</h4>
                 <p className="mb-0 text-muted">
-                  Virtual/Physical card order and bind flow is available in a focused
-                  modal to keep this page clean.
+                  Link your physical card by entering the activation code, card number, and address details.
                 </p>
               </div>
-                <div className="d-flex align-items-center gap-2 flex-wrap">
-                  <span className="badge bg-light text-dark border">
-                    {cardFlow.canOrderCard
-                      ? "Security Code Required"
-                      : `Order Locked`}
-                  </span>
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary"
-                    onClick={() => {
-                      if (!cardFlow.canOrderCard) return;
-                      setCardOpsScreen("order");
-                      setShowCardOpsModal(true);
-                    }}
-                    disabled={!cardFlow.canOrderCard}
-                  >
-                    Open Card Order
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      if (!cardFlow.canBindCard) return;
-                      setCardOpsScreen("bind");
-                      setShowCardOpsModal(true);
-                    }}
-                    disabled={!cardFlow.canBindCard}
-                  >
-                    Open Card Bind
-                  </button>
-                </div>
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if (!cardFlow.canBindCard) return;
+                    setCardOpsScreen("bind");
+                    setShowCardOpsModal(true);
+                  }}
+                  disabled={!cardFlow.canBindCard}
+                >
+                  <i className="pi pi-link me-2" />Open Card Bind
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -824,45 +806,85 @@ const Cards = () => {
           </>
         ) : (
           <div className="col-12">
-            <div className="card nova-panel nova-card-ops-launch">
-              <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                <div>
-                  <div className="nova-flow-kicker mb-1">First Card</div>
-                  <h4 className="mb-1">Buy Your First Card</h4>
-                  <p className="mb-0 text-muted">
-                    {cardFlow.message}
-                  </p>
-                  {kycError ? (
-                    <div className="alert alert-warning py-2 mt-3 mb-0">
-                      {kycError}
-                    </div>
-                  ) : null}
+            <div className="nova-first-card-hero">
+              {/* Left — icon + heading */}
+              <div className="nova-first-card-left">
+                <div className="nova-first-card-icon">
+                  <i className="pi pi-credit-card" />
                 </div>
-                <div className="d-flex align-items-center gap-2 flex-wrap">
-                  <span className="badge bg-light text-dark border">
-                    {kycLoading
-                      ? "Checking KYC..."
-                      : cardFlow.canOrderCard
-                        ? "Security Code Required"
-                        : `KYC: ${kycStatusLabel}`}
+                <div className="nova-flow-kicker mb-2">Getting Started</div>
+                <h3 className="nova-first-card-title">Buy Your First Card</h3>
+                <p className="nova-first-card-desc">{cardFlow.message}</p>
+
+                <div className="nova-first-card-chips">
+                  <span className={`nova-first-card-chip ${isKycApproved ? "is-done" : "is-pending"}`}>
+                    <i className={`pi ${isKycApproved ? "pi-check-circle" : "pi-clock"}`} />
+                    KYC: {kycLoading ? "Checking..." : kycStatusLabel}
                   </span>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      if (!cardFlow.canOrderCard) return;
-                      setCardOpsScreen("order");
-                      setShowCardOpsModal(true);
-                    }}
-                    disabled={!cardFlow.canOrderCard || kycLoading}
-                  >
-                    {kycLoading
-                      ? "Checking..."
-                      : cardFlow.canOrderCard
-                        ? "Buy First Card"
-                        : cardFlow.title}
-                  </button>
+                  <span className={`nova-first-card-chip ${hasSecurityCode ? "is-done" : "is-pending"}`}>
+                    <i className={`pi ${hasSecurityCode ? "pi-check-circle" : "pi-shield"}`} />
+                    Security Code: {securityStatusLoading ? "Checking..." : hasSecurityCode ? "Set" : "Not Set"}
+                  </span>
                 </div>
+
+                {kycError ? (
+                  <div className="nova-kyc-feedback is-error mt-3">
+                    <i className="fa fa-exclamation-circle" />
+                    <span>{kycError}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Right — steps + CTA */}
+              <div className="nova-first-card-right">
+                <div className="nova-first-card-steps">
+                  <div className={`nova-first-card-step ${isKycApproved ? "is-done" : "is-active"}`}>
+                    <div className="nova-first-card-step-num">
+                      {isKycApproved ? <i className="pi pi-check" /> : "1"}
+                    </div>
+                    <div>
+                      <strong>Complete KYC</strong>
+                      <p>Submit your identity verification</p>
+                    </div>
+                    {isKycApproved && <i className="pi pi-check-circle nova-first-card-step-tick" />}
+                  </div>
+                  <div className={`nova-first-card-step ${hasSecurityCode ? "is-done" : isKycApproved ? "is-active" : ""}`}>
+                    <div className="nova-first-card-step-num">
+                      {hasSecurityCode ? <i className="pi pi-check" /> : "2"}
+                    </div>
+                    <div>
+                      <strong>Set Security Code</strong>
+                      <p>Configure from Profile Settings</p>
+                    </div>
+                    {hasSecurityCode && <i className="pi pi-check-circle nova-first-card-step-tick" />}
+                  </div>
+                  <div className={`nova-first-card-step ${cardFlow.canOrderCard ? "is-active" : ""}`}>
+                    <div className="nova-first-card-step-num">3</div>
+                    <div>
+                      <strong>Order Your Card</strong>
+                      <p>Virtual or Physical card</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="nova-first-card-cta"
+                  onClick={() => {
+                    if (!cardFlow.canOrderCard) return;
+                    setCardOpsScreen("order");
+                    setShowCardOpsModal(true);
+                  }}
+                  disabled={!cardFlow.canOrderCard || kycLoading}
+                >
+                  {kycLoading ? (
+                    <><span className="spinner-border spinner-border-sm me-2" />Checking...</>
+                  ) : cardFlow.canOrderCard ? (
+                    <><i className="pi pi-credit-card me-2" />Buy First Card</>
+                  ) : (
+                    <><i className="pi pi-lock me-2" />{cardFlow.title}</>
+                  )}
+                </button>
               </div>
             </div>
           </div>

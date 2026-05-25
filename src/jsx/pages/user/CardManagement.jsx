@@ -3,9 +3,12 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Modal } from "react-bootstrap";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import Swal from "sweetalert2";
 import { useLocation } from "react-router-dom";
 import PageTitle from "../../layouts/PageTitle";
@@ -44,6 +47,9 @@ const filterCardsForUser = ({ rows, userId, userCode, thirdId }) =>
 
 const getCardIdentity = (card) =>
   String(card?.id ?? card?.card_id ?? card?.tevau_response?.cardId ?? "");
+
+const getTevauCardId = (card) =>
+  String(card?.tevau_response?.cardId ?? card?.cardId ?? card?.card_id ?? "").trim();
 
 const getCardName = (card, index = 0) =>
   card?.card_name ||
@@ -120,6 +126,8 @@ const CardManagement = () => {
   const [limitsLoading, setLimitsLoading] = useState(false);
   const [limitsError, setLimitsError] = useState("");
   const [cardLimits, setCardLimits] = useState(createEmptyCardLimits);
+
+  const cardSwiperRef = useRef(null);
 
   const userId = user?.id;
   const userCode = user?.tevau_user?.user_code || null;
@@ -275,6 +283,93 @@ const CardManagement = () => {
 
   const [closeLoading, setCloseLoading] = useState(false);
 
+  /* ── Bind card ── */
+  const [bindModalOpen, setBindModalOpen] = useState(false);
+  const [bindLoading, setBindLoading] = useState(false);
+  const [bindError, setBindError] = useState("");
+  const [bindForm, setBindForm] = useState({
+    active_code: "",
+    card_number: "",
+    address: "",
+    country_area: "",
+    city: "",
+    post_code: "",
+    dial_code: "",
+    phone_number: "",
+    email: "",
+  });
+
+  const openBindModal = () => {
+    const rawPhone = String(user?.phone || "").replace(/\D/g, "");
+    let dialCode = "971";
+    let phoneNumber = rawPhone;
+    if (rawPhone.startsWith("971") && rawPhone.length > 3) {
+      phoneNumber = rawPhone.slice(3);
+    }
+    setBindForm({
+      active_code: "",
+      card_number: "",
+      address: "",
+      country_area: "",
+      city: "",
+      post_code: "",
+      dial_code: dialCode,
+      phone_number: phoneNumber,
+      email: String(user?.email || ""),
+    });
+    setBindError("");
+    setBindModalOpen(true);
+  };
+
+  const handleBindFormChange = (e) => {
+    const { name, value } = e.target;
+    setBindForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBindSubmit = async (e) => {
+    e.preventDefault();
+    const cardId = getCardIdentity(selectedCard);
+    if (!cardId) return;
+
+    const required = ["active_code", "card_number", "address", "country_area", "city", "post_code", "dial_code", "phone_number", "email"];
+    for (const field of required) {
+      if (!String(bindForm[field] || "").trim()) {
+        setBindError(`${field.replace(/_/g, " ")} is required.`);
+        return;
+      }
+    }
+
+    try {
+      setBindLoading(true);
+      setBindError("");
+
+      const fd = new FormData();
+      required.forEach((field) => fd.append(field, String(bindForm[field]).trim()));
+
+      await request({
+        url: `app/tevau/cards/${cardId}/bind`,
+        method: "POST",
+        data: fd,
+      });
+
+      setBindModalOpen(false);
+      Swal.fire({
+        icon: "success",
+        title: "Card Bound",
+        text: "Your card has been successfully bound and activated.",
+        timer: 2400,
+        showConfirmButton: false,
+      });
+      await loadCards();
+    } catch (err) {
+      const d = err?.response?.data || {};
+      const firstError = d.errors ? Object.values(d.errors).flat().find(Boolean) : null;
+      setBindError(String(firstError || d.message || d.error || err?.message || "Bind failed. Please try again."));
+    } finally {
+      setBindLoading(false);
+    }
+  };
+
   const loadCardLimits = useCallback(async () => {
     const cardId = getCardIdentity(selectedCard);
     if (!cardId) {
@@ -321,6 +416,7 @@ const CardManagement = () => {
 
   const handleFreezeCard = async () => {
     const cardId = getCardIdentity(selectedCard);
+    const tevauCardId = getTevauCardId(selectedCard);
 
     if (!cardId || freezeLoading) return;
 
@@ -328,12 +424,24 @@ const CardManagement = () => {
     const actionLabel = isCurrentlyFrozen ? "unfreeze" : "freeze";
     const resultLabel = isCurrentlyFrozen ? "unfrozen" : "frozen";
 
+    if (!tevauCardId) {
+      Swal.fire({
+        icon: "error",
+        title: `${isCurrentlyFrozen ? "Unfreeze" : "Freeze"} Failed`,
+        text: "The Tevau card identifier is missing. Refresh the card list and try again.",
+      });
+      return;
+    }
+
     try {
       setFreezeLoading(true);
 
       await request({
-        url: `app/tevau/cards/${cardId}/${actionLabel}`,
+        url: `app/tevau/cards/${encodeURIComponent(cardId)}/${actionLabel}`,
         method: "POST",
+        data: {
+          cardId: tevauCardId,
+        },
       });
 
       setFreezeEnabled((prev) => !prev);
@@ -348,10 +456,13 @@ const CardManagement = () => {
 
       await loadCards();
     } catch (error) {
+      const d = error?.response?.data || {};
+      const firstError = d.errors ? Object.values(d.errors).flat().find(Boolean) : null;
+      const msg = String(firstError || d.message || d.error || error?.message || "Please try again.").trim();
       Swal.fire({
         icon: "error",
         title: `${isCurrentlyFrozen ? "Unfreeze" : "Freeze"} Failed`,
-        text: `An error occurred while trying to ${actionLabel} the card. Please try again later.`,
+        text: msg,
       });
     } finally {
       setFreezeLoading(false);
@@ -442,6 +553,14 @@ const CardManagement = () => {
           tone: "default",
           onClick: handleOpenPinModal,
         },
+        {
+          icon: "pi pi-link",
+          title: "Bind / Activate Card",
+          subtitle: "Link your card using activation code and billing details.",
+          actionLabel: "Bind",
+          tone: "default",
+          onClick: openBindModal,
+        },
       ],
     },
     {
@@ -487,8 +606,9 @@ const CardManagement = () => {
 
       {loading ? (
         <div className="card nova-panel">
-          <div className="card-body">
-            <div className="text-muted">Loading card management...</div>
+          <div className="card-body d-flex align-items-center gap-2 text-muted">
+            <span className="spinner-border spinner-border-sm" />
+            Loading card management...
           </div>
         </div>
       ) : !cards.length ? (
@@ -498,162 +618,271 @@ const CardManagement = () => {
         />
       ) : (
         <div className="row g-3">
-          <div className="col-12">
-            <div className="card nova-panel nova-card-management-shell">
-              <div className="card-body">
-                <div className="nova-card-management-hero">
-                  <div>
-                    <div className="nova-flow-kicker mb-1">Card Management</div>
-                    <h4 className="mb-1">Manage your card settings</h4>
-                    <p className="text-muted mb-0">
-                      Review card identity, control access, and manage
-                      operational actions from one place.
-                    </p>
+          {/* ── Card selector — Swiper ── */}
+          {cards.length > 1 && (
+            <div className="col-12">
+              <div className="nova-cm-selector-v2">
+                <div className="nova-cm-selector-header">
+                  <div className="nova-cm-selector-header-left">
+                    <span className="nova-cm-selector-label">Select Card</span>
+                    <span className="nova-cm-selector-count">{cards.length} cards</span>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary"
-                    onClick={() => {
-                      loadCards().catch(() => undefined);
-                      loadWallet().catch(() => undefined);
-                    }}
-                  >
-                    Refresh
-                  </button>
-                </div>
-
-                {error ? (
-                  <div className="alert alert-warning py-2 mt-3 mb-0">
-                    {error}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <div className="col-xl-4">
-            <div className="card nova-panel h-100">
-              <div className="card-body">
-                <div className="nova-card-management-summary">
-                  <div className="nova-card-management-summary-head">
-                    <div>
-                      <span className="nova-card-management-summary-label">
-                        {selectedCardName}
-                      </span>
-                      <h4>{maskCardLast4(selectedCard)}</h4>
-                    </div>
-                    <span className="badge bg-light text-dark border">
-                      {selectedCardType}
-                    </span>
-                  </div>
-
-                  <div className="nova-card-management-summary-grid">
-                    <div className="nova-card-management-summary-item">
-                      <span>Currency</span>
-                      <strong>{selectedCardCurrency}</strong>
-                    </div>
-                    <div className="nova-card-management-summary-item">
-                      <span>Status</span>
-                      <strong>{selectedCardStatus}</strong>
-                    </div>
-                    <div className="nova-card-management-summary-item">
-                      <span>Balance</span>
-                      <strong>
-                        {formatMoney(selectedCardBalance, selectedCardCurrency)}
-                      </strong>
-                    </div>
-                    <div className="nova-card-management-summary-item">
-                      <span>Created</span>
-                      <strong>{selectedCardCreated}</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-xl-8">
-            <div className="card nova-panel h-100">
-              <div className="card-body">
-                <div className="nova-settings-quick-grid">
-                  {quickStats.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`nova-settings-quick-card ${item.tone}`.trim()}
+                  <div className="nova-cm-selector-nav">
+                    <button
+                      type="button"
+                      aria-label="Previous"
+                      onClick={() => cardSwiperRef.current?.slidePrev()}
                     >
-                      <span>{item.label}</span>
-                      <strong>{item.value}</strong>
+                      <i className="pi pi-chevron-left" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Next"
+                      onClick={() => cardSwiperRef.current?.slideNext()}
+                    >
+                      <i className="pi pi-chevron-right" />
+                    </button>
+                  </div>
+                </div>
+
+                <Swiper
+                  onSwiper={(swiper) => { cardSwiperRef.current = swiper; }}
+                  slidesPerView="auto"
+                  spaceBetween={10}
+                  slidesPerGroup={1}
+                  className="nova-cm-swiper"
+                >
+                  {cards.map((card, index) => {
+                    const cid = getCardIdentity(card);
+                    const ctype = normalizeCardType(card?.card_type || card?.type);
+                    const isSelected = cid === selectedCardId;
+                    const isCardActive = ["active", "normal"].includes(String(card?.status || "").toLowerCase());
+                    return (
+                      <SwiperSlide key={cid} className="nova-cm-swiper-slide">
+                        <button
+                          type="button"
+                          className={`nova-cm-card-tile ${isSelected ? "is-selected" : ""} ${ctype === "Virtual" ? "is-virtual" : "is-physical"}`}
+                          onClick={() => setSelectedCardId(cid)}
+                        >
+                          <div className="nova-cm-card-tile-icon">
+                            <i className={`pi ${ctype === "Virtual" ? "pi-mobile" : "pi-credit-card"}`} />
+                          </div>
+                          <div className="nova-cm-card-tile-info">
+                            <strong>{getCardName(card, index)}</strong>
+                            <span>{maskCardLast4(card)}</span>
+                          </div>
+                          <div className="nova-cm-card-tile-meta">
+                            <span className={`nova-cm-tile-type ${ctype === "Virtual" ? "is-virtual" : "is-physical"}`}>{ctype}</span>
+                            <span className={`nova-cm-tile-dot ${isCardActive ? "is-on" : ""}`} title={isCardActive ? "Active" : "Inactive"} />
+                          </div>
+                        </button>
+                      </SwiperSlide>
+                    );
+                  })}
+                </Swiper>
+              </div>
+            </div>
+          )}
+
+          {/* ── Hero banner ── */}
+          <div className="col-12">
+            <div className="nova-cm-hero">
+              <div className="nova-cm-hero-body">
+                <div className="nova-flow-kicker mb-1">Card Management</div>
+                <h4 className="mb-2">{selectedCardName}</h4>
+                <div className="nova-cm-hero-meta">
+                  <span
+                    className={`nova-cm-status-badge ${String(selectedCard?.status || "").toLowerCase() === "active" ? "is-active" : "is-neutral"}`}
+                  >
+                    {selectedCardStatus}
+                  </span>
+                  <span className="nova-cm-type-badge">
+                    <i
+                      className={`pi ${selectedCardType === "Virtual" ? "pi-mobile" : "pi-credit-card"}`}
+                    />
+                    {selectedCardType}
+                  </span>
+                  <span className="nova-cm-hero-number">
+                    {maskCardLast4(selectedCard)}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="nova-cm-refresh-btn"
+                onClick={() => {
+                  loadCards().catch(() => undefined);
+                  loadWallet().catch(() => undefined);
+                }}
+              >
+                <i className="pi pi-refresh" />
+                <span>Refresh</span>
+              </button>
+            </div>
+            {error ? (
+              <div className="alert alert-warning py-2 mt-2 mb-0">{error}</div>
+            ) : null}
+          </div>
+
+          {/* ── Card overview: visual + stats unified ── */}
+          <div className="col-12">
+            <div className="card nova-panel">
+              <div className="card-body">
+                <div className="row g-3 align-items-stretch">
+
+                  {/* Card mock — col-5 */}
+                  <div className="col-xl-5 col-lg-5">
+                    <div className={`nova-cm-card-mock h-100 ${selectedCardType === "Virtual" ? "is-virtual" : "is-physical"}`}>
+                      <div className="nova-cm-card-mock-top">
+                        <span className="nova-cm-card-mock-name">{selectedCardName}</span>
+                        <span className={`nova-cm-card-mock-status ${String(selectedCard?.status || "").toLowerCase() === "active" ? "is-active" : "is-other"}`}>
+                          {selectedCardStatus}
+                        </span>
+                      </div>
+                      <div className="nova-cm-card-mock-chip" />
+                      <div className="nova-cm-card-mock-number">{maskCardLast4(selectedCard)}</div>
+                      <div className="nova-cm-card-mock-footer">
+                        <div className="nova-cm-card-mock-field">
+                          <span>Balance</span>
+                          <strong>{formatMoney(selectedCardBalance, selectedCardCurrency)}</strong>
+                        </div>
+                        <div className="nova-cm-card-mock-field">
+                          <span>Issued</span>
+                          <strong>{selectedCardCreated}</strong>
+                        </div>
+                        <div className="nova-cm-card-mock-type">
+                          <i className={`pi ${selectedCardType === "Virtual" ? "pi-mobile" : "pi-credit-card"}`} />
+                        </div>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Stats — col-7 */}
+                  <div className="col-xl-7 col-lg-7">
+                    <p className="nova-flow-kicker mb-3">Card Overview</p>
+                    <div className="nova-cm-stat-grid">
+                      <div className={`nova-cm-stat-item is-status`}>
+                        <div className="nova-cm-stat-icon">
+                          <i className="pi pi-shield-check" />
+                        </div>
+                        <span>Card Status</span>
+                        <strong>{selectedCardStatus}</strong>
+                      </div>
+                      <div className="nova-cm-stat-item is-balance">
+                        <div className="nova-cm-stat-icon">
+                          <i className="pi pi-credit-card" />
+                        </div>
+                        <span>Card Balance</span>
+                        <strong>{formatMoney(selectedCardBalance, selectedCardCurrency)}</strong>
+                      </div>
+                      <div className="nova-cm-stat-item is-wallet">
+                        <div className="nova-cm-stat-icon">
+                          <i className="pi pi-wallet" />
+                        </div>
+                        <span>Wallet Available</span>
+                        <strong>{formatMoney(walletSummary.availableBalance ?? walletSummary.balance ?? 0, walletSummary.currency)}</strong>
+                      </div>
+                      <div className="nova-cm-stat-item is-date">
+                        <div className="nova-cm-stat-icon">
+                          <i className="pi pi-calendar" />
+                        </div>
+                        <span>Issued</span>
+                        <strong>{selectedCardCreated}</strong>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
           </div>
 
-          {managementSections.map((section) => (
-            <div className="col-xl-6" key={section.title}>
-              <div className="card nova-panel h-100 nova-card-management-section">
-                <div className="card-body">
-                  <div className="nova-card-management-section-head">
-                    <h5 className="mb-1">{section.title}</h5>
-                    <p className="text-muted mb-0">{section.description}</p>
-                  </div>
+          {/* ── Management sections — single unified card ── */}
+          <div className="col-12">
+            <div className="card nova-panel">
+                  <div className="card-body">
+                    <div className="nova-cm-sections-grid">
+                      {managementSections.map((section, sIdx) => (
+                        <div
+                          key={section.title}
+                          className={`nova-cm-section-col${sIdx > 0 ? " has-divider" : ""}`}
+                        >
+                          <div className="nova-cm-section-head">
+                            <div className="nova-cm-section-icon">
+                              <i
+                                className={
+                                  section.title === "Security"
+                                    ? "pi pi-shield"
+                                    : section.title === "Controls"
+                                      ? "pi pi-sliders-h"
+                                      : "pi pi-times-circle"
+                                }
+                              />
+                            </div>
+                            <div>
+                              <h6 className="nova-cm-section-title">
+                                {section.title}
+                              </h6>
+                              <p className="nova-cm-section-desc">
+                                {section.description}
+                              </p>
+                            </div>
+                          </div>
 
-                  <div className="nova-card-management-list">
-                    {section.items.map((item) => (
-                      <div
-                        className={`nova-card-management-row ${
-                          item.tone === "danger" ? "is-danger" : ""
-                        }`.trim()}
-                        key={item.title}
-                      >
-                        <div className="nova-card-management-row-icon">
-                          <i className={item.icon} />
+                          <div className="nova-cm-action-list">
+                            {section.items.map((item) => (
+                              <div
+                                className={`nova-cm-action-row ${item.tone === "danger" ? "is-danger" : ""}`.trim()}
+                                key={item.title}
+                              >
+                                <div className="nova-cm-action-icon">
+                                  <i className={item.icon} />
+                                </div>
+                                <div className="nova-cm-action-copy">
+                                  <strong>{item.title}</strong>
+                                  <span>{item.subtitle}</span>
+                                </div>
+                                <div className="nova-cm-action-ctrl">
+                                  {item.type === "toggle" ? (
+                                    <button
+                                      type="button"
+                                      className={`nova-2fa-switch ${freezeEnabled ? "is-on" : ""}`}
+                                      onClick={item.onClick}
+                                      disabled={freezeLoading}
+                                      aria-label="Toggle freeze card"
+                                    >
+                                      <span />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className={`btn btn-sm ${item.tone === "danger" ? "btn-outline-danger" : "btn-outline-primary"}`}
+                                      disabled={
+                                        (item.title === "Close Card" && closeLoading) ||
+                                        (item.title === "Limits" && limitsLoading) ||
+                                        (item.title === "Bind / Activate Card" && bindLoading)
+                                      }
+                                      onClick={item.onClick}
+                                    >
+                                      {item.title === "Close Card" && closeLoading
+                                        ? "Closing..."
+                                        : item.title === "Limits" && limitsLoading
+                                          ? "Loading..."
+                                          : item.title === "Bind / Activate Card" && bindLoading
+                                            ? "Binding..."
+                                            : item.actionLabel}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="nova-card-management-row-copy">
-                          <strong>{item.title}</strong>
-                          <span>{item.subtitle}</span>
-                        </div>
-
-                        {item.type === "toggle" ? (
-                          <button
-                            type="button"
-                            className={`nova-2fa-switch ${freezeEnabled ? "is-on" : ""}`}
-                            onClick={item.onClick}
-                            disabled={freezeLoading}
-                            aria-label="Toggle freeze card"
-                          >
-                            <span />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className={`btn ${
-                              item.tone === "danger"
-                                ? "btn-outline-danger"
-                                : "btn-outline-primary"
-                            } btn-sm`}
-                            disabled={
-                              (item.title === "Close Card" && closeLoading) ||
-                              (item.title === "Limits" && limitsLoading)
-                            }
-                            onClick={item.onClick}
-                          >
-                            {item.title === "Close Card" && closeLoading
-                              ? "Closing..."
-                              : item.title === "Limits" && limitsLoading
-                                ? "Loading..."
-                                : item.actionLabel}
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </div>
             </div>
-          ))}
-
+          </div>
         </div>
       )}
 
@@ -716,7 +945,10 @@ const CardManagement = () => {
                         }).map((row) => {
                           const rowValue = cardLimits[group.key]?.[row.key];
                           return (
-                            <div className="nova-card-limits-row" key={row.label}>
+                            <div
+                              className="nova-card-limits-row"
+                              key={row.label}
+                            >
                               <span>{row.label}</span>
                               <strong>{formatLimitValue(rowValue)}</strong>
                             </div>
@@ -739,6 +971,163 @@ const CardManagement = () => {
         cardName={selectedCardName}
         cardMasked={maskCardLast4(selectedCard)}
       />
+
+      {/* ── Bind Card Modal ── */}
+      <Modal
+        show={bindModalOpen}
+        onHide={() => !bindLoading && setBindModalOpen(false)}
+        centered
+        size="lg"
+      >
+        <form onSubmit={handleBindSubmit}>
+          <div className="modal-content">
+            <div className="modal-header">
+              <div>
+                <h5 className="modal-title mb-1">Bind / Activate Card</h5>
+                <div className="text-muted small">
+                  {selectedCardName} ({maskCardLast4(selectedCard)})
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => !bindLoading && setBindModalOpen(false)}
+                aria-label="Close"
+              />
+            </div>
+
+            <div className="modal-body">
+              {bindError && (
+                <div className="alert alert-danger py-2 mb-3">{bindError}</div>
+              )}
+
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Activation Code <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="active_code"
+                    value={bindForm.active_code}
+                    onChange={handleBindFormChange}
+                    placeholder="e.g. 440728"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Card Last 4 Digits <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="card_number"
+                    value={bindForm.card_number}
+                    onChange={handleBindFormChange}
+                    placeholder="e.g. 9018"
+                    maxLength={4}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Address <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="address"
+                    value={bindForm.address}
+                    onChange={handleBindFormChange}
+                    placeholder="Full billing address"
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Country Code <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="country_area"
+                    value={bindForm.country_area}
+                    onChange={handleBindFormChange}
+                    placeholder="e.g. HK"
+                    maxLength={3}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">City <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="city"
+                    value={bindForm.city}
+                    onChange={handleBindFormChange}
+                    placeholder="e.g. HongKong"
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Post Code <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="post_code"
+                    value={bindForm.post_code}
+                    onChange={handleBindFormChange}
+                    placeholder="e.g. 123456"
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label fw-semibold">Dial Code <span className="text-danger">*</span></label>
+                  <div className="input-group">
+                    <span className="input-group-text">+</span>
+                    <input
+                      className="form-control"
+                      name="dial_code"
+                      value={bindForm.dial_code}
+                      onChange={handleBindFormChange}
+                      placeholder="971"
+                      maxLength={5}
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Phone Number <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    name="phone_number"
+                    value={bindForm.phone_number}
+                    onChange={handleBindFormChange}
+                    placeholder="581231234"
+                  />
+                </div>
+                <div className="col-md-5">
+                  <label className="form-label fw-semibold">Email <span className="text-danger">*</span></label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    name="email"
+                    value={bindForm.email}
+                    onChange={handleBindFormChange}
+                    placeholder="user@example.com"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setBindModalOpen(false)}
+                disabled={bindLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={bindLoading}
+              >
+                {bindLoading ? (
+                  <><span className="spinner-border spinner-border-sm me-2" />Binding...</>
+                ) : (
+                  "Bind Card"
+                )}
+              </button>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 };

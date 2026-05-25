@@ -11,13 +11,19 @@ export const MenuList = [
     title: "Cards",
     classsChange: "mm-collapse",
     iconStyle: SVGICON.BillsSvg,
-    to: "/cards",
+    content: [
+      { title: "Order Card", to: "/cards/order" },
+      { title: "Cards", to: "/cards" },
+    ],
   },
   {
     title: "Wallet",
     classsChange: "mm-collapse",
     iconStyle: SVGICON.WalletSvg,
-    to: "/wallet",
+    content: [
+      { title: "Deposit", to: "/wallet" },
+      { title: "Transactions", to: "/wallet/transactions" },
+    ],
   },
   {
     title: "KYC",

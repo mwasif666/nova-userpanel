@@ -1034,9 +1034,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   border-radius: 8px;
 }
 .nova-panel {
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid #eef1f6;
-  box-shadow: 0 14px 30px rgba(30, 52, 95, 0.08);
+  box-shadow: 0 2px 8px rgba(30, 52, 95, 0.05);
 }
 .nova-action-panel {
   min-width: 180px;
@@ -1333,6 +1333,186 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 }
 .nova-card-ops-launch .card-body {
   padding: 1rem 1.1rem;
+}
+
+/* ── First Card Hero ── */
+.nova-first-card-hero {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 2px 12px rgba(30, 52, 95, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2.2rem 2rem;
+}
+@media (min-width: 992px) {
+  .nova-first-card-hero {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 3rem;
+  }
+}
+.nova-first-card-left {
+  flex: 1;
+}
+.nova-first-card-right {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.nova-first-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1e4ab8 0%, #3b82f6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+}
+.nova-first-card-icon .pi {
+  font-size: 1.6rem;
+  color: #fff;
+}
+.nova-first-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.4rem;
+}
+.nova-first-card-desc {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+.nova-first-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.nova-first-card-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  border: 1.5px solid;
+}
+.nova-first-card-chip.is-done {
+  color: #16a34a;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.nova-first-card-chip.is-pending {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+/* Steps */
+.nova-first-card-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.nova-first-card-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e8edf5;
+  opacity: 0.5;
+  transition:
+    opacity 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+.nova-first-card-step.is-done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  opacity: 1;
+}
+.nova-first-card-step.is-active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  opacity: 1;
+}
+.nova-first-card-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  flex-shrink: 0;
+}
+.nova-first-card-step.is-done .nova-first-card-step-num {
+  background: #16a34a;
+  color: #fff;
+  font-size: 0.85rem;
+}
+.nova-first-card-step.is-active .nova-first-card-step-num {
+  background: #2563eb;
+  color: #fff;
+}
+.nova-first-card-step strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.1rem;
+}
+.nova-first-card-step p {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+}
+.nova-first-card-step-tick {
+  margin-left: auto;
+  font-size: 1.1rem;
+  color: #16a34a;
+  flex-shrink: 0;
+  align-self: center;
+}
+/* CTA Button */
+.nova-first-card-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #1e4ab8 0%, #3b82f6 100%);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
+}
+.nova-first-card-cta:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+.nova-first-card-cta:disabled {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 .nova-card-ops-launch-tags {
   display: flex;
@@ -1653,6 +1833,73 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   border-radius: 999px;
   padding: 0.25rem 0.6rem;
 }
+/* ── Wallet Page Layout ── */
+.nova-wallet-page {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 2px 8px rgba(30, 52, 95, 0.05);
+  min-height: calc(100vh - 220px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.nova-wallet-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nova-wallet-network-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.nova-wallet-network-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  background: #f0f7ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.nova-wallet-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 1.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nova-wallet-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  padding: 0.85rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+  display: flex;
+  align-items: center;
+}
+.nova-wallet-tab-btn:hover {
+  color: #1e293b;
+}
+.nova-wallet-tab-btn.is-active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+.nova-wallet-panel {
+  padding: 1.5rem 1.75rem;
+  flex: 1;
+}
+
 .nova-wallet-address-grid {
   display: grid;
   gap: 0.8rem;
@@ -1714,6 +1961,471 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   font-size: 0.86rem;
   line-height: 1.35;
   word-break: break-all;
+}
+
+/* ── Deposit Panel ── */
+.nova-deposit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.nova-deposit-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  background: #f8fafc;
+  border: 1px solid #e8edf5;
+  border-radius: 14px;
+  padding: 1.2rem 1.25rem;
+}
+.nova-deposit-field {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.nova-deposit-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nova-deposit-input {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #1e293b;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.nova-deposit-input:focus {
+  border-color: #2563eb;
+}
+.nova-deposit-cta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.62rem 1.4rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #1e4ab8 0%, #3b82f6 100%);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+  align-self: flex-end;
+}
+.nova-deposit-cta:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.nova-deposit-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Info strip */
+.nova-deposit-info-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 0.75rem 1.1rem;
+}
+.nova-deposit-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: #3b82f6;
+}
+.nova-deposit-info-item .pi {
+  font-size: 0.85rem;
+}
+.nova-deposit-info-label {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+.nova-deposit-info-item strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+.nova-deposit-info-divider {
+  width: 1px;
+  height: 20px;
+  background: #bfdbfe;
+  margin: 0 0.25rem;
+}
+/* Address list */
+.nova-deposit-address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.nova-deposit-address-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+}
+.nova-deposit-address-qr {
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+  border: 1px solid #dbe5ef;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-deposit-address-qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.nova-deposit-address-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.nova-deposit-address-network {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.22rem 0.65rem;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  width: fit-content;
+}
+.nova-deposit-address-value {
+  font-size: 0.85rem;
+  color: #1e293b;
+  word-break: break-all;
+  line-height: 1.5;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-family: monospace;
+}
+.nova-deposit-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.38rem 0.85rem;
+  border-radius: 8px;
+  border: 1.5px solid #2563eb;
+  background: #fff;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.nova-deposit-copy-btn:hover:not(:disabled) {
+  background: #2563eb;
+  color: #fff;
+}
+.nova-deposit-copy-btn.is-copied {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+/* Empty state */
+.nova-deposit-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+}
+.nova-deposit-empty-icon {
+  font-size: 2.5rem;
+  color: #cbd5e1;
+}
+.nova-deposit-empty p {
+  font-size: 0.88rem;
+  margin: 0;
+  max-width: 320px;
+}
+.nova-deposit-empty strong {
+  color: #475569;
+}
+/* Attention */
+.nova-deposit-attention {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  color: #92400e;
+}
+.nova-deposit-attention-title {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+}
+.nova-deposit-attention ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.nova-deposit-attention li {
+  margin-bottom: 0.2rem;
+}
+
+/* ── Email Stepper ─────────────────────────────────────── */
+.nova-email-stepper-wrap {
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.nova-email-stepper-head {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+.nova-email-stepper-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-dark, #1a1a2e);
+  margin-bottom: 0.3rem;
+}
+.nova-email-stepper-sub {
+  font-size: 0.88rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Step indicator bar */
+.nova-email-stepper-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+  gap: 0;
+}
+.nova-email-stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+.nova-email-stepper-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 2px solid #d1d5db;
+  background: #fff;
+  color: #9ca3af;
+  transition: all 0.25s;
+}
+.nova-email-stepper-step.is-active .nova-email-stepper-circle {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.nova-email-stepper-step.is-done .nova-email-stepper-circle {
+  border-color: #10b981;
+  background: #10b981;
+  color: #fff;
+}
+.nova-email-stepper-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-align: center;
+  max-width: 80px;
+  line-height: 1.3;
+}
+.nova-email-stepper-step.is-active .nova-email-stepper-label {
+  color: var(--primary);
+}
+.nova-email-stepper-step.is-done .nova-email-stepper-label {
+  color: #10b981;
+}
+.nova-email-stepper-connector {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 0.5rem;
+  margin-bottom: 1.4rem;
+  transition: background 0.25s;
+}
+.nova-email-stepper-connector.is-done {
+  background: #10b981;
+}
+
+/* Panel content */
+.nova-email-stepper-panel {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Verified badge */
+.nova-email-stepper-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Confirm row */
+.nova-email-stepper-confirm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+.nova-email-stepper-confirm-label {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+.nova-email-stepper-confirm-value {
+  font-size: 0.88rem;
+  color: #1a1a2e;
+  font-weight: 600;
+}
+
+/* Hint text */
+.nova-email-stepper-hint {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 0.5rem 0 0;
+}
+
+/* Action row */
+.nova-email-stepper-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.nova-email-stepper-back-btn {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nova-email-stepper-back-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.nova-email-stepper-next-btn {
+  display: inline-flex;
+  align-items: center;
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.nova-email-stepper-next-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.nova-email-stepper-next-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.nova-email-stepper-next-btn.is-confirm {
+  background: #10b981;
+}
+.nova-email-stepper-next-btn.is-confirm:hover:not(:disabled) {
+  background: #059669;
+}
+
+/* Info grid below panel */
+.nova-email-stepper-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.nova-email-stepper-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 1.4rem 1.5rem;
+}
+.nova-email-stepper-info-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary-opacity, rgba(38,150,253,0.12));
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+.nova-email-stepper-info-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+.nova-email-stepper-info-desc {
+  font-size: 0.84rem;
+  color: #6b7280;
+  line-height: 1.6;
 }
 
 @media (max-width: 991.98px) {
@@ -1847,7 +2559,11 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   border: 1px solid rgba(42, 100, 134, 0.38);
   background:
     linear-gradient(145deg, rgba(42, 100, 134, 0.95), rgba(42, 100, 134, 0.82)),
-    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 56%);
+    radial-gradient(
+      circle at 12% 8%,
+      rgba(255, 255, 255, 0.12),
+      transparent 56%
+    );
   box-shadow: 0 18px 40px rgba(16, 35, 55, 0.16);
   --nova-deck-card-width: 468px;
   --nova-deck-card-height: 308px;
@@ -1982,7 +2698,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .nova-main-balance-card .nova-deck-stack {
   position: relative;
   width: 100%;
-  height: calc(var(--nova-deck-card-height) + (var(--nova-deck-stack-rise) * 4));
+  height: calc(
+    var(--nova-deck-card-height) + (var(--nova-deck-stack-rise) * 4)
+  );
   overflow: visible;
 }
 .nova-main-balance-card .nova-deck-layer {
@@ -2382,6 +3100,26 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   font-size: 0.74rem;
   color: #fff;
 }
+.nova-wallet-see-all-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nova-wallet-see-all-btn:hover { background: rgba(255, 255, 255, 0.28); }
+.nova-tx-type-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #334155;
+}
 @media (max-width: 1199.98px) {
   .nova-main-balance-card .nova-main-balance-bootstrap > [class*="col-"] {
     width: 100%;
@@ -2755,7 +3493,11 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .payment-bx .nova-dashboard-overview-panel {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)),
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.03)
+    ),
     radial-gradient(circle at 10% 0%, rgba(0, 194, 255, 0.08), transparent 55%);
   box-shadow: 0 18px 40px rgba(6, 14, 41, 0.18);
   border-radius: 18px;
@@ -2815,7 +3557,10 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .payment-bx .nova-dashboard-overview-board .nova-overview-metric-content h6 {
   color: #eff4ff;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-content strong {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-content
+  strong {
   color: #ffffff;
 }
 .payment-bx .nova-dashboard-overview-board .nova-overview-metric-content p {
@@ -2830,37 +3575,61 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-rose .nova-overview-metric-arrow {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-rose
+  .nova-overview-metric-arrow {
   background: #07adc2;
   color: #fff;
   border-color: rgba(7, 173, 194, 0.2);
 }
 
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-blue .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-blue
+  .nova-overview-metric-icon {
   background: rgba(74, 153, 255, 0.18);
   color: #6db4ff;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-slate .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-slate
+  .nova-overview-metric-icon {
   background: rgba(175, 193, 215, 0.14);
   color: #c1d0e4;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-purple .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-purple
+  .nova-overview-metric-icon {
   background: rgba(155, 116, 255, 0.16);
   color: #b692ff;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-orange .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-orange
+  .nova-overview-metric-icon {
   background: rgba(255, 174, 62, 0.16);
   color: #ffc15f;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-green .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-green
+  .nova-overview-metric-icon {
   background: rgba(40, 207, 139, 0.15);
   color: #52dca1;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-cyan .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-cyan
+  .nova-overview-metric-icon {
   background: rgba(0, 213, 238, 0.15);
   color: #61e9ff;
 }
-.payment-bx .nova-dashboard-overview-board .nova-overview-metric-card.is-rose .nova-overview-metric-icon {
+.payment-bx
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card.is-rose
+  .nova-overview-metric-icon {
   background: rgba(255, 118, 150, 0.15);
   color: #ff8ea7;
 }
@@ -2943,6 +3712,55 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .nova-kyc-submit-page {
   margin-bottom: 1.25rem;
 }
+.nova-kyc-hero-card.is-approved {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
+  border-color: #bbf7d0;
+}
+.nova-kyc-approved-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.nova-kyc-approved-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  flex: 1;
+  min-width: 0;
+}
+.nova-kyc-approved-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
+}
+.nova-kyc-approved-icon .fa-check-circle {
+  font-size: 2rem;
+  color: #fff;
+}
+.nova-kyc-approved-sub {
+  margin: 0.35rem 0 0.75rem;
+  color: #166534;
+  font-size: 0.85rem;
+  max-width: 50ch;
+}
+.nova-kyc-approved-stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.nova-kyc-approved-stats .nova-kyc-stat-box {
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #bbf7d0;
+}
 .nova-kyc-hero-card {
   position: relative;
   overflow: hidden;
@@ -2963,14 +3781,22 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   height: 240px;
   right: -70px;
   top: -90px;
-  background: radial-gradient(circle, rgba(42, 100, 134, 0.16) 0%, rgba(42, 100, 134, 0) 72%);
+  background: radial-gradient(
+    circle,
+    rgba(42, 100, 134, 0.16) 0%,
+    rgba(42, 100, 134, 0) 72%
+  );
 }
 .nova-kyc-hero-card::after {
   width: 180px;
   height: 180px;
   left: -50px;
   bottom: -70px;
-  background: radial-gradient(circle, rgba(18, 79, 116, 0.1) 0%, rgba(18, 79, 116, 0) 75%);
+  background: radial-gradient(
+    circle,
+    rgba(18, 79, 116, 0.1) 0%,
+    rgba(18, 79, 116, 0) 75%
+  );
 }
 .nova-kyc-hero-card .card-body {
   position: relative;
@@ -3215,6 +4041,50 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+.nova-kyc-upload-preview {
+  margin-top: 0.75rem;
+}
+.nova-kyc-face-verify-box {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1.5px solid #2a6486;
+  border-radius: 14px;
+  background: #f0f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.nova-kyc-face-verify-info {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.nova-kyc-face-verify-info .fa-camera {
+  font-size: 1.5rem;
+  color: #2a6486;
+}
+.nova-kyc-face-verify-info strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+.nova-kyc-face-verify-info span {
+  display: block;
+  color: #6b7280;
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
+}
+.nova-kyc-preview-img {
+  width: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e2ebf2;
+  display: block;
+  margin-bottom: 0.5rem;
 }
 .nova-kyc-file-name {
   font-size: 0.78rem;
@@ -3633,14 +4503,14 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   flex-wrap: wrap;
 }
 .nova-settings-side-pane {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #f8fbff;
+  border: 1px solid #eef1f6;
+  border-radius: 12px;
+  background: #fafbfd;
   height: 100%;
 }
 .nova-settings-main-pane {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border: 1px solid #eef1f6;
+  border-radius: 12px;
   background: #fff;
   min-height: 100%;
   padding: 1rem;
@@ -3651,10 +4521,10 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   gap: 0.75rem;
 }
 .nova-settings-quick-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 0.78rem 0.85rem;
-  background: #f8fbff;
+  border: 1px solid #eef1f6;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  background: #fafbfd;
 }
 .nova-settings-quick-card span {
   display: block;
@@ -3710,7 +4580,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   text-align: left;
   padding: 0.72rem 0.78rem;
   color: #334155;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 .nova-settings-nav-icon {
   width: 34px;
@@ -3774,10 +4646,10 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   color: rgba(255, 255, 255, 0.82);
 }
 .nova-settings-kv {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 0.58rem 0.74rem;
-  background: #f8fbff;
+  border: 1px solid #eef1f6;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  background: #fafbfd;
   min-height: 64px;
   display: flex;
   flex-direction: column;
@@ -4094,7 +4966,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   padding: 3px;
   display: inline-flex;
   align-items: center;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 .nova-2fa-switch span {
   width: 26px;
@@ -4389,6 +5263,644 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   line-height: 1.45;
 }
 
+/* ── Google Auth redesign ──────────────────────────────── */
+.nova-google-wrap {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.nova-google-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1rem;
+}
+.nova-google-status-info {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.nova-google-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.nova-google-status-dot.is-on { background: #10b981; }
+.nova-google-status-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+.nova-google-status-state {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: 0.1rem;
+}
+.nova-google-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(38,150,253,0.06);
+  border: 1px solid rgba(38,150,253,0.15);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.25rem;
+}
+.nova-google-notice-icon {
+  color: var(--primary);
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.nova-google-notice p {
+  margin: 0;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.nova-google-howto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+.nova-google-howto-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+}
+.nova-google-howto-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nova-google-howto-text {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.45;
+  padding-top: 0.15rem;
+}
+.nova-google-setup-panel {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.nova-google-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 1rem;
+}
+.nova-google-qr-card img {
+  max-width: 148px;
+  border-radius: 8px;
+}
+.nova-google-qr-card p {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  text-align: center;
+}
+.nova-google-secret-card {
+  flex: 1;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+.nova-google-secret-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+.nova-google-secret-value {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.6rem;
+}
+.nova-google-secret-value code {
+  flex: 1;
+  font-size: 0.82rem;
+  color: #0f172a;
+  word-break: break-all;
+  line-height: 1.4;
+}
+.nova-google-copy-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.nova-google-copy-btn:hover { opacity: 0.85; }
+.nova-google-secret-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+.nova-google-code-form { margin-bottom: 1rem; }
+.nova-google-footer {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.nova-google-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.nova-google-footer-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.nova-google-footer-btn.is-danger { color: #ef4444; border-color: #fca5a5; }
+.nova-google-footer-btn.is-danger:hover { border-color: #ef4444; background: #fff5f5; }
+.nova-google-footer-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.nova-google-forget-panel {
+  margin-top: 1.25rem;
+  background: #fff8f8;
+  border: 1px solid #fca5a5;
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+}
+.nova-google-forget-title {
+  font-weight: 700;
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+.nova-email-stepper-next-btn.is-danger {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+.nova-email-stepper-next-btn.is-danger:hover { background: #dc2626; }
+
+/* ── Card Bind Modal redesign ──────────────────────── */
+.nova-bind-summary-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+}
+.nova-bind-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 0.2rem 0.65rem;
+}
+.nova-bind-summary-item i { color: var(--primary); font-size: 0.78rem; }
+.nova-bind-security-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(38,150,253,0.05);
+  border: 1.5px solid rgba(38,150,253,0.2);
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  flex-wrap: wrap;
+}
+.nova-bind-security-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.nova-bind-security-field {
+  flex: 1;
+  min-width: 180px;
+}
+.nova-bind-security-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+.nova-bind-security-note {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+/* Bind panel */
+.nova-bind-panel {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  height: 100%;
+}
+.nova-bind-panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nova-bind-panel-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(38,150,253,0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.nova-bind-panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.2rem;
+}
+.nova-bind-panel-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+.nova-bind-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 0.6rem;
+}
+.nova-bind-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+/* ── Card Order Page ──────────────────────────────── */
+.nova-order-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.nova-order-type-tabs {
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.nova-order-type-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 200px;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: left;
+}
+.nova-order-type-tab i {
+  font-size: 1.5rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.nova-order-type-tab strong { display: block; font-size: 0.95rem; color: #0f172a; }
+.nova-order-type-tab span { display: block; font-size: 0.78rem; color: #64748b; margin-top: 0.15rem; }
+.nova-order-type-tab.is-active {
+  border-color: var(--primary);
+  background: rgba(38,150,253,0.06);
+}
+.nova-order-type-tab.is-active i { color: var(--primary); }
+.nova-order-type-tab:hover:not(.is-active) { border-color: #cbd5e1; background: #f1f5f9; }
+.nova-order-form-wrap { padding-top: 0.25rem; }
+.nova-order-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+}
+.nova-order-submit-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+/* Status badges */
+.nova-order-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.nova-order-badge-success { background: #d1fae5; color: #065f46; }
+.nova-order-badge-warning { background: #fef3c7; color: #92400e; }
+.nova-order-badge-info    { background: #dbeafe; color: #1e40af; }
+.nova-order-badge-danger  { background: #fee2e2; color: #991b1b; }
+.nova-order-badge-muted   { background: #f1f5f9; color: #475569; }
+/* Type pill */
+.nova-order-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.nova-order-type-pill.is-virtual  { background: #ede9fe; color: #5b21b6; }
+.nova-order-type-pill.is-physical { background: #fff7ed; color: #9a3412; }
+
+/* Tracking tabs */
+.nova-tracking-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+.nova-tracking-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nova-tracking-tab.is-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.nova-tracking-tab:hover:not(.is-active) { color: #334155; }
+.nova-tracking-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  margin-left: 0.2rem;
+}
+.nova-tracking-tab-count.is-delivered {
+  background: #d1fae5;
+  color: #065f46;
+}
+.nova-tracking-ref {
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: #334155;
+  word-break: break-all;
+}
+
+/* ── Wallet Transactions Page ── */
+.nova-wtx-spin-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  gap: 0.75rem;
+}
+.nova-wtx-spin-text {
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.nova-wtx-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.nova-wtx-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 150px;
+}
+.nova-wtx-filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nova-wtx-select {
+  padding: 0.45rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #334155;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.nova-wtx-select:focus { border-color: var(--primary); }
+.nova-wtx-filter-actions { display: flex; gap: 0.5rem; align-items: flex-end; }
+
+.nova-wtx-table thead th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2d6a8f;
+  padding: 0.65rem 0.75rem;
+  white-space: nowrap;
+}
+.nova-wtx-table tbody td { padding: 0.6rem 0.75rem; font-size: 0.83rem; vertical-align: middle; }
+.nova-wtx-row { cursor: pointer; transition: background 0.12s; }
+.nova-wtx-row:hover { background: #f8fafc; }
+.nova-wtx-ref {
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #475569;
+  word-break: break-all;
+}
+.nova-wtx-type-pill {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+}
+.nova-wtx-type-pill.deposit      { background: #d1fae5; color: #065f46; }
+.nova-wtx-type-pill.withdraw     { background: #fee2e2; color: #991b1b; }
+.nova-wtx-type-pill.card-purchase { background: #ede9fe; color: #5b21b6; }
+.nova-wtx-type-pill.card-topup   { background: #dbeafe; color: #1e40af; }
+
+.nova-wtx-network-chip {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  letter-spacing: 0.03em;
+}
+.nova-wtx-debit { color: #dc2626; }
+.nova-wtx-detail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.nova-wtx-detail-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Pagination */
+.nova-wtx-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+.nova-wtx-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.82rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nova-wtx-page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.nova-wtx-page-btn.is-active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+.nova-wtx-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.nova-wtx-page-ellipsis { color: #94a3b8; font-size: 0.85rem; }
+
+/* Detail modal grid */
+.nova-wtx-detail-grid { display: flex; flex-direction: column; gap: 0; }
+.nova-wtx-detail-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nova-wtx-detail-row:last-child { border-bottom: none; }
+.nova-wtx-detail-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 110px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nova-wtx-detail-value {
+  font-size: 0.82rem;
+  color: #1e293b;
+  word-break: break-all;
+  text-align: right;
+}
+
 /* Dashboard light base + sidebar-tone glass cards */
 .payment-bx.nova-dashboard-clean {
   --nova-sidebar-tone: #2a6486;
@@ -4437,7 +5949,6 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   box-shadow:
     0 24px 52px rgba(12, 30, 48, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.26);
- 
 }
 .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .card-header {
   padding: 1.3rem 1.55rem 0.35rem !important;
@@ -4464,12 +5975,17 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   backdrop-filter: blur(14px) saturate(130%);
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-balance-value {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-wallet-balance-value {
   margin-top: 0.45rem;
   gap: 0.55rem;
   align-items: center;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-balance-value > h2 {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-wallet-balance-value
+  > h2 {
   margin: 0 !important;
   font-size: clamp(2.1rem, 2.8vw, 3rem);
   line-height: 1.06;
@@ -4478,10 +5994,14 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   display: block;
   margin-top: 0.22rem;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-balance-head {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-wallet-balance-head {
   gap: 0.68rem;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-sec-visibility-inline {
   width: auto;
   height: auto;
   border: 0;
@@ -4493,26 +6013,35 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   min-width: 0;
   margin-top: -2px;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline .pi {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-sec-visibility-inline
+  .pi {
   font-size: 1.22rem;
   line-height: 1;
   display: block;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline:hover:not(:disabled) {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-sec-visibility-inline:hover:not(:disabled) {
   transform: none;
   border-color: transparent;
   box-shadow: none;
   background: transparent;
   opacity: 0.82;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-sec-visibility-inline:disabled {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-sec-visibility-inline:disabled {
   opacity: 0.55;
 }
 .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-stats {
   margin-top: 0.95rem;
   gap: 0.52rem;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-stat-chip {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-wallet-stat-chip {
   padding: 0.34rem 0.72rem;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background: rgba(255, 255, 255, 0.18);
@@ -4521,7 +6050,10 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   margin-top: 0.9rem;
   gap: 1rem;
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-overview span {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-wallet-overview
+  span {
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.92);
 }
@@ -4530,7 +6062,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   gap: 0.48rem;
   max-width: min(940px, 100%);
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .nova-wallet-quick-tx-item {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .nova-wallet-quick-tx-item {
   border-radius: 14px;
   padding: 0.5rem 0.78rem;
   background: rgba(255, 255, 255, 0.16);
@@ -4543,7 +6077,10 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
-.payment-bx.nova-dashboard-clean .nova-home-wallet-glass .modal-btn span:last-child {
+.payment-bx.nova-dashboard-clean
+  .nova-home-wallet-glass
+  .modal-btn
+  span:last-child {
   color: rgba(255, 255, 255, 0.92);
 }
 @media (max-width: 1199.98px) {
@@ -4577,7 +6114,10 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
     align-items: center;
     gap: 0.6rem;
   }
-  .payment-bx.nova-dashboard-clean .nova-home-wallet-glass .modal-btn .icon-box {
+  .payment-bx.nova-dashboard-clean
+    .nova-home-wallet-glass
+    .modal-btn
+    .icon-box {
     margin: 0 !important;
   }
 }
@@ -4587,7 +6127,9 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .payment-bx.nova-dashboard-clean .nova-main-balance-card .card-header .h6 {
   color: #fff;
 }
-.payment-bx.nova-dashboard-clean .nova-dashboard-overview-board .nova-overview-metric-card {
+.payment-bx.nova-dashboard-clean
+  .nova-dashboard-overview-board
+  .nova-overview-metric-card {
   background: rgba(var(--nova-sidebar-tone-rgb), 0.35);
   border-color: rgba(255, 255, 255, 0.16);
 }
@@ -4604,4 +6146,665 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 .deznav .metismenu.nova-sidebar-main-menu > .nova-sidebar-logout-item {
   margin-top: auto;
   padding-top: 0.75rem;
+}
+
+/* ── Card Management Redesign ─────────────────────────── */
+
+/* ── Card selector v2 ── */
+.nova-cm-selector-v2 {
+  background: #fff;
+  border: 1px solid #e3edf4;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+}
+.nova-cm-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+.nova-cm-selector-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.nova-cm-selector-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+}
+.nova-cm-selector-count {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-weight: 600;
+}
+.nova-cm-selector-nav {
+  display: flex;
+  gap: 0.35rem;
+}
+.nova-cm-selector-nav button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #dbe5ef;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  padding: 0;
+}
+.nova-cm-selector-nav button:hover {
+  border-color: #2a6486;
+  color: #2a6486;
+  background: #f0f7ff;
+}
+.nova-cm-selector-scroll-v2 {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 3px;
+}
+.nova-cm-selector-scroll-v2::-webkit-scrollbar { display: none; }
+
+/* Card tile */
+.nova-cm-card-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 210px;
+  padding: 0.7rem 0.95rem;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fafbfd;
+  text-align: left;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+.nova-cm-card-tile:hover:not(.is-selected) {
+  border-color: #b0c8dc;
+  background: #f4f9fd;
+  box-shadow: 0 2px 8px rgba(42, 100, 134, 0.08);
+}
+.nova-cm-card-tile.is-selected {
+  border-color: #2a6486;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f1fb 100%);
+  box-shadow: 0 4px 14px rgba(42, 100, 134, 0.13);
+}
+.nova-cm-card-tile-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+.nova-cm-card-tile.is-physical .nova-cm-card-tile-icon {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+.nova-cm-card-tile.is-virtual .nova-cm-card-tile-icon {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+}
+.nova-cm-card-tile.is-selected.is-physical .nova-cm-card-tile-icon {
+  background: rgba(124, 58, 237, 0.16);
+}
+.nova-cm-card-tile.is-selected.is-virtual .nova-cm-card-tile-icon {
+  background: rgba(14, 165, 233, 0.16);
+}
+.nova-cm-card-tile-info {
+  flex: 1;
+  min-width: 0;
+}
+.nova-cm-card-tile-info strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nova-cm-card-tile-info span {
+  display: block;
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 0.12rem;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.04em;
+}
+.nova-cm-card-tile-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.nova-cm-tile-type {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.48rem;
+  border-radius: 20px;
+}
+.nova-cm-tile-type.is-physical {
+  background: rgba(124, 58, 237, 0.1);
+  color: #6d28d9;
+}
+.nova-cm-tile-type.is-virtual {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0369a1;
+}
+.nova-cm-tile-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+}
+.nova-cm-tile-dot.is-on {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+/* Hero banner */
+.nova-cm-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2a6486 60%, #3f87b3 100%);
+  border-radius: 16px;
+  padding: 1.4rem 1.6rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.2);
+}
+.nova-cm-hero::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+.nova-cm-hero::after {
+  content: "";
+  position: absolute;
+  bottom: -40px;
+  left: 30%;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+.nova-cm-hero-body {
+  position: relative;
+  z-index: 1;
+}
+.nova-cm-hero .nova-flow-kicker {
+  color: rgba(255, 255, 255, 0.65);
+}
+.nova-cm-hero h4 {
+  color: #fff;
+  margin: 0 0 0.65rem;
+}
+.nova-cm-hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.nova-cm-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+}
+.nova-cm-status-badge.is-active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+.nova-cm-status-badge.is-neutral {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.nova-cm-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.nova-cm-hero-number {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.12em;
+  font-family: monospace;
+}
+.nova-cm-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  backdrop-filter: blur(4px);
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+.nova-cm-refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Credit card visual mock */
+.nova-cm-card-mock {
+  border-radius: 18px;
+  padding: 1.4rem 1.5rem;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(30, 58, 95, 0.22);
+}
+.nova-cm-card-mock.is-virtual {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2a6486 55%, #0ea5e9 100%);
+}
+.nova-cm-card-mock.is-physical {
+  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 55%, #a855f7 100%);
+}
+.nova-cm-card-mock::before {
+  content: "";
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+.nova-cm-card-mock::after {
+  content: "";
+  position: absolute;
+  bottom: -30px;
+  left: 20px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+.nova-cm-card-mock-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+.nova-cm-card-mock-name {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+.nova-cm-card-mock-status {
+  padding: 0.18rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.nova-cm-card-mock-status.is-active {
+  background: rgba(34, 197, 94, 0.22);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.nova-cm-card-mock-status.is-other {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.nova-cm-card-mock-chip {
+  width: 38px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #d97706 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
+  margin: 0.9rem 0;
+}
+.nova-cm-card-mock-chip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%);
+}
+.nova-cm-card-mock-number {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.14em;
+  font-family: "Courier New", monospace;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.75rem;
+}
+.nova-cm-card-mock-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+.nova-cm-card-mock-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+.nova-cm-card-mock-field span {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.58);
+}
+.nova-cm-card-mock-field strong {
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: 600;
+}
+.nova-cm-card-mock-type {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nova-cm-card-mock-type i {
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Unified management sections card ── */
+.nova-cm-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.nova-cm-section-col {
+  padding: 0.25rem 1.5rem 0.25rem 0;
+}
+.nova-cm-section-col.has-divider {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  border-left: 1px solid #eef3f8;
+}
+.nova-cm-section-col:last-child {
+  padding-right: 0;
+}
+.nova-cm-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nova-cm-section-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #d9e5ef;
+  background: #f0f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a6486;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+.nova-cm-section-title {
+  margin: 0 0 0.18rem;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.nova-cm-section-desc {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+.nova-cm-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.nova-cm-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  background: #fafbfd;
+  padding: 0.75rem 0.9rem;
+  min-width: 0;
+}
+.nova-cm-action-row.is-danger {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: rgba(254, 242, 242, 0.5);
+}
+.nova-cm-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d9e5ef;
+  background: #f0f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a6486;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+.nova-cm-action-row.is-danger .nova-cm-action-icon {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(254, 242, 242, 0.8);
+}
+.nova-cm-action-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.nova-cm-action-copy strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: normal;
+  word-break: break-word;
+}
+.nova-cm-action-copy span {
+  display: block;
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 0.1rem;
+  white-space: normal;
+  word-break: break-word;
+}
+.nova-cm-action-ctrl {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.nova-cm-action-ctrl .btn {
+  min-height: unset;
+  border-radius: 8px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Responsive: stack card selector on narrow screens */
+@media (max-width: 575.98px) {
+  .nova-cm-selector-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .nova-cm-hero {
+    padding: 1.1rem 1.2rem;
+  }
+  .nova-cm-card-mock {
+    min-height: 170px;
+  }
+}
+@media (max-width: 991.98px) {
+  .nova-cm-sections-grid {
+    grid-template-columns: 1fr;
+  }
+  .nova-cm-section-col {
+    padding: 1rem 0 0;
+  }
+  .nova-cm-section-col.has-divider {
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid #eef3f8;
+  }
+}
+
+/* ── Overview panel: Bootstrap col-5 / col-7 ── */
+.nova-cm-card-mock.h-100 {
+  min-height: 200px;
+}
+.nova-cm-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  flex: 1;
+}
+
+/* Stat item cards */
+.nova-cm-stat-item {
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #fafbfd;
+  border: 1px solid #e8edf5;
+  position: relative;
+  overflow: hidden;
+}
+.nova-cm-stat-item::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+}
+.nova-cm-stat-item.is-status::after  { background: #22c55e; }
+.nova-cm-stat-item.is-balance::after { background: #3b82f6; }
+.nova-cm-stat-item.is-wallet::after  { background: #f59e0b; }
+.nova-cm-stat-item.is-date::after    { background: #8b5cf6; }
+
+.nova-cm-stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.nova-cm-stat-item.is-status .nova-cm-stat-icon  { background: rgba(34,197,94,0.12);  color: #16a34a; }
+.nova-cm-stat-item.is-balance .nova-cm-stat-icon { background: rgba(59,130,246,0.12); color: #2563eb; }
+.nova-cm-stat-item.is-wallet .nova-cm-stat-icon  { background: rgba(245,158,11,0.12); color: #d97706; }
+.nova-cm-stat-item.is-date .nova-cm-stat-icon    { background: rgba(139,92,246,0.12); color: #7c3aed; }
+
+.nova-cm-stat-item span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  font-weight: 600;
+}
+.nova-cm-stat-item strong {
+  font-size: 1.15rem;
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.2;
+  display: block;
+}
+
+/* ── Swiper card selector ── */
+.nova-cm-swiper {
+  width: 100%;
+  overflow: visible;
+}
+.nova-cm-swiper .swiper-wrapper {
+  align-items: stretch;
+}
+.nova-cm-swiper-slide {
+  width: auto !important;
+  flex-shrink: 0;
+}
+.nova-cm-swiper-slide .nova-cm-card-tile {
+  height: 100%;
+}
+
+@media (max-width: 575.98px) {
+  .nova-cm-stat-grid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -5,6 +5,7 @@ import {
   changeSecurityCode,
   createSecurityCode,
   forgetSecurityCode,
+  sendSecurityForgetCode,
   getSecurityCodeStatus,
   validateSecurityCode,
 } from "../../../services/securityCode";
@@ -64,16 +65,42 @@ const TAB_ITEMS = [
   },
 ];
 
-const getApiError = (error, fallback) => {
-  const payload = error?.response?.data || {};
-  const errors = payload?.errors;
+const findFirstFieldError = (errorBag) => {
+  if (!errorBag || typeof errorBag !== "object") return "";
 
-  if (errors && typeof errors === "object") {
-    const first = Object.values(errors).flat().find(Boolean);
-    if (first) return String(first);
+  for (const value of Object.values(errorBag)) {
+    if (Array.isArray(value)) {
+      const first = value.find((item) => typeof item === "string" && item.trim());
+      if (first) return first.trim();
+      continue;
+    }
+
+    if (typeof value === "string" && value.trim()) return value.trim();
+
+    const nested = findFirstFieldError(value);
+    if (nested) return nested;
   }
 
-  return payload?.message || payload?.msg || error?.message || fallback;
+  return "";
+};
+
+const getApiError = (error, fallback) => {
+  const payload = error?.response?.data || {};
+  const fieldError =
+    findFirstFieldError(payload?.errors) ||
+    findFirstFieldError(payload?.error) ||
+    findFirstFieldError(payload?.data?.errors) ||
+    findFirstFieldError(payload?.data?.error);
+
+  return fieldError || payload?.message || payload?.msg || error?.message || fallback;
+};
+
+const isGenericValidationError = (error, message) => {
+  if (Number(error?.response?.status || 0) !== 422) return false;
+
+  return ["validation error", "validation failed", "unprocessable entity"].includes(
+    String(message || "").trim().toLowerCase(),
+  );
 };
 
 const messageContainsAny = (message, tokens) => {
@@ -106,6 +133,13 @@ const formatValue = (value) => {
   if (value === null || value === undefined || value === "") return "N/A";
   if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
+};
+
+const formatProfileDate = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 };
 
 const maskEmailAddress = (email) => {
@@ -156,6 +190,9 @@ const SecuritySettings = () => {
     confirm_password: "",
     verification_code: "",
   });
+  const [passwordCodeSent, setPasswordCodeSent] = useState(false);
+  const [passwordUiStep, setPasswordUiStep] = useState(1);
+  const [passwordStepError, setPasswordStepError] = useState("");
 
   const [emailChangeForm, setEmailChangeForm] = useState({
     current_code: "",
@@ -176,14 +213,21 @@ const SecuritySettings = () => {
   });
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   const [phoneSecurityVisible, setPhoneSecurityVisible] = useState(false);
+  const [phoneUiStep, setPhoneUiStep] = useState(1);
+  const [phoneStepError, setPhoneStepError] = useState("");
 
   const [securityForm, setSecurityForm] = useState({
     current_code: "",
     new_code: "",
     confirm_code: "",
-    forgot_password: "",
+    forgot_verification_code: "",
+    forgot_new_code: "",
+    forgot_confirm_code: "",
   });
   const [showForgetSecurity, setShowForgetSecurity] = useState(false);
+  const [forgetCodeSent, setForgetCodeSent] = useState(false);
+  const [securityChangeStep, setSecurityChangeStep] = useState(1);
+  const [securityStepError, setSecurityStepError] = useState("");
   const [showForgetGoogle, setShowForgetGoogle] = useState(false);
   const [googleForm, setGoogleForm] = useState({
     otp: "",
@@ -312,11 +356,11 @@ const SecuritySettings = () => {
       },
       {
         label: "Member Since",
-        value: profileData?.created_at,
+        value: formatProfileDate(profileData?.created_at),
       },
       {
         label: "Last Update",
-        value: profileData?.updated_at,
+        value: formatProfileDate(profileData?.updated_at),
       },
       {
         label: "Google Auth Enabled",
@@ -335,9 +379,10 @@ const SecuritySettings = () => {
     setSubmittingAction("password-send-code");
     try {
       await sendChangePasswordCode();
+      setPasswordCodeSent(true);
       setFeedback({
         type: "success",
-        message: "Verification code sent for password change.",
+        message: "Verification code sent to your email.",
       });
     } catch (error) {
       setFeedback({
@@ -350,31 +395,8 @@ const SecuritySettings = () => {
   };
 
   const onPasswordSubmit = async (event) => {
-    event.preventDefault();
+    if (event?.preventDefault) event.preventDefault();
     clearFeedback();
-
-    if (
-      !passwordForm.new_password ||
-      !passwordForm.confirm_password ||
-      !passwordForm.verification_code
-    ) {
-      setFeedback({
-        type: "error",
-        message: "New password, confirm password, and verification code are required.",
-      });
-      return;
-    }
-
-    if (
-      String(passwordForm.new_password || "").trim() !==
-      String(passwordForm.confirm_password || "").trim()
-    ) {
-      setFeedback({
-        type: "error",
-        message: "New password and confirmation must match.",
-      });
-      return;
-    }
 
     setSubmittingAction("password-confirm");
     try {
@@ -384,11 +406,9 @@ const SecuritySettings = () => {
         verificationCode: passwordForm.verification_code,
       });
       setFeedback({ type: "success", message: "Password updated successfully." });
-      setPasswordForm({
-        new_password: "",
-        confirm_password: "",
-        verification_code: "",
-      });
+      setPasswordForm({ new_password: "", confirm_password: "", verification_code: "" });
+      setPasswordCodeSent(false);
+      setPasswordUiStep(1);
     } catch (error) {
       setFeedback({
         type: "error",
@@ -467,7 +487,9 @@ const SecuritySettings = () => {
       return;
     }
 
-    if (!String(emailChangeForm.new_email || "").trim()) {
+    const newEmail = String(emailChangeForm.new_email || "").trim();
+
+    if (!newEmail) {
       setFeedback({
         type: "error",
         message: "New email is required.",
@@ -475,10 +497,20 @@ const SecuritySettings = () => {
       return;
     }
 
+    if (
+      String(profileData?.email || "").trim().toLowerCase() === newEmail.toLowerCase()
+    ) {
+      setFeedback({
+        type: "error",
+        message: "New email must be different from your current email.",
+      });
+      return;
+    }
+
     setSubmittingAction("email-send-new");
     try {
       await sendChangeEmailCodeNew({
-        newEmail: emailChangeForm.new_email,
+        newEmail,
       });
       setEmailChangeState((prev) => ({
         ...prev,
@@ -489,9 +521,12 @@ const SecuritySettings = () => {
         message: "Code sent to new email.",
       });
     } catch (error) {
+      const message = getApiError(error, "Unable to send code on new email.");
       setFeedback({
         type: "error",
-        message: getApiError(error, "Unable to send code on new email."),
+        message: isGenericValidationError(error, message)
+          ? "This email address is already in use or cannot be used. Please enter a different email address."
+          : message,
       });
     } finally {
       setSubmittingAction("");
@@ -647,25 +682,8 @@ const SecuritySettings = () => {
   };
 
   const onSecuritySubmit = async (event) => {
-    event.preventDefault();
+    if (event?.preventDefault) event.preventDefault();
     clearFeedback();
-
-    if (!securityForm.new_code || !securityForm.confirm_code) {
-      setFeedback({
-        type: "error",
-        message: "New security code and confirmation are required.",
-      });
-      return;
-    }
-
-    if (hasSecurityCode && !securityForm.current_code) {
-      setFeedback({
-        type: "error",
-        message: "Current security code is required.",
-      });
-      return;
-    }
-
     setSubmittingAction("security-submit");
     try {
       if (hasSecurityCode) {
@@ -681,12 +699,16 @@ const SecuritySettings = () => {
         });
       }
 
-      setSecurityForm((prev) => ({
-        ...prev,
+      setSecurityForm({
         current_code: "",
         new_code: "",
         confirm_code: "",
-      }));
+        forgot_verification_code: "",
+        forgot_new_code: "",
+        forgot_confirm_code: "",
+      });
+      setSecurityChangeStep(1);
+      setSecurityStepError("");
       await loadStatus();
       setFeedback({
         type: "success",
@@ -695,15 +717,36 @@ const SecuritySettings = () => {
           : "Security code created successfully.",
       });
     } catch (error) {
-      setFeedback({
-        type: "error",
-        message: getApiError(
+      setSecurityStepError(
+        getApiError(
           error,
           hasSecurityCode
             ? "Unable to update security code."
             : "Unable to create security code.",
         ),
-      });
+      );
+    } finally {
+      setSubmittingAction("");
+    }
+  };
+
+  const onSendForgetCode = async () => {
+    clearFeedback();
+    setSubmittingAction("security-forget-send");
+    try {
+      await sendSecurityForgetCode();
+      setForgetCodeSent(true);
+      setFeedback({ type: "success", message: "Verification code sent to your email." });
+    } catch (error) {
+      const msg = getApiError(error, "");
+      const codeWasSent =
+        msg.includes("verification code") || msg.includes("sent") || msg.includes("email");
+      if (codeWasSent) {
+        setForgetCodeSent(true);
+        setFeedback({ type: "success", message: "Verification code sent to your email." });
+      } else {
+        setFeedback({ type: "error", message: msg || "Unable to send verification code." });
+      }
     } finally {
       setSubmittingAction("");
     }
@@ -713,8 +756,16 @@ const SecuritySettings = () => {
     event.preventDefault();
     clearFeedback();
 
-    if (!String(securityForm.forgot_password || "").trim()) {
-      setFeedback({ type: "error", message: "Account password is required." });
+    if (!String(securityForm.forgot_verification_code || "").trim()) {
+      setFeedback({ type: "error", message: "Verification code is required." });
+      return;
+    }
+    if (!String(securityForm.forgot_new_code || "").trim()) {
+      setFeedback({ type: "error", message: "New security code is required." });
+      return;
+    }
+    if (!String(securityForm.forgot_confirm_code || "").trim()) {
+      setFeedback({ type: "error", message: "Confirm new security code." });
       return;
     }
 
@@ -722,26 +773,27 @@ const SecuritySettings = () => {
 
     try {
       await forgetSecurityCode({
-        password: securityForm.forgot_password,
+        verificationCode: securityForm.forgot_verification_code,
+        newCode: securityForm.forgot_new_code,
+        confirmCode: securityForm.forgot_confirm_code,
       });
       setSecurityForm((prev) => ({
         ...prev,
-        current_code: "",
-        new_code: "",
-        confirm_code: "",
-        forgot_password: "",
+        forgot_verification_code: "",
+        forgot_new_code: "",
+        forgot_confirm_code: "",
       }));
       setShowForgetSecurity(false);
+      setForgetCodeSent(false);
       await loadStatus();
       setFeedback({
         type: "success",
-        message:
-          "Security code reset successful. Set a new security code now.",
+        message: "Security code reset successfully.",
       });
     } catch (error) {
       setFeedback({
         type: "error",
-        message: getApiError(error, "Unable to process forget security code."),
+        message: getApiError(error, "Unable to reset security code."),
       });
     } finally {
       setSubmittingAction("");
@@ -997,10 +1049,7 @@ const SecuritySettings = () => {
               <div className="nova-settings-hero">
               <div className="nova-settings-hero-head">
                 <div>
-                  <h4 className="mb-1">Profile Settings</h4>
-                  <p className="mb-0 text-muted">
-                    Manage profile details, password, security code and Google Auth in one place.
-                  </p>
+                  <h4 className="mb-0">Profile Settings</h4>
                 </div>
                 <div className="nova-sec-status-wrap">
                   <span
@@ -1046,16 +1095,18 @@ const SecuritySettings = () => {
                 ))}
               </div>
               </div>
-              {statusError ? <div className="alert alert-warning mt-3 mb-0">{statusError}</div> : null}
-              {googleError ? <div className="alert alert-warning mt-3 mb-0">{googleError}</div> : null}
-              {profileError ? <div className="alert alert-warning mt-3 mb-0">{profileError}</div> : null}
+              {(statusError || googleError || profileError) ? (
+                <div className="nova-kyc-feedback is-error mt-3 mb-0">
+                  <i className="fa fa-exclamation-circle" />
+                  <span>{statusError || googleError || profileError}</span>
+                </div>
+              ) : null}
 
               <div className="row g-3 mt-0 nova-settings-shell-body">
                 <div className="col-xl-3 col-12">
                   <div className="nova-settings-side-pane">
               <div className="nova-settings-nav-head">
                 <h6>Settings Menu</h6>
-                <p>Choose a section to update your account.</p>
               </div>
               <div className="nova-settings-nav">
                 {TAB_ITEMS.map((tab) => (
@@ -1075,7 +1126,6 @@ const SecuritySettings = () => {
                     </span>
                     <span className="nova-settings-nav-text">
                       <strong>{tab.title}</strong>
-                      <span>{tab.sub}</span>
                     </span>
                     <i className="pi pi-angle-right nova-settings-nav-arrow" />
                   </button>
@@ -1088,22 +1138,18 @@ const SecuritySettings = () => {
                   <div className="nova-settings-main-pane">
               {feedback.message ? (
                 <div
-                  className={`alert ${
-                    feedback.type === "error" ? "alert-danger" : "alert-success"
-                  } mb-3`}
+                  className={`nova-kyc-feedback mb-3 ${
+                    feedback.type === "error" ? "is-error" : "is-success"
+                  }`}
                 >
-                  {feedback.message}
+                  <i className={`fa ${feedback.type === "error" ? "fa-exclamation-circle" : "fa-check-circle"}`} />
+                  <span>{feedback.message}</span>
                 </div>
               ) : null}
               {activeTab === "profile" && (
                 <div className="nova-settings-section nova-settings-panel">
                   <div className="nova-settings-section-head">
-                    <div>
-                      <h5 className="mb-1">Profile Details</h5>
-                      <p className="text-muted mb-0">
-                        Review the account information currently available from the API.
-                      </p>
-                    </div>
+                    <h5 className="mb-0">Profile Details</h5>
                   </div>
                   {profileLoading ? (
                     <div className="d-flex align-items-center gap-2 text-muted">
@@ -1125,673 +1171,1041 @@ const SecuritySettings = () => {
                 </div>
               )}
 
-              {activeTab === "email" && (
-                <div className="nova-bind-tab-wrap">
-                  <div className="nova-bind-card">
-                    <h6 className="nova-bind-card-title">Bind Your Email</h6>
-                    <p className="nova-bind-card-subtitle">
-                      Verify current email first, then confirm new email.
-                    </p>
-
-                    <div className="nova-bind-field">
-                      <label>Verification Method</label>
-                      <div className="nova-bind-input is-static">
-                        {maskedCurrentEmail}
-                      </div>
+              {activeTab === "email" && (() => {
+                const emailUiStep = !emailChangeState.currentVerified ? 1
+                  : !emailChangeState.newCodeSent ? 2
+                  : 3;
+                const ESTEPS = [
+                  { n: 1, label: "Verify Current Email" },
+                  { n: 2, label: "Enter New Email" },
+                  { n: 3, label: "Confirm Change" },
+                ];
+                return (
+                  <div className="nova-email-stepper-wrap">
+                    <div className="nova-email-stepper-head">
+                      <h5 className="nova-email-stepper-title">Change Email</h5>
+                      <p className="nova-email-stepper-sub">Update the email address linked to your account</p>
                     </div>
 
-                    <div className="nova-bind-field">
-                      <label>Verification Code (Current Email)</label>
-                      <div className="nova-bind-input-group">
-                        <input
-                          type="text"
-                          className="nova-bind-input"
-                          value={emailChangeForm.current_code}
-                          onChange={(event) =>
-                            setEmailChangeForm((prev) => ({
-                              ...prev,
-                              current_code: event.target.value,
-                            }))
-                          }
-                          placeholder="Enter code"
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-primary nova-bind-inline-btn"
-                          onClick={onSendEmailCurrentCode}
-                          disabled={submittingAction === "email-send-current"}
-                        >
-                          {submittingAction === "email-send-current" ? "Sending..." : "Get Code"}
-                        </button>
-                      </div>
+                    {/* Step indicator */}
+                    <div className="nova-email-stepper-bar">
+                      {ESTEPS.map(({ n, label }) => {
+                        const done = n < emailUiStep;
+                        const active = n === emailUiStep;
+                        return (
+                          <React.Fragment key={n}>
+                            <div className={`nova-email-stepper-step ${done ? "is-done" : active ? "is-active" : ""}`}>
+                              <div className="nova-email-stepper-circle">
+                                {done ? <i className="pi pi-check" /> : n}
+                              </div>
+                              <span className="nova-email-stepper-label">{label}</span>
+                            </div>
+                            {n < 3 && <div className={`nova-email-stepper-connector ${done ? "is-done" : ""}`} />}
+                          </React.Fragment>
+                        );
+                      })}
                     </div>
 
-                    <div className="nova-settings-actions">
-                      <button
-                        type="button"
-                        className="btn btn-primary nova-bind-main-btn"
-                        onClick={onVerifyEmailCurrent}
-                        disabled={
-                          !emailChangeState.currentCodeSent ||
-                          submittingAction === "email-verify-current"
-                        }
-                      >
-                        {submittingAction === "email-verify-current" ? "Verifying..." : "Next"}
-                      </button>
-                    </div>
-
-                    <div className="nova-bind-divider" />
-
-                    <div className="nova-bind-field">
-                      <label>New Email</label>
-                      <input
-                        type="email"
-                        className="nova-bind-input"
-                        value={emailChangeForm.new_email}
-                        onChange={(event) => {
-                          const nextEmail = event.target.value;
-                          setEmailChangeForm((prev) => ({
-                            ...prev,
-                            new_email: nextEmail,
-                            new_code: "",
-                          }));
-                          setEmailChangeState((prev) => ({
-                            ...prev,
-                            newCodeSent: false,
-                          }));
-                        }}
-                        placeholder="Please enter"
-                      />
-                    </div>
-
-                    <div className="nova-bind-field">
-                      <label>Verification Code (New Email)</label>
-                      <div className="nova-bind-input-group">
-                        <input
-                          type="text"
-                          className="nova-bind-input"
-                          value={emailChangeForm.new_code}
-                          onChange={(event) =>
-                            setEmailChangeForm((prev) => ({
-                              ...prev,
-                              new_code: event.target.value,
-                            }))
-                          }
-                          placeholder="Enter code"
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-primary nova-bind-inline-btn"
-                          onClick={onSendEmailNewCode}
-                          disabled={
-                            !emailChangeState.currentVerified ||
-                            submittingAction === "email-send-new"
-                          }
-                        >
-                          {submittingAction === "email-send-new" ? "Sending..." : "Get Code"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="nova-settings-actions">
-                      <button
-                        type="button"
-                        className="btn btn-primary nova-bind-main-btn"
-                        onClick={onConfirmEmailChange}
-                        disabled={
-                          !emailChangeState.newCodeSent ||
-                          submittingAction === "email-confirm"
-                        }
-                      >
-                        {submittingAction === "email-confirm" ? "Confirming..." : "Confirm Email"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "phone" && (
-                <div className="nova-bind-tab-wrap">
-                  <div className="nova-bind-card">
-                    <h6 className="nova-bind-card-title">Bind Your Phone</h6>
-                    <p className="nova-bind-card-subtitle">
-                      Your card will be linked to your phone number.
-                    </p>
-                    <p className="text-muted small mb-3">
-                      Verification code: {phoneCodeSent ? "Sent" : "Pending"}
-                    </p>
-
-                    <form onSubmit={onPhoneConfirm}>
-                      <div className="nova-bind-field">
-                        <label>Phone Area Code</label>
-                        <input
-                          type="text"
-                          className="nova-bind-input"
-                          value={phoneChangeForm.code}
-                          onChange={(event) => {
-                            setPhoneChangeForm((prev) => ({
-                              ...prev,
-                              code: event.target.value,
-                            }));
-                            setPhoneCodeSent(false);
-                          }}
-                          placeholder="+92"
-                        />
-                      </div>
-
-                      <div className="nova-bind-field">
-                        <label>Phone Number</label>
-                        <input
-                          type="text"
-                          className="nova-bind-input"
-                          value={phoneChangeForm.phone}
-                          onChange={(event) => {
-                            setPhoneChangeForm((prev) => ({
-                              ...prev,
-                              phone: event.target.value,
-                            }));
-                            setPhoneCodeSent(false);
-                          }}
-                          placeholder="Please enter"
-                        />
-                      </div>
-
-                      <div className="nova-bind-field">
-                        <div className="nova-settings-inline-head">
-                          <label>Security Code</label>
-                          <button
-                            type="button"
-                            className="btn btn-link p-0 text-decoration-none nova-settings-link-action"
-                            onClick={() => setActiveTab("security")}
-                          >
-                            Forgot?
-                          </button>
+                    {/* Step 1 — Verify current email */}
+                    {emailUiStep === 1 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-bind-field">
+                          <label>Your Current Email</label>
+                          <div className="nova-bind-input is-static">{profileData?.email || "—"}</div>
                         </div>
-                        <div className="nova-bind-password-wrap">
-                          <input
-                            type={phoneSecurityVisible ? "text" : "password"}
-                            className="nova-bind-input"
-                            value={phoneChangeForm.security_code}
-                            onChange={(event) =>
-                              setPhoneChangeForm((prev) => ({
-                                ...prev,
-                                security_code: event.target.value,
-                              }))
-                            }
-                            placeholder="Security code"
-                          />
-                          <button
-                            type="button"
-                            className="nova-bind-eye-btn"
-                            onClick={() => setPhoneSecurityVisible((prev) => !prev)}
-                            aria-label={phoneSecurityVisible ? "Hide security code" : "Show security code"}
-                          >
-                            <i className={`pi ${phoneSecurityVisible ? "pi-eye-slash" : "pi-eye"}`} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="nova-settings-actions">
-                        <button
-                          type="button"
-                          className="btn btn-primary nova-bind-main-btn"
-                          onClick={onPhoneSendCode}
-                          disabled={submittingAction === "phone-send-code"}
-                        >
-                          {submittingAction === "phone-send-code" ? "Sending..." : "Get Verify Code"}
-                        </button>
-                      </div>
-
-                      <div className="nova-bind-field mb-0">
-                        <label>Verification Code</label>
-                        <input
-                          type="text"
-                          className="nova-bind-input"
-                          value={phoneChangeForm.verification_code}
-                          onChange={(event) =>
-                            setPhoneChangeForm((prev) => ({
-                              ...prev,
-                              verification_code: event.target.value,
-                            }))
-                          }
-                          placeholder="Enter code"
-                        />
-                      </div>
-
-                      <div className="nova-settings-actions">
-                        <button
-                          type="submit"
-                          className="btn btn-outline-primary nova-bind-main-btn mt-3"
-                          disabled={submittingAction === "phone-confirm"}
-                        >
-                          {submittingAction === "phone-confirm" ? "Confirming..." : "Confirm Phone"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "password" && (
-                <div className="nova-settings-section nova-settings-panel">
-                  <div className="nova-settings-section-head">
-                    <div>
-                      <h5 className="mb-1">Change Password</h5>
-                      <p className="text-muted small mb-0">
-                        First send a verification code from `/app/change-password/send-code`,
-                        then confirm the new password with that code.
-                      </p>
-                    </div>
-                  </div>
-                  <form onSubmit={onPasswordSubmit} className="row g-3">
-                    <div className="col-md-4">
-                      <label className="form-label">New Password</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        value={passwordForm.new_password}
-                        onChange={(event) =>
-                          setPasswordForm((prev) => ({
-                            ...prev,
-                            new_password: event.target.value,
-                          }))
-                        }
-                        placeholder="New password"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Confirm Password</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        value={passwordForm.confirm_password}
-                        onChange={(event) =>
-                          setPasswordForm((prev) => ({
-                            ...prev,
-                            confirm_password: event.target.value,
-                          }))
-                        }
-                        placeholder="Confirm password"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Verification Code</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={passwordForm.verification_code}
-                        onChange={(event) =>
-                          setPasswordForm((prev) => ({
-                            ...prev,
-                            verification_code: event.target.value,
-                          }))
-                        }
-                        placeholder="Enter code"
-                      />
-                    </div>
-                    <div className="col-12 nova-settings-actions">
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary"
-                        onClick={onPasswordSendCode}
-                        disabled={submittingAction === "password-send-code"}
-                      >
-                        {submittingAction === "password-send-code"
-                          ? "Sending..."
-                          : "Send Verify Code"}
-                      </button>
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={submittingAction === "password-confirm"}
-                      >
-                        {submittingAction === "password-confirm"
-                          ? "Confirming..."
-                          : "Confirm Password Change"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {activeTab === "security" && (
-                <div className="row g-3">
-                  <div className="col-12">
-                    <div className="nova-settings-section-head">
-                      <div>
-                        <h5 className="mb-1">Security Code</h5>
-                        <p className="text-muted mb-0">
-                          {hasSecurityCode
-                            ? "Change your current security code or use the forgot flow."
-                            : "Set up a new security code."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-12">
-                    <div className="nova-settings-section">
-                      <h6 className="mb-3">
-                        {hasSecurityCode ? "Change Security Code" : "Create Security Code"}
-                      </h6>
-                      <form onSubmit={onSecuritySubmit} className="row g-3">
-                        {hasSecurityCode ? (
-                          <div className="col-md-4">
-                            <label className="form-label">Current Security Code</label>
+                        <div className="nova-bind-field">
+                          <label>Verification Code</label>
+                          <div className="nova-bind-input-group">
                             <input
-                              type="password"
-                              className="form-control"
-                              value={securityForm.current_code}
-                              onChange={(event) =>
-                                setSecurityForm((prev) => ({
-                                  ...prev,
-                                  current_code: event.target.value,
-                                }))
-                              }
-                              placeholder="Current security code"
+                              type="text"
+                              className="nova-bind-input"
+                              value={emailChangeForm.current_code}
+                              onChange={(e) => setEmailChangeForm((prev) => ({ ...prev, current_code: e.target.value }))}
+                              placeholder="Enter code sent to your email"
                             />
-                          </div>
-                        ) : null}
-
-                        <div className={hasSecurityCode ? "col-md-4" : "col-md-6"}>
-                          <label className="form-label">New Security Code</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            value={securityForm.new_code}
-                            onChange={(event) =>
-                              setSecurityForm((prev) => ({
-                                ...prev,
-                                new_code: event.target.value,
-                              }))
-                            }
-                            placeholder="New security code"
-                          />
-                        </div>
-
-                        <div className={hasSecurityCode ? "col-md-4" : "col-md-6"}>
-                          <label className="form-label">Confirm New Security Code</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            value={securityForm.confirm_code}
-                            onChange={(event) =>
-                              setSecurityForm((prev) => ({
-                                ...prev,
-                                confirm_code: event.target.value,
-                              }))
-                            }
-                            placeholder="Confirm new security code"
-                          />
-                        </div>
-
-                        <div className="col-12 nova-settings-actions nova-settings-actions-split">
-                          {hasSecurityCode ? (
                             <button
                               type="button"
-                              className="btn btn-link p-0 text-decoration-none fw-semibold nova-settings-link-action"
-                              onClick={() => setShowForgetSecurity((prev) => !prev)}
+                              className="btn btn-primary nova-bind-inline-btn"
+                              onClick={onSendEmailCurrentCode}
+                              disabled={submittingAction === "email-send-current"}
                             >
-                              {showForgetSecurity
-                                ? "Cancel"
-                                : "Forgot original security code?"}
+                              {submittingAction === "email-send-current" ? "Sending..." : emailChangeState.currentCodeSent ? "Resend" : "Get Code"}
                             </button>
-                          ) : (
-                            <span />
+                          </div>
+                          {emailChangeState.currentCodeSent && (
+                            <p className="nova-email-stepper-hint"><i className="pi pi-info-circle me-1" />A code was sent to {profileData?.email}. Check your inbox.</p>
                           )}
+                        </div>
+                        <div className="nova-email-stepper-actions">
                           <button
-                            type="submit"
-                            className="btn btn-primary"
-                            disabled={submittingAction === "security-submit"}
+                            type="button"
+                            className="nova-email-stepper-next-btn"
+                            onClick={onVerifyEmailCurrent}
+                            disabled={!emailChangeState.currentCodeSent || submittingAction === "email-verify-current"}
                           >
-                            {submittingAction === "security-submit"
-                              ? "Submitting..."
-                              : hasSecurityCode
-                                ? "Confirm"
-                                : "Create Security Code"}
+                            {submittingAction === "email-verify-current" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Verifying...</>
+                            ) : (
+                              <>Next <i className="pi pi-arrow-right ms-2" /></>
+                            )}
                           </button>
                         </div>
-                      </form>
+                      </div>
+                    )}
 
-                      {hasSecurityCode && showForgetSecurity ? (
-                        <form onSubmit={onSecurityForget} className="row g-2 mt-2">
-                          <div className="col-12">
-                            <label className="form-label">Account Password</label>
+                    {/* Step 2 — Enter new email */}
+                    {emailUiStep === 2 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-verified-badge">
+                          <i className="pi pi-check-circle me-2" />Current email verified
+                        </div>
+                        <div className="nova-bind-field">
+                          <label>New Email Address</label>
+                          <input
+                            type="email"
+                            className="nova-bind-input"
+                            value={emailChangeForm.new_email}
+                            onChange={(e) => {
+                              setEmailChangeForm((prev) => ({ ...prev, new_email: e.target.value, new_code: "" }));
+                              setEmailChangeState((prev) => ({ ...prev, newCodeSent: false }));
+                            }}
+                            placeholder="Enter your new email address"
+                          />
+                        </div>
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-back-btn"
+                            onClick={() => setEmailChangeState((prev) => ({ ...prev, currentVerified: false, currentCodeSent: false }))}
+                          >
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn"
+                            onClick={onSendEmailNewCode}
+                            disabled={!emailChangeForm.new_email.trim() || submittingAction === "email-send-new"}
+                          >
+                            {submittingAction === "email-send-new" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Sending Code...</>
+                            ) : (
+                              <>Send Code <i className="pi pi-send ms-2" /></>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3 — Enter code + confirm */}
+                    {emailUiStep === 3 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-verified-badge">
+                          <i className="pi pi-check-circle me-2" />Current email verified
+                        </div>
+                        <div className="nova-email-stepper-confirm-row">
+                          <span className="nova-email-stepper-confirm-label">New Email</span>
+                          <span className="nova-email-stepper-confirm-value">{emailChangeForm.new_email}</span>
+                        </div>
+                        <div className="nova-bind-field mt-3">
+                          <label>Verification Code (New Email)</label>
+                          <div className="nova-bind-input-group">
                             <input
-                              type="password"
-                              className="form-control"
-                              value={securityForm.forgot_password}
-                              onChange={(event) =>
-                                setSecurityForm((prev) => ({
-                                  ...prev,
-                                  forgot_password: event.target.value,
-                                }))
-                              }
-                              placeholder="Enter account password"
+                              type="text"
+                              className="nova-bind-input"
+                              value={emailChangeForm.new_code}
+                              onChange={(e) => setEmailChangeForm((prev) => ({ ...prev, new_code: e.target.value }))}
+                              placeholder="Enter code sent to your new email"
                             />
-                          </div>
-                          <div className="col-12 nova-settings-actions">
                             <button
-                              type="submit"
-                              className="btn btn-outline-danger"
-                              disabled={submittingAction === "security-forget"}
+                              type="button"
+                              className="btn btn-primary nova-bind-inline-btn"
+                              onClick={onSendEmailNewCode}
+                              disabled={submittingAction === "email-send-new"}
                             >
-                              {submittingAction === "security-forget"
-                                ? "Processing..."
-                                : "Reset via Forgot"}
+                              {submittingAction === "email-send-new" ? "Sending..." : "Resend"}
                             </button>
                           </div>
-                        </form>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "google" && (
-                <div className="row g-3">
-                  <div className="col-12">
-                    <div className="nova-settings-section-head">
-                      <div>
-                        <h5 className="mb-1">Google Authentication (2FA)</h5>
-                        <p className="text-muted mb-0">
-                          Configure two-factor authentication for higher-risk actions.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-12">
-                    <div className="nova-settings-section">
-                      <div className="nova-2fa-switch-row">
-                        <div>
-                          <h6 className="mb-1">Google Authenticator (2FA)</h6>
-                          <p className="text-muted small mb-0">
-                            {googleLoading
-                              ? "Checking status..."
-                              : googleEnabled
-                                ? "Currently enabled"
-                                : "Currently disabled"}
-                          </p>
+                          <p className="nova-email-stepper-hint"><i className="pi pi-info-circle me-1" />A code was sent to {emailChangeForm.new_email}. Check your inbox.</p>
                         </div>
-                        <button
-                          type="button"
-                          className={`nova-2fa-switch ${googleEnabled ? "is-on" : ""}`}
-                          onClick={onGoogleToggleSwitch}
-                          disabled={googleLoading || submittingAction === "google-setup"}
-                          aria-label="Toggle Google 2FA setup"
-                        >
-                          <span />
-                        </button>
-                      </div>
-
-                      <div className="nova-2fa-attention">
-                        <strong>Attention</strong>
-                        <p className="mb-0">
-                          2FA verification will be required for critical actions such as
-                          login, card purchase/top-up, CVV/PAN view, withdrawal, and transfer.
-                        </p>
-                      </div>
-
-                      {!googleEnabled ? (
-                        <div className="alert alert-info py-2 px-3 mt-3 mb-2">
-                          <strong>Setup Flow</strong>
-                          <p className="small mb-0 mt-1">
-                            Step 1: Generate the setup. Step 2: Scan the QR code in the
-                            Google Authenticator app or add the secret key using
-                            <strong> Enter a setup key</strong>. Step 3: Enter the app's
-                            6-digit code below and click <strong>Confirm &amp; Enable</strong>.
-                          </p>
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-back-btn"
+                            onClick={() => setEmailChangeState((prev) => ({ ...prev, newCodeSent: false }))}
+                          >
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn is-confirm"
+                            onClick={onConfirmEmailChange}
+                            disabled={!emailChangeForm.new_code.trim() || submittingAction === "email-confirm"}
+                          >
+                            {submittingAction === "email-confirm" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Confirming...</>
+                            ) : (
+                              <><i className="pi pi-check me-2" />Confirm Change</>
+                            )}
+                          </button>
                         </div>
-                      ) : null}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
-                      {(googleQr || googleSecret) && (
-                        <div className="row g-2 mt-1">
-                          {googleQr ? (
-                            <div className="col-md-4">
-                              <div className="small text-muted mb-1">QR Code</div>
-                              <img
-                                src={googleQr}
-                                alt="Google Auth QR"
-                                className="img-fluid rounded border"
-                                style={{ maxHeight: "170px" }}
-                              />
-                            </div>
-                          ) : null}
-                          {googleSecret ? (
-                            <div className="col-md-12">
-                              <div className="nova-settings-secret-panel">
-                              <div className="nova-settings-inline-head mb-1">
-                                <div className="small text-muted">Secret Key</div>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-secondary btn-sm"
-                                  onClick={onCopyGoogleSecret}
-                                >
-                                  Copy Key
-                                </button>
+              {activeTab === "phone" && (() => {
+                const activePhoneStep = phoneCodeSent ? 3
+                  : (phoneUiStep >= 2 && !String(phoneChangeForm.phone || "").trim()) ? 1
+                  : phoneUiStep;
+                const PSTEPS = [
+                  { n: 1, label: "Enter Phone Number" },
+                  { n: 2, label: "Verify Security Code" },
+                  { n: 3, label: "Enter Email Code" },
+                ];
+                return (
+                  <div className="nova-email-stepper-wrap">
+                    <div className="nova-email-stepper-head">
+                      <h5 className="nova-email-stepper-title">Change Phone</h5>
+                      <p className="nova-email-stepper-sub">Update the phone number linked to your account</p>
+                    </div>
+
+                    {/* Step indicator */}
+                    <div className="nova-email-stepper-bar">
+                      {PSTEPS.map(({ n, label }) => {
+                        const done = n < activePhoneStep;
+                        const active = n === activePhoneStep;
+                        return (
+                          <React.Fragment key={n}>
+                            <div className={`nova-email-stepper-step ${done ? "is-done" : active ? "is-active" : ""}`}>
+                              <div className="nova-email-stepper-circle">
+                                {done ? <i className="pi pi-check" /> : n}
                               </div>
-                              <p className="small text-muted mb-1">
-                                In the Google Authenticator app, select
-                                <strong> Enter a setup key</strong> and paste this secret key.
-                              </p>
-                              <code>{googleSecret}</code>
-                              </div>
+                              <span className="nova-email-stepper-label">{label}</span>
                             </div>
-                          ) : null}
+                            {n < 3 && <div className={`nova-email-stepper-connector ${done ? "is-done" : ""}`} />}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+
+                    {/* Step 1 — Enter phone number */}
+                    {activePhoneStep === 1 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-bind-field">
+                          <label>Phone Area Code</label>
+                          <input
+                            type="text"
+                            className="nova-bind-input"
+                            value={phoneChangeForm.code}
+                            onChange={(e) => {
+                              setPhoneChangeForm((prev) => ({ ...prev, code: e.target.value }));
+                              setPhoneStepError("");
+                              setPhoneCodeSent(false);
+                            }}
+                            placeholder="+92"
+                          />
+                        </div>
+                        <div className="nova-bind-field">
+                          <label>Phone Number</label>
+                          <input
+                            type="text"
+                            className="nova-bind-input"
+                            value={phoneChangeForm.phone}
+                            onChange={(e) => {
+                              setPhoneChangeForm((prev) => ({ ...prev, phone: e.target.value }));
+                              setPhoneStepError("");
+                              setPhoneCodeSent(false);
+                            }}
+                            placeholder="Enter your phone number"
+                          />
+                        </div>
+                        {phoneStepError && (
+                          <div className="nova-kyc-feedback is-error mt-2">
+                            <i className="fa fa-exclamation-circle" /><span>{phoneStepError}</span>
+                          </div>
+                        )}
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn"
+                            onClick={() => {
+                              if (!String(phoneChangeForm.code || "").trim()) { setPhoneStepError("Phone area code is required."); return; }
+                              if (!String(phoneChangeForm.phone || "").trim()) { setPhoneStepError("Phone number is required."); return; }
+                              setPhoneStepError("");
+                              setPhoneUiStep(2);
+                            }}
+                          >
+                            Next <i className="pi pi-arrow-right ms-2" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2 — Security code + get verify code */}
+                    {activePhoneStep === 2 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-confirm-row mb-3">
+                          <span className="nova-email-stepper-confirm-label">Phone Number</span>
+                          <span className="nova-email-stepper-confirm-value">{phoneChangeForm.code} {phoneChangeForm.phone}</span>
+                        </div>
+                        <div className="nova-bind-field">
+                          <div className="nova-settings-inline-head">
+                            <label>Security Code</label>
+                            <button
+                              type="button"
+                              className="btn btn-link p-0 text-decoration-none nova-settings-link-action"
+                              onClick={() => setActiveTab("security")}
+                            >
+                              Forgot?
+                            </button>
+                          </div>
+                          <div className="nova-bind-password-wrap">
+                            <input
+                              type={phoneSecurityVisible ? "text" : "password"}
+                              className="nova-bind-input"
+                              value={phoneChangeForm.security_code}
+                              onChange={(e) => { setPhoneChangeForm((prev) => ({ ...prev, security_code: e.target.value })); setPhoneStepError(""); }}
+                              placeholder="Enter your security code"
+                            />
+                            <button
+                              type="button"
+                              className="nova-bind-eye-btn"
+                              onClick={() => setPhoneSecurityVisible((prev) => !prev)}
+                            >
+                              <i className={`pi ${phoneSecurityVisible ? "pi-eye-slash" : "pi-eye"}`} />
+                            </button>
+                          </div>
+                        </div>
+                        {phoneStepError && (
+                          <div className="nova-kyc-feedback is-error mt-2">
+                            <i className="fa fa-exclamation-circle" /><span>{phoneStepError}</span>
+                          </div>
+                        )}
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-back-btn"
+                            onClick={() => { setPhoneStepError(""); setPhoneUiStep(1); }}
+                          >
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn"
+                            onClick={() => {
+                              if (hasSecurityCode && !String(phoneChangeForm.security_code || "").trim()) {
+                                setPhoneStepError("Security code is required.");
+                                return;
+                              }
+                              setPhoneStepError("");
+                              onPhoneSendCode();
+                            }}
+                            disabled={submittingAction === "phone-send-code"}
+                          >
+                            {submittingAction === "phone-send-code" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Sending...</>
+                            ) : (
+                              <>Send Verify Code <i className="pi pi-send ms-2" /></>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3 — Enter SMS code + confirm */}
+                    {activePhoneStep === 3 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-verified-badge">
+                          <i className="pi pi-check-circle me-2" />Verification code sent to your email
+                        </div>
+                        <div className="nova-bind-field mt-3">
+                          <label>Verification Code</label>
+                          <div className="nova-bind-input-group">
+                            <input
+                              type="text"
+                              className="nova-bind-input"
+                              value={phoneChangeForm.verification_code}
+                              onChange={(e) => setPhoneChangeForm((prev) => ({ ...prev, verification_code: e.target.value }))}
+                              placeholder="Enter code sent to your phone"
+                            />
+                            <button
+                              type="button"
+                              className="btn btn-primary nova-bind-inline-btn"
+                              onClick={onPhoneSendCode}
+                              disabled={submittingAction === "phone-send-code"}
+                            >
+                              {submittingAction === "phone-send-code" ? "Sending..." : "Resend"}
+                            </button>
+                          </div>
+                          <p className="nova-email-stepper-hint"><i className="pi pi-info-circle me-1" />A verification code was sent to your email. Check your inbox.</p>
+                        </div>
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-back-btn"
+                            onClick={() => { setPhoneCodeSent(false); setPhoneStepError(""); setPhoneUiStep(2); }}
+                          >
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn is-confirm"
+                            onClick={onPhoneConfirm}
+                            disabled={!String(phoneChangeForm.verification_code || "").trim() || submittingAction === "phone-confirm"}
+                          >
+                            {submittingAction === "phone-confirm" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Confirming...</>
+                            ) : (
+                              <><i className="pi pi-check me-2" />Confirm Phone</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })()}
+
+              {activeTab === "password" && (() => {
+                const activePwStep = passwordCodeSent ? 3 : passwordUiStep;
+                const PWSTEPS = [
+                  { n: 1, label: "New Password" },
+                  { n: 2, label: "Send Email Code" },
+                  { n: 3, label: "Confirm Change" },
+                ];
+                return (
+                  <div className="nova-email-stepper-wrap">
+                    <div className="nova-email-stepper-head">
+                      <h5 className="nova-email-stepper-title">Change Password</h5>
+                      <p className="nova-email-stepper-sub">Set a new password for your account</p>
+                    </div>
+
+                    {/* Step indicator */}
+                    <div className="nova-email-stepper-bar">
+                      {PWSTEPS.map(({ n, label }) => {
+                        const done = n < activePwStep;
+                        const active = n === activePwStep;
+                        return (
+                          <React.Fragment key={n}>
+                            <div className={`nova-email-stepper-step ${done ? "is-done" : active ? "is-active" : ""}`}>
+                              <div className="nova-email-stepper-circle">
+                                {done ? <i className="pi pi-check" /> : n}
+                              </div>
+                              <span className="nova-email-stepper-label">{label}</span>
+                            </div>
+                            {n < 3 && <div className={`nova-email-stepper-connector ${done ? "is-done" : ""}`} />}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+
+                    {/* Step 1 — Enter new password */}
+                    {activePwStep === 1 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-bind-field">
+                          <label>New Password</label>
+                          <input
+                            type="password"
+                            className="nova-bind-input"
+                            value={passwordForm.new_password}
+                            onChange={(e) => { setPasswordForm((prev) => ({ ...prev, new_password: e.target.value })); setPasswordStepError(""); }}
+                            placeholder="Enter new password"
+                          />
+                        </div>
+                        <div className="nova-bind-field">
+                          <label>Confirm Password</label>
+                          <input
+                            type="password"
+                            className="nova-bind-input"
+                            value={passwordForm.confirm_password}
+                            onChange={(e) => { setPasswordForm((prev) => ({ ...prev, confirm_password: e.target.value })); setPasswordStepError(""); }}
+                            placeholder="Re-enter new password"
+                          />
+                        </div>
+                        {passwordStepError && (
+                          <div className="nova-kyc-feedback is-error mt-2">
+                            <i className="fa fa-exclamation-circle" /><span>{passwordStepError}</span>
+                          </div>
+                        )}
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn"
+                            onClick={() => {
+                              if (!passwordForm.new_password.trim()) { setPasswordStepError("New password is required."); return; }
+                              if (!passwordForm.confirm_password.trim()) { setPasswordStepError("Please confirm your password."); return; }
+                              if (passwordForm.new_password.trim() !== passwordForm.confirm_password.trim()) { setPasswordStepError("Passwords do not match."); return; }
+                              setPasswordStepError("");
+                              setPasswordUiStep(2);
+                            }}
+                          >
+                            Next <i className="pi pi-arrow-right ms-2" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2 — Send email code */}
+                    {activePwStep === 2 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-confirm-row mb-3">
+                          <span className="nova-email-stepper-confirm-label">Account Email</span>
+                          <span className="nova-email-stepper-confirm-value">{profileData?.email || "your email"}</span>
+                        </div>
+                        <p className="nova-email-stepper-hint mb-3">
+                          <i className="pi pi-info-circle me-1" />A verification code will be sent to your email. Enter it in the next step to confirm the password change.
+                        </p>
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-back-btn"
+                            onClick={() => { setPasswordStepError(""); setPasswordUiStep(1); }}
+                          >
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn"
+                            onClick={onPasswordSendCode}
+                            disabled={submittingAction === "password-send-code"}
+                          >
+                            {submittingAction === "password-send-code" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Sending...</>
+                            ) : (
+                              <>Send Code <i className="pi pi-send ms-2" /></>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3 — Enter code + confirm */}
+                    {activePwStep === 3 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-verified-badge">
+                          <i className="pi pi-check-circle me-2" />Verification code sent to your email
+                        </div>
+                        <div className="nova-bind-field mt-3">
+                          <label>Verification Code</label>
+                          <div className="nova-bind-input-group">
+                            <input
+                              type="text"
+                              className="nova-bind-input"
+                              value={passwordForm.verification_code}
+                              onChange={(e) => setPasswordForm((prev) => ({ ...prev, verification_code: e.target.value }))}
+                              placeholder="Enter code from your email"
+                            />
+                            <button
+                              type="button"
+                              className="btn btn-primary nova-bind-inline-btn"
+                              onClick={onPasswordSendCode}
+                              disabled={submittingAction === "password-send-code"}
+                            >
+                              {submittingAction === "password-send-code" ? "Sending..." : "Resend"}
+                            </button>
+                          </div>
+                          <p className="nova-email-stepper-hint"><i className="pi pi-info-circle me-1" />Check your inbox for the verification code.</p>
+                        </div>
+                        <div className="nova-email-stepper-actions">
+                          <button
+                            type="button"
+                            className="nova-email-stepper-back-btn"
+                            onClick={() => { setPasswordCodeSent(false); setPasswordUiStep(2); }}
+                          >
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button
+                            type="button"
+                            className="nova-email-stepper-next-btn is-confirm"
+                            onClick={() => {
+                              if (!passwordForm.new_password.trim() || !passwordForm.confirm_password.trim()) {
+                                setPasswordCodeSent(false);
+                                setPasswordUiStep(1);
+                                setPasswordStepError("Please enter and confirm your new password.");
+                                return;
+                              }
+                              onPasswordSubmit();
+                            }}
+                            disabled={!passwordForm.verification_code.trim() || submittingAction === "password-confirm"}
+                          >
+                            {submittingAction === "password-confirm" ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Confirming...</>
+                            ) : (
+                              <><i className="pi pi-check me-2" />Confirm Change</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {activeTab === "security" && (() => {
+                /* ── Forgot/Reset flow ── */
+                if (hasSecurityCode && showForgetSecurity) {
+                  const forgotStep = forgetCodeSent ? 2 : 1;
+                  const FSTEPS = [{ n: 1, label: "Send Email Code" }, { n: 2, label: "Reset Code" }];
+                  return (
+                    <div className="nova-email-stepper-wrap">
+                      <div className="nova-email-stepper-head">
+                        <h5 className="nova-email-stepper-title">Reset Security Code</h5>
+                        <p className="nova-email-stepper-sub">Verify your email to reset your security code</p>
+                      </div>
+                      <div className="nova-email-stepper-bar">
+                        {FSTEPS.map(({ n, label }) => {
+                          const done = n < forgotStep;
+                          const active = n === forgotStep;
+                          return (
+                            <React.Fragment key={n}>
+                              <div className={`nova-email-stepper-step ${done ? "is-done" : active ? "is-active" : ""}`}>
+                                <div className="nova-email-stepper-circle">{done ? <i className="pi pi-check" /> : n}</div>
+                                <span className="nova-email-stepper-label">{label}</span>
+                              </div>
+                              {n < 2 && <div className={`nova-email-stepper-connector ${done ? "is-done" : ""}`} />}
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+
+                      {forgotStep === 1 && (
+                        <div className="nova-email-stepper-panel">
+                          <div className="nova-email-stepper-confirm-row mb-3">
+                            <span className="nova-email-stepper-confirm-label">Account Email</span>
+                            <span className="nova-email-stepper-confirm-value">{profileData?.email || "your email"}</span>
+                          </div>
+                          <p className="nova-email-stepper-hint mb-3"><i className="pi pi-info-circle me-1" />A verification code will be sent to your email to reset your security code.</p>
+                          <div className="nova-email-stepper-actions">
+                            <button type="button" className="nova-email-stepper-back-btn"
+                              onClick={() => { setShowForgetSecurity(false); clearFeedback(); }}>
+                              <i className="pi pi-arrow-left me-2" />Back
+                            </button>
+                            <button type="button" className="nova-email-stepper-next-btn"
+                              onClick={onSendForgetCode} disabled={submittingAction === "security-forget-send"}>
+                              {submittingAction === "security-forget-send"
+                                ? <><span className="spinner-border spinner-border-sm me-2" />Sending...</>
+                                : <>Send Code <i className="pi pi-send ms-2" /></>}
+                            </button>
+                          </div>
                         </div>
                       )}
 
-                      <form onSubmit={onGooglePrimarySubmit} className="row g-2 mt-2">
-                        <div className="col-md-8">
-                          <label className="form-label">Authenticator Code</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={googleForm.otp}
-                            onChange={(event) =>
-                              setGoogleForm((prev) => ({
-                                ...prev,
-                                otp: event.target.value,
-                              }))
-                            }
-                            placeholder="Enter 6-digit code"
-                          />
-                          <div className="form-text">
-                            The code will come from the Google Authenticator app after QR
-                            scan or secret key setup.
+                      {forgotStep === 2 && (
+                        <div className="nova-email-stepper-panel">
+                          <div className="nova-email-stepper-verified-badge mb-3">
+                            <i className="pi pi-check-circle me-2" />Verification code sent to your email
                           </div>
-                        </div>
-                        <div className="col-md-4 d-flex align-items-end">
-                          <button
-                            type="submit"
-                            className={`btn w-100 ${
-                              googleEnabled ? "btn-outline-danger" : "btn-primary"
-                            }`}
-                            disabled={
-                              submittingAction === "google-verify" ||
-                              submittingAction === "google-disable"
-                            }
-                          >
-                            {submittingAction === "google-verify"
-                              ? "Confirming..."
-                              : submittingAction === "google-disable"
-                                ? "Disabling..."
-                                : googleEnabled
-                                  ? "Disable 2FA"
-                                  : "Confirm & Enable"}
-                          </button>
-                        </div>
-                      </form>
-
-                      <div className="nova-settings-actions nova-settings-actions-split mt-3">
-                        <button
-                          type="button"
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => onSetupGoogle()}
-                            disabled={submittingAction === "google-setup"}
-                        >
-                          {submittingAction === "google-setup"
-                            ? "Generating..."
-                            : googleQr || googleSecret
-                              ? "Regenerate Setup"
-                              : "Generate New Setup"}
-                        </button>
-
-                        {googleEnabled ? (
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm"
-                            onClick={onResetGoogleSetup}
-                            disabled={submittingAction === "google-reset-setup"}
-                          >
-                            {submittingAction === "google-reset-setup"
-                              ? "Resetting..."
-                              : "Disable & Setup New"}
-                          </button>
-                        ) : null}
-
-                        <button
-                          type="button"
-                          className="btn btn-outline-warning btn-sm nova-settings-secondary-btn"
-                          onClick={() => setShowForgetGoogle((prev) => !prev)}
-                        >
-                          {showForgetGoogle ? "Cancel Forget" : "Forget 2FA"}
-                        </button>
-                      </div>
-
-                      {showForgetGoogle ? (
-                        <form onSubmit={onForgetGoogle} className="row g-2 mt-3">
-                          <div className="col-md-8">
-                            <label className="form-label">Account Password</label>
-                            <input
-                              type="password"
-                              className="form-control"
-                              value={googleForm.password}
-                              onChange={(event) =>
-                                setGoogleForm((prev) => ({
-                                  ...prev,
-                                  password: event.target.value,
-                                }))
-                              }
-                              placeholder="Enter account password"
-                            />
+                          <div className="nova-bind-field">
+                            <label>Verification Code</label>
+                            <div className="nova-bind-input-group">
+                              <input type="text" className="nova-bind-input"
+                                value={securityForm.forgot_verification_code}
+                                onChange={(e) => setSecurityForm((prev) => ({ ...prev, forgot_verification_code: e.target.value }))}
+                                placeholder="Code from email" />
+                              <button type="button" className="btn btn-primary nova-bind-inline-btn"
+                                onClick={onSendForgetCode} disabled={submittingAction === "security-forget-send"}>
+                                {submittingAction === "security-forget-send" ? "Sending..." : "Resend"}
+                              </button>
+                            </div>
                           </div>
-                          <div className="col-md-4 d-flex align-items-end">
-                            <button
-                              type="submit"
-                              className="btn btn-outline-warning w-100"
-                              disabled={submittingAction === "google-forget"}
-                            >
-                              {submittingAction === "google-forget"
-                                ? "Processing..."
-                                : "Submit Forget"}
+                          <div className="nova-bind-field">
+                            <label>New Security Code</label>
+                            <input type="password" className="nova-bind-input"
+                              value={securityForm.forgot_new_code}
+                              onChange={(e) => setSecurityForm((prev) => ({ ...prev, forgot_new_code: e.target.value }))}
+                              placeholder="Enter new security code" />
+                          </div>
+                          <div className="nova-bind-field">
+                            <label>Confirm Security Code</label>
+                            <input type="password" className="nova-bind-input"
+                              value={securityForm.forgot_confirm_code}
+                              onChange={(e) => setSecurityForm((prev) => ({ ...prev, forgot_confirm_code: e.target.value }))}
+                              placeholder="Confirm new security code" />
+                          </div>
+                          <div className="nova-email-stepper-actions">
+                            <button type="button" className="nova-email-stepper-back-btn"
+                              onClick={() => { setForgetCodeSent(false); setSecurityForm((prev) => ({ ...prev, forgot_verification_code: "", forgot_new_code: "", forgot_confirm_code: "" })); clearFeedback(); }}>
+                              <i className="pi pi-arrow-left me-2" />Back
+                            </button>
+                            <button type="button" className="nova-email-stepper-next-btn is-confirm"
+                              onClick={onSecurityForget} disabled={submittingAction === "security-forget"}>
+                              {submittingAction === "security-forget"
+                                ? <><span className="spinner-border spinner-border-sm me-2" />Resetting...</>
+                                : <><i className="pi pi-check me-2" />Reset Security Code</>}
                             </button>
                           </div>
-                        </form>
-                      ) : null}
+                        </div>
+                      )}
                     </div>
+                  );
+                }
+
+                /* ── Create / Change flow ── */
+                const isCreate = !hasSecurityCode;
+                const CSTEPS = isCreate
+                  ? [{ n: 1, label: "New Code" }, { n: 2, label: "Confirm & Create" }]
+                  : [{ n: 1, label: "Current Code" }, { n: 2, label: "New Code" }, { n: 3, label: "Confirm" }];
+                const totalSteps = CSTEPS.length;
+                return (
+                  <div className="nova-email-stepper-wrap">
+                    <div className="nova-email-stepper-head">
+                      <h5 className="nova-email-stepper-title">{isCreate ? "Create Security Code" : "Change Security Code"}</h5>
+                      <p className="nova-email-stepper-sub">{isCreate ? "Set a 6-digit security code for your account" : "Update your account security code"}</p>
+                    </div>
+                    <div className="nova-email-stepper-bar">
+                      {CSTEPS.map(({ n, label }) => {
+                        const done = n < securityChangeStep;
+                        const active = n === securityChangeStep;
+                        return (
+                          <React.Fragment key={n}>
+                            <div className={`nova-email-stepper-step ${done ? "is-done" : active ? "is-active" : ""}`}>
+                              <div className="nova-email-stepper-circle">{done ? <i className="pi pi-check" /> : n}</div>
+                              <span className="nova-email-stepper-label">{label}</span>
+                            </div>
+                            {n < totalSteps && <div className={`nova-email-stepper-connector ${done ? "is-done" : ""}`} />}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+
+                    {/* Create flow — Step 1: new + confirm */}
+                    {isCreate && securityChangeStep === 1 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-bind-field">
+                          <label>New Security Code</label>
+                          <input type="password" className="nova-bind-input"
+                            value={securityForm.new_code}
+                            onChange={(e) => { setSecurityForm((prev) => ({ ...prev, new_code: e.target.value })); setSecurityStepError(""); }}
+                            placeholder="Enter new security code" />
+                        </div>
+                        <div className="nova-bind-field">
+                          <label>Confirm Security Code</label>
+                          <input type="password" className="nova-bind-input"
+                            value={securityForm.confirm_code}
+                            onChange={(e) => { setSecurityForm((prev) => ({ ...prev, confirm_code: e.target.value })); setSecurityStepError(""); }}
+                            placeholder="Confirm security code" />
+                        </div>
+                        {securityStepError && <div className="nova-kyc-feedback is-error mt-2"><i className="fa fa-exclamation-circle" /><span>{securityStepError}</span></div>}
+                        <div className="nova-email-stepper-actions">
+                          <button type="button" className="nova-email-stepper-next-btn"
+                            onClick={() => {
+                              if (!securityForm.new_code.trim()) { setSecurityStepError("Security code is required."); return; }
+                              if (!securityForm.confirm_code.trim()) { setSecurityStepError("Please confirm your security code."); return; }
+                              if (securityForm.new_code !== securityForm.confirm_code) { setSecurityStepError("Codes do not match."); return; }
+                              setSecurityStepError(""); setSecurityChangeStep(2);
+                            }}>
+                            Next <i className="pi pi-arrow-right ms-2" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Create flow — Step 2: confirm summary + submit */}
+                    {isCreate && securityChangeStep === 2 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-confirm-row mb-3">
+                          <span className="nova-email-stepper-confirm-label">New Security Code</span>
+                          <span className="nova-email-stepper-confirm-value">{"•".repeat(securityForm.new_code.length || 6)}</span>
+                        </div>
+                        <p className="nova-email-stepper-hint"><i className="pi pi-info-circle me-1" />Click Create to save your new security code.</p>
+                        {securityStepError && <div className="nova-kyc-feedback is-error mt-2"><i className="fa fa-exclamation-circle" /><span>{securityStepError}</span></div>}
+                        <div className="nova-email-stepper-actions">
+                          <button type="button" className="nova-email-stepper-back-btn" onClick={() => setSecurityChangeStep(1)}>
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button type="button" className="nova-email-stepper-next-btn is-confirm"
+                            onClick={onSecuritySubmit} disabled={submittingAction === "security-submit"}>
+                            {submittingAction === "security-submit"
+                              ? <><span className="spinner-border spinner-border-sm me-2" />Creating...</>
+                              : <><i className="pi pi-check me-2" />Create Security Code</>}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Change flow — Step 1: current code */}
+                    {!isCreate && securityChangeStep === 1 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-bind-field">
+                          <div className="nova-settings-inline-head">
+                            <label>Current Security Code</label>
+                            <button type="button" className="btn btn-link p-0 text-decoration-none nova-settings-link-action"
+                              onClick={() => { setShowForgetSecurity(true); clearFeedback(); }}>
+                              Forgot?
+                            </button>
+                          </div>
+                          <input type="password" className="nova-bind-input"
+                            value={securityForm.current_code}
+                            onChange={(e) => { setSecurityForm((prev) => ({ ...prev, current_code: e.target.value })); setSecurityStepError(""); }}
+                            placeholder="Enter current security code" />
+                        </div>
+                        {securityStepError && <div className="nova-kyc-feedback is-error mt-2"><i className="fa fa-exclamation-circle" /><span>{securityStepError}</span></div>}
+                        <div className="nova-email-stepper-actions">
+                          <button type="button" className="nova-email-stepper-next-btn"
+                            disabled={submittingAction === "security-validate"}
+                            onClick={async () => {
+                              if (!securityForm.current_code.trim()) { setSecurityStepError("Current security code is required."); return; }
+                              setSecurityStepError("");
+                              setSubmittingAction("security-validate");
+                              try {
+                                await validateSecurityCode({ securityCode: securityForm.current_code });
+                                setSecurityChangeStep(2);
+                              } catch (error) {
+                                setSecurityStepError(getApiError(error, "Incorrect security code. Please try again."));
+                              } finally {
+                                setSubmittingAction("");
+                              }
+                            }}>
+                            {submittingAction === "security-validate"
+                              ? <><span className="spinner-border spinner-border-sm me-2" />Verifying...</>
+                              : <>Next <i className="pi pi-arrow-right ms-2" /></>}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Change flow — Step 2: new + confirm */}
+                    {!isCreate && securityChangeStep === 2 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-bind-field">
+                          <label>New Security Code</label>
+                          <input type="password" className="nova-bind-input"
+                            value={securityForm.new_code}
+                            onChange={(e) => { setSecurityForm((prev) => ({ ...prev, new_code: e.target.value })); setSecurityStepError(""); }}
+                            placeholder="Enter new security code" />
+                        </div>
+                        <div className="nova-bind-field">
+                          <label>Confirm Security Code</label>
+                          <input type="password" className="nova-bind-input"
+                            value={securityForm.confirm_code}
+                            onChange={(e) => { setSecurityForm((prev) => ({ ...prev, confirm_code: e.target.value })); setSecurityStepError(""); }}
+                            placeholder="Confirm new security code" />
+                        </div>
+                        {securityStepError && <div className="nova-kyc-feedback is-error mt-2"><i className="fa fa-exclamation-circle" /><span>{securityStepError}</span></div>}
+                        <div className="nova-email-stepper-actions">
+                          <button type="button" className="nova-email-stepper-back-btn" onClick={() => { setSecurityStepError(""); setSecurityChangeStep(1); }}>
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button type="button" className="nova-email-stepper-next-btn"
+                            onClick={() => {
+                              if (!securityForm.new_code.trim()) { setSecurityStepError("New security code is required."); return; }
+                              if (!securityForm.confirm_code.trim()) { setSecurityStepError("Please confirm your security code."); return; }
+                              if (securityForm.new_code !== securityForm.confirm_code) { setSecurityStepError("Codes do not match."); return; }
+                              setSecurityStepError(""); setSecurityChangeStep(3);
+                            }}>
+                            Next <i className="pi pi-arrow-right ms-2" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Change flow — Step 3: confirm & submit */}
+                    {!isCreate && securityChangeStep === 3 && (
+                      <div className="nova-email-stepper-panel">
+                        <div className="nova-email-stepper-confirm-row mb-2">
+                          <span className="nova-email-stepper-confirm-label">New Security Code</span>
+                          <span className="nova-email-stepper-confirm-value">{"•".repeat(securityForm.new_code.length || 6)}</span>
+                        </div>
+                        <p className="nova-email-stepper-hint mt-2"><i className="pi pi-info-circle me-1" />Click Update to apply your new security code.</p>
+                        {securityStepError && <div className="nova-kyc-feedback is-error mt-2"><i className="fa fa-exclamation-circle" /><span>{securityStepError}</span></div>}
+                        <div className="nova-email-stepper-actions">
+                          <button type="button" className="nova-email-stepper-back-btn" onClick={() => { setSecurityStepError(""); setSecurityChangeStep(2); }}>
+                            <i className="pi pi-arrow-left me-2" />Back
+                          </button>
+                          <button type="button" className="nova-email-stepper-next-btn is-confirm"
+                            onClick={onSecuritySubmit} disabled={submittingAction === "security-submit"}>
+                            {submittingAction === "security-submit"
+                              ? <><span className="spinner-border spinner-border-sm me-2" />Updating...</>
+                              : <><i className="pi pi-check me-2" />Update Security Code</>}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                );
+              })()}
+
+              {activeTab === "google" && (
+                <div className="nova-google-wrap">
+                  <div className="nova-email-stepper-head">
+                    <h5 className="nova-email-stepper-title">Google Authentication (2FA)</h5>
+                    <p className="nova-email-stepper-sub">Protect your account with two-factor authentication</p>
+                  </div>
+
+                  {/* Status toggle */}
+                  <div className="nova-google-status-card">
+                    <div className="nova-google-status-info">
+                      <div className={`nova-google-status-dot ${googleEnabled ? "is-on" : ""}`} />
+                      <div>
+                        <div className="nova-google-status-name">Google Authenticator</div>
+                        <div className="nova-google-status-state">
+                          {googleLoading ? "Checking status..." : googleEnabled ? "Two-factor authentication is enabled" : "Two-factor authentication is disabled"}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className={`nova-2fa-switch ${googleEnabled ? "is-on" : ""}`}
+                      onClick={onGoogleToggleSwitch}
+                      disabled={googleLoading || submittingAction === "google-setup"}
+                    >
+                      <span />
+                    </button>
+                  </div>
+
+                  {/* Notice */}
+                  <div className="nova-google-notice">
+                    <i className="pi pi-shield nova-google-notice-icon" />
+                    <p>2FA verification will be required for critical actions such as <strong>login, card purchase/top-up, CVV/PAN view, withdrawal, and transfer</strong>.</p>
+                  </div>
+
+                  {/* How-to steps — only when disabled */}
+                  {!googleEnabled && (
+                    <div className="nova-google-howto">
+                      <div className="nova-google-howto-step">
+                        <div className="nova-google-howto-num">1</div>
+                        <div className="nova-google-howto-text">Click <strong>Generate Setup</strong> below to get your QR code and secret key.</div>
+                      </div>
+                      <div className="nova-google-howto-step">
+                        <div className="nova-google-howto-num">2</div>
+                        <div className="nova-google-howto-text">Open <strong>Google Authenticator</strong> and scan the QR code, or tap <strong>Enter a setup key</strong> to add manually.</div>
+                      </div>
+                      <div className="nova-google-howto-step">
+                        <div className="nova-google-howto-num">3</div>
+                        <div className="nova-google-howto-text">Enter the <strong>6-digit code</strong> from the app below and click <strong>Confirm & Enable</strong>.</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* QR + Secret */}
+                  {(googleQr || googleSecret) && (
+                    <div className="nova-google-setup-panel">
+                      {googleQr && (
+                        <div className="nova-google-qr-card">
+                          <img src={googleQr} alt="Google Auth QR" />
+                          <p>Scan with Google Authenticator</p>
+                        </div>
+                      )}
+                      {googleSecret && (
+                        <div className="nova-google-secret-card">
+                          <div className="nova-google-secret-label">Manual Setup Key</div>
+                          <div className="nova-google-secret-value">
+                            <code>{googleSecret}</code>
+                            <button type="button" className="nova-google-copy-btn" onClick={onCopyGoogleSecret}>
+                              <i className="pi pi-copy me-1" />Copy
+                            </button>
+                          </div>
+                          <p className="nova-google-secret-hint">In Google Authenticator, tap <strong>Enter a setup key</strong> and paste this key.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Code input + submit */}
+                  <form onSubmit={onGooglePrimarySubmit} className="nova-google-code-form">
+                    <div className="nova-bind-field">
+                      <label>{googleEnabled ? "Enter code to disable 2FA" : "Authenticator Code"}</label>
+                      <div className="nova-bind-input-group">
+                        <input
+                          type="text"
+                          className="nova-bind-input"
+                          value={googleForm.otp}
+                          onChange={(e) => setGoogleForm((prev) => ({ ...prev, otp: e.target.value }))}
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                        />
+                        <button
+                          type="submit"
+                          className={`nova-email-stepper-next-btn ${googleEnabled ? "is-danger" : "is-confirm"}`}
+                          disabled={submittingAction === "google-verify" || submittingAction === "google-disable"}
+                        >
+                          {submittingAction === "google-verify" ? (
+                            <><span className="spinner-border spinner-border-sm me-2" />Confirming...</>
+                          ) : submittingAction === "google-disable" ? (
+                            <><span className="spinner-border spinner-border-sm me-2" />Disabling...</>
+                          ) : googleEnabled ? (
+                            <><i className="pi pi-times me-2" />Disable 2FA</>
+                          ) : (
+                            <><i className="pi pi-check me-2" />Confirm & Enable</>
+                          )}
+                        </button>
+                      </div>
+                      <p className="nova-email-stepper-hint mt-1"><i className="pi pi-info-circle me-1" />The code comes from the Google Authenticator app after scanning the QR code or adding the secret key.</p>
+                    </div>
+                  </form>
+
+                  {/* Footer actions */}
+                  <div className="nova-google-footer">
+                    <button
+                      type="button"
+                      className="nova-google-footer-btn"
+                      onClick={() => onSetupGoogle()}
+                      disabled={submittingAction === "google-setup"}
+                    >
+                      {submittingAction === "google-setup" ? (
+                        <><span className="spinner-border spinner-border-sm me-2" />Generating...</>
+                      ) : (
+                        <><i className="pi pi-refresh me-2" />{googleQr || googleSecret ? "Regenerate Setup" : "Generate Setup"}</>
+                      )}
+                    </button>
+                    {googleEnabled && (
+                      <button
+                        type="button"
+                        className="nova-google-footer-btn"
+                        onClick={onResetGoogleSetup}
+                        disabled={submittingAction === "google-reset-setup"}
+                      >
+                        {submittingAction === "google-reset-setup" ? (
+                          <><span className="spinner-border spinner-border-sm me-2" />Resetting...</>
+                        ) : (
+                          <><i className="pi pi-replay me-2" />Disable & New Setup</>
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="nova-google-footer-btn is-danger"
+                      onClick={() => setShowForgetGoogle((prev) => !prev)}
+                    >
+                      <i className={`pi ${showForgetGoogle ? "pi-times" : "pi-trash"} me-2`} />
+                      {showForgetGoogle ? "Cancel" : "Forget 2FA"}
+                    </button>
+                  </div>
+
+                  {/* Forget 2FA form */}
+                  {showForgetGoogle && (
+                    <div className="nova-google-forget-panel">
+                      <div className="nova-google-forget-title"><i className="pi pi-exclamation-triangle me-2" />Reset 2FA Access</div>
+                      <p className="nova-email-stepper-hint mb-3">Enter your account password to disable Google Authentication.</p>
+                      <form onSubmit={onForgetGoogle}>
+                        <div className="nova-bind-field">
+                          <label>Account Password</label>
+                          <div className="nova-bind-input-group">
+                            <input
+                              type="password"
+                              className="nova-bind-input"
+                              value={googleForm.password}
+                              onChange={(e) => setGoogleForm((prev) => ({ ...prev, password: e.target.value }))}
+                              placeholder="Enter your account password"
+                            />
+                            <button
+                              type="submit"
+                              className="nova-email-stepper-next-btn is-danger"
+                              disabled={submittingAction === "google-forget"}
+                            >
+                              {submittingAction === "google-forget" ? (
+                                <><span className="spinner-border spinner-border-sm me-2" />Processing...</>
+                              ) : (
+                                <><i className="pi pi-check me-2" />Submit</>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  )}
                 </div>
               )}
                   </div>

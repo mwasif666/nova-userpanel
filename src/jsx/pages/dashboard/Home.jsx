@@ -476,7 +476,7 @@ export function CommandPage({ user }) {
               onOpenTransfer={() => setTransferModal(true)}
               onOpenWithdraw={() => setWithdrowModal(true)}
               disableFinancialActions={!hasPurchasedCard}
-              disabledActionReason="Buy at least one card first. Until then, only Profile and KYC are available."
+              disabledActionReason="Transfer and Withdraw require a card. Use Deposit to fund your wallet and then buy your first card."
             />
             {hasPurchasedCard ? (
               <div className="row g-3">
@@ -500,6 +500,7 @@ export function CommandPage({ user }) {
                     walletWithdrawals={walletWithdrawals}
                     walletTotalTransactions={walletTotalTransactions}
                     walletTxPreview={walletTxPreview}
+                    walletTransactions={walletTransactions}
                     userCardsError={userCardsError}
                     walletError={walletError}
                   />

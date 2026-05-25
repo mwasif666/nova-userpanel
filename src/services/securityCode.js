@@ -104,6 +104,7 @@ const callSecurityEndpoint = async ({
 
 const inferStatus = (payload) => {
   const directBoolean = [
+    payload?.security_code_set,
     payload?.has_security_code,
     payload?.hasSecurityCode,
     payload?.is_set,
@@ -157,8 +158,7 @@ const inferStatus = (payload) => {
     }
   }
 
-  // Prefer secure default when backend response shape is unknown.
-  return true;
+  return false;
 };
 
 export const getSecurityCodeStatus = async () => {
@@ -167,7 +167,6 @@ export const getSecurityCodeStatus = async () => {
     method: "GET",
   });
   const payload = unwrapPayload(response);
-
   return {
     hasSecurityCode: inferStatus(payload),
     payload,
@@ -196,6 +195,7 @@ export const changeSecurityCode = async ({
     suffix: "change",
     method: "POST",
     data: {
+      current_code: String(currentCode || "").trim(),
       current_security_code: String(currentCode || "").trim(),
       old_security_code: String(currentCode || "").trim(),
       old_code: String(currentCode || "").trim(),
@@ -217,9 +217,18 @@ export const validateSecurityCode = async ({ securityCode }) =>
     },
   });
 
-export const forgetSecurityCode = async ({ password = "" }) => {
+export const sendSecurityForgetCode = async () =>
+  callSecurityEndpoint({
+    suffix: "forget/request",
+    method: "POST",
+    fallbackStatuses: [404, 405],
+  });
+
+export const forgetSecurityCode = async ({ verificationCode = "", newCode = "", confirmCode = "" }) => {
   const form = new FormData();
-  form.append("password", String(password || "").trim());
+  form.append("verification_code", String(verificationCode || "").trim());
+  form.append("new_code", String(newCode || "").trim());
+  form.append("new_code_confirmation", String(confirmCode || "").trim());
 
   return callSecurityEndpoint({
     suffix: "forget",

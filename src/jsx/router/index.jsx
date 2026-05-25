@@ -20,6 +20,8 @@ import Home from "../pages/dashboard/Home";
 import Kyc from "../pages/user/Kyc";
 import Wallet from "../elements/Wallet/Wallet";
 import Cards from "../pages/user/Cards";
+import CardOrderPage from "../pages/user/CardOrderPage";
+import WalletTransactions from "../pages/user/WalletTransactions";
 import CardManagement from "../pages/user/CardManagement";
 import SecuritySettings from "../pages/user/SecuritySettings";
 
@@ -46,7 +48,9 @@ const Markup = () => {
           <Route path="/kyc" element={<Kyc />} />
           <Route path="/card-management" element={<CardManagement />} />
           <Route path="/cards" element={<Cards />} />
+          <Route path="/cards/order" element={<CardOrderPage />} />
           <Route path="/wallet" element={<Wallet />} />
+          <Route path="/wallet/transactions" element={<WalletTransactions />} />
           <Route path="/security-settings" element={<SecuritySettings />} />
           <Route path="/profile" element={<SecuritySettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />

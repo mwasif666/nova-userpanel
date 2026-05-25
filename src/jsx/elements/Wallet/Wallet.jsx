@@ -22,29 +22,23 @@ const Wallet = () => {
 
   const loadNetworks = async () => {
     setNetworkError("");
-
     try {
       setLoadingNetworks(true);
-
       const res = await request({
         url: "app/usdt/wallet/withdrawal-networks",
         method: "GET",
       });
-      
       const list = res?.data?.networks || [];
-
-      const normalized = list.map((item) => ({
-        value: item.network,
-        label: item.name,
-        withdrawal_fee: item.withdrawal_fee,
-        min_withdrawal: item.min_withdrawal,
-      }));
-
-      setNetworks(normalized);
-    } catch (error) {
-      setNetworkError(
-        getApiErrorMessage(error, "Failed to load withdrawal networks.")
+      setNetworks(
+        list.map((item) => ({
+          value: item.network,
+          label: item.name,
+          withdrawal_fee: item.withdrawal_fee,
+          min_withdrawal: item.min_withdrawal,
+        }))
       );
+    } catch (error) {
+      setNetworkError(getApiErrorMessage(error, "Failed to load withdrawal networks."));
     } finally {
       setLoadingNetworks(false);
     }
@@ -59,93 +53,74 @@ const Wallet = () => {
       <PageTitle motherMenu="Wallet" activeMenu="Wallet" />
 
       {!cardFlowLoading && !canAccessWallet ? (
-        <CardAccessNotice
-          title={flowTitle}
-          message={walletBlockedReason}
-        />
+        <CardAccessNotice title={flowTitle} message={walletBlockedReason} />
       ) : (
-      <div className="row g-3">
-        <div className="col-12">
-          <div className="card nova-panel h-100">
-            <div className="card-body">
-
-              <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-3">
-                <div>
-                  <div className="nova-flow-kicker mb-1">Wallet</div>
-                  <h5 className="mb-0">Supported Networks</h5>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-outline-primary"
-                  onClick={loadNetworks}
-                  disabled={loadingNetworks}
-                >
-                  {loadingNetworks ? "Refreshing..." : "Refresh Networks"}
-                </button>
-              </div>
-
-              {networkError && (
-                <div className="alert alert-warning py-2">
-                  {networkError}
-                </div>
-              )}
-
+        <div className="nova-wallet-page">
+          {/* Header */}
+          <div className="nova-wallet-page-head">
+            <div>
+              <div className="nova-flow-kicker mb-1">Crypto Wallet</div>
+              <h4 className="mb-0">Deposit</h4>
+            </div>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
               {networks.length > 0 && (
-                <div className="nova-bind-helper mb-0">
-                  <div className="nova-bind-helper-list">
-                    {networks.map((item) => (
-                      <span key={item.value}>{item.label}</span>
-                    ))}
-                  </div>
+                <div className="nova-wallet-network-chips">
+                  {networks.map((item) => (
+                    <span key={item.value} className="nova-wallet-network-chip">
+                      {item.label}
+                    </span>
+                  ))}
                 </div>
               )}
-
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={loadNetworks}
+                disabled={loadingNetworks}
+              >
+                <i className="pi pi-refresh me-1" />
+                {loadingNetworks ? "Loading..." : "Refresh"}
+              </button>
             </div>
           </div>
-        </div>
-        <div className="col-12">
-          <div
-            className="nova-flow-switch"
-            role="tablist"
-            aria-label="Wallet tabs"
-          >
+
+          {networkError && (
+            <div className="nova-kyc-feedback is-error mb-3">
+              <i className="fa fa-exclamation-circle" />
+              <span>{networkError}</span>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="nova-wallet-tabs">
             <button
               type="button"
-              className={`nova-flow-switch-btn ${
-                activeTab === "addresses" ? "is-active" : ""
-              }`}
+              className={`nova-wallet-tab-btn ${activeTab === "addresses" ? "is-active" : ""}`}
               onClick={() => setActiveTab("addresses")}
             >
-              <span className="nova-flow-switch-title">
-                Deposit Addresses
-              </span>
+              <i className="pi pi-wallet me-2" />
+              Deposit Addresses
             </button>
-
             <button
               type="button"
-              className={`nova-flow-switch-btn ${
-                activeTab === "binance" ? "is-active" : ""
-              }`}
+              className={`nova-wallet-tab-btn ${activeTab === "binance" ? "is-active" : ""}`}
               onClick={() => setActiveTab("binance")}
             >
-              <span className="nova-flow-switch-title">Binance Pay</span>
+              <i className="pi pi-credit-card me-2" />
+              Binance Pay
             </button>
           </div>
+
+          {/* Panel */}
+          <div className="nova-wallet-panel">
+            {activeTab === "addresses" && (
+              <WalletDepositAddressesPanel networks={networks} />
+            )}
+            {activeTab === "binance" && (
+              <WalletBinancePayPanel networks={networks} />
+            )}
+          </div>
         </div>
-        {activeTab === "addresses" && (
-          <div className="col-12">
-            <WalletDepositAddressesPanel networks={networks} />
-          </div>
-        )}
-
-        {activeTab === "binance" && (
-          <div className="col-12">
-            <WalletBinancePayPanel networks={networks} />
-          </div>
-        )}
-
-      </div>
       )}
     </>
   );

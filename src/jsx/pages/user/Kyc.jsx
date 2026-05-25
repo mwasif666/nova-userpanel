@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PageTitle from "../../layouts/PageTitle";
 import { request } from "../../../utils/api";
-import { validateSecurityCode } from "../../../services/securityCode";
-
 const INITIAL_FORM_VALUES = {
   country_area: "US",
   first_name_en: "",
@@ -12,7 +10,6 @@ const INITIAL_FORM_VALUES = {
   identity_card: "",
   identity_card_validity_time: "",
   provider: "1",
-  security_code: "",
 };
 
 const INITIAL_FILES = {
@@ -154,8 +151,6 @@ const toFormValuesFromKyc = (record) => {
       record?.identity_card_validity_time,
     ),
     provider: String(record?.provider || INITIAL_FORM_VALUES.provider),
-    api_version: String(record?.api_version || INITIAL_FORM_VALUES.api_version),
-    security_code: "",
   };
 };
 
@@ -178,6 +173,7 @@ const Kyc = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [faceVerifyUrl, setFaceVerifyUrl] = useState("");
   const [kycLoading, setKycLoading] = useState(true);
   const [kycError, setKycError] = useState("");
   const [kycRows, setKycRows] = useState([]);
@@ -312,11 +308,6 @@ const Kyc = () => {
       return;
     }
 
-    if (!String(formValues.security_code || "").trim()) {
-      setSubmitError("Security code is required to submit KYC.");
-      return;
-    }
-
     const formData = new FormData();
     Object.entries(formValues).forEach(([key, value]) => {
       if (key === "security_code") return;
@@ -333,27 +324,32 @@ const Kyc = () => {
     setSubmitting(true);
 
     try {
-      await validateSecurityCode({
-        securityCode: formValues.security_code,
-      });
-
       const response = await request({
-        url: "/tevau/kyc",
+        url: "app/tevau/kyc",
         method: "POST",
         data: formData,
       });
 
-      setSubmitMessage(
-        response?.message ||
-          response?.msg ||
-          "KYC submission sent successfully.",
-      );
+      const responseData = response?.data && typeof response.data === "object"
+        ? response.data
+        : response || {};
+
+      const verifyUrl =
+        response?.kyc_url ||
+        responseData?.kyc_url ||
+        responseData?.url ||
+        responseData?.verify_url ||
+        responseData?.face_url ||
+        responseData?.liveness_url ||
+        responseData?.verification_url ||
+        responseData?.redirect_url ||
+        response?.url ||
+        "";
+
+      setFaceVerifyUrl(String(verifyUrl || "").trim());
+      setSubmitMessage("KYC submitted successfully.");
 
       setFiles(INITIAL_FILES);
-      setFormValues((prev) => ({
-        ...prev,
-        security_code: "",
-      }));
       await loadKycList();
     } catch (error) {
       setSubmitError(getApiErrorMessage(error));
@@ -368,6 +364,7 @@ const Kyc = () => {
     setFiles(INITIAL_FILES);
     setSubmitError("");
     setSubmitMessage("");
+    setFaceVerifyUrl("");
   };
 
   const statusRows = [
@@ -463,52 +460,72 @@ const Kyc = () => {
       <PageTitle motherMenu="KYC" activeMenu="KYC Submission" />
 
       <div className="nova-kyc-submit-page">
-        <div className="card nova-panel nova-kyc-hero-card mb-3">
+        <div className={`card nova-panel nova-kyc-hero-card mb-3 ${isApproved ? "is-approved" : ""}`}>
           <div className="card-body">
-            <div className="nova-kyc-hero-grid">
-              <div>
-                <div className="nova-kyc-eyebrow">Tevau Verification</div>
-                <h3 className="nova-kyc-hero-title">KYC Submission Form</h3>
-                <div className="nova-kyc-pill-row">
-                  <span className={`nova-kyc-pill is-${statusTone}`}>
-                    <span className="nova-kyc-pill-dot" />
-                    {approvedBadgeText}
-                  </span>
-                  {/* <span className="nova-kyc-pill is-neutral">
-                    Filled: {hasFilledKyc ? "Yes" : "No"}
-                  </span>
-                  <span className="nova-kyc-pill is-neutral">
-                    Total Records: {kycMeta.total || 0}
-                  </span>
-                  <span className="nova-kyc-pill is-neutral">
-                    Latest ID: {latestKyc?.id || "N/A"}
-                  </span> */}
+            {isApproved ? (
+              <div className="nova-kyc-approved-hero">
+                <div className="nova-kyc-approved-left">
+                  <div className="nova-kyc-approved-icon">
+                    <i className="fa fa-check-circle" />
+                  </div>
+                  <div>
+                    <div className="nova-kyc-eyebrow">Tevau Verification</div>
+                    <h3 className="nova-kyc-hero-title">KYC Verified</h3>
+                    <div className="nova-kyc-pill-row">
+                      <span className="nova-kyc-pill is-success">
+                        <span className="nova-kyc-pill-dot" />
+                        KYC Approved
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="nova-kyc-approved-stats">
+                  <div className="nova-kyc-stat-box">
+                    <span>Approved KYC ID</span>
+                    <strong>{approvedKyc?.id || "N/A"}</strong>
+                  </div>
+                  <div className="nova-kyc-stat-box">
+                    <span>Submitted At</span>
+                    <strong>{formatDateTime(latestKyc?.submitted_at || latestKyc?.created_at)}</strong>
+                  </div>
+                  <div className="nova-kyc-stat-box">
+                    <span>Approved At</span>
+                    <strong>{formatDateTime(approvedKyc?.approved_at)}</strong>
+                  </div>
                 </div>
               </div>
-
-              <div className="nova-kyc-hero-side">
-                <div className="nova-kyc-stat-box">
-                  <span>Approved KYC ID</span>
-                  <strong>{approvedKyc?.id || "No approved KYC"}</strong>
+            ) : (
+              <div className="nova-kyc-hero-grid">
+                <div>
+                  <div className="nova-kyc-eyebrow">Tevau Verification</div>
+                  <h3 className="nova-kyc-hero-title">KYC Submission Form</h3>
+                  <div className="nova-kyc-pill-row">
+                    <span className={`nova-kyc-pill is-${statusTone}`}>
+                      <span className="nova-kyc-pill-dot" />
+                      {approvedBadgeText}
+                    </span>
+                  </div>
                 </div>
-                <div className="nova-kyc-stat-box">
-                  <span>Latest Submission</span>
-                  <strong>
-                    {formatDateTime(
-                      latestKyc?.submitted_at || latestKyc?.created_at,
-                    )}
-                  </strong>
-                </div>
-                <div className="nova-kyc-stat-box">
-                  <span>Approved At</span>
-                  <strong>{formatDateTime(approvedKyc?.approved_at)}</strong>
+                <div className="nova-kyc-hero-side">
+                  <div className="nova-kyc-stat-box">
+                    <span>Approved KYC ID</span>
+                    <strong>{approvedKyc?.id || "No approved KYC"}</strong>
+                  </div>
+                  <div className="nova-kyc-stat-box">
+                    <span>Latest Submission</span>
+                    <strong>{formatDateTime(latestKyc?.submitted_at || latestKyc?.created_at)}</strong>
+                  </div>
+                  <div className="nova-kyc-stat-box">
+                    <span>Approved At</span>
+                    <strong>{formatDateTime(approvedKyc?.approved_at)}</strong>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        <div className="card nova-panel nova-kyc-guide-card mb-3">
+        {!isApproved && <div className="card nova-panel nova-kyc-guide-card mb-3">
           <div className="card-body">
             <h5 className="mb-2">Submission Guide</h5>
             <ul className="nova-kyc-guide-list">
@@ -524,7 +541,7 @@ const Kyc = () => {
               </li>
             </ul>
           </div>
-        </div>
+        </div>}
 
         {isResolvingInitialView && (
           <div className="card nova-panel mb-3">
@@ -548,7 +565,7 @@ const Kyc = () => {
 
         <div className={`row g-3 ${isResolvingInitialView ? "d-none" : ""}`}>
           {!isApproved && (
-            <div className="col-xl-8 col-12">
+            <div className="col-12">
               <div className="card nova-panel nova-kyc-form-card">
                 <div className="card-body">
                   <div className="nova-kyc-section-header">
@@ -556,7 +573,7 @@ const Kyc = () => {
                       <h4 className="mb-1">KYC Submission Form</h4>
                       <p className="mb-0 text-muted">
                         {isUnderReview
-                          ? "KYC is under review. The form is visible, but editing and submission are disabled."
+                          ? "KYC is under review."
                           : "If the user already has a submitted/approved KYC record, fields are auto-filled. File inputs cannot be auto-filled due to browser restrictions."}
                       </p>
                     </div>
@@ -577,8 +594,7 @@ const Kyc = () => {
                       <div className="nova-kyc-feedback is-warning-lite">
                         <i className="fa fa-lock" />
                         <span>
-                          KYC is under review. The form is visible but currently
-                          disabled.
+                          KYC is under review.
                         </span>
                       </div>
                     )}
@@ -695,7 +711,7 @@ const Kyc = () => {
                           Document Uploads
                         </h6>
                         <div className="row g-3">
-                          <div className="col-md-6">
+                          <div className={formValues.identity_card_type === "1" ? "col-md-6" : "col-md-12"}>
                             <label
                               className="nova-kyc-upload-card"
                               htmlFor="identity_front_pic"
@@ -711,36 +727,53 @@ const Kyc = () => {
                                   </p>
                                 </div>
                               </div>
-                              <div className="nova-kyc-upload-file">
-                                {files.identity_front_pic ? (
-                                  <>
+                              {files.identity_front_pic ? (
+                                <div className="nova-kyc-upload-preview">
+                                  <img
+                                    src={URL.createObjectURL(files.identity_front_pic)}
+                                    alt="Front preview"
+                                    className="nova-kyc-preview-img"
+                                  />
+                                  <div className="nova-kyc-upload-file">
                                     <span className="nova-kyc-file-name">
                                       {files.identity_front_pic.name}
                                     </span>
                                     <span className="nova-kyc-file-meta">
-                                      {formatFileSize(
-                                        files.identity_front_pic.size,
-                                      )}
+                                      {formatFileSize(files.identity_front_pic.size)}
                                     </span>
-                                  </>
-                                ) : (
+                                  </div>
+                                </div>
+                              ) : displayKyc?.identity_front_pic_url ? (
+                                <div className="nova-kyc-upload-preview">
+                                  <img
+                                    src={displayKyc.identity_front_pic_url}
+                                    alt="Existing front"
+                                    className="nova-kyc-preview-img"
+                                  />
+                                  <div className="nova-kyc-upload-file">
+                                    <span className="nova-kyc-file-empty">
+                                      Previously uploaded — click to replace
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="nova-kyc-upload-file">
                                   <span className="nova-kyc-file-empty">
                                     Click to choose file
                                   </span>
-                                )}
-                              </div>
+                                </div>
+                              )}
                               <input
                                 id="identity_front_pic"
                                 type="file"
                                 className="d-none"
                                 accept="image/*"
-                                onChange={handleFileChange(
-                                  "identity_front_pic",
-                                )}
+                                onChange={handleFileChange("identity_front_pic")}
                               />
                             </label>
                           </div>
 
+                          {formValues.identity_card_type === "1" && (
                           <div className="col-md-6">
                             <label
                               className="nova-kyc-upload-card"
@@ -757,24 +790,42 @@ const Kyc = () => {
                                   </p>
                                 </div>
                               </div>
-                              <div className="nova-kyc-upload-file">
-                                {files.identity_back_pic ? (
-                                  <>
+                              {files.identity_back_pic ? (
+                                <div className="nova-kyc-upload-preview">
+                                  <img
+                                    src={URL.createObjectURL(files.identity_back_pic)}
+                                    alt="Back preview"
+                                    className="nova-kyc-preview-img"
+                                  />
+                                  <div className="nova-kyc-upload-file">
                                     <span className="nova-kyc-file-name">
                                       {files.identity_back_pic.name}
                                     </span>
                                     <span className="nova-kyc-file-meta">
-                                      {formatFileSize(
-                                        files.identity_back_pic.size,
-                                      )}
+                                      {formatFileSize(files.identity_back_pic.size)}
                                     </span>
-                                  </>
-                                ) : (
+                                  </div>
+                                </div>
+                              ) : displayKyc?.identity_back_pic_url ? (
+                                <div className="nova-kyc-upload-preview">
+                                  <img
+                                    src={displayKyc.identity_back_pic_url}
+                                    alt="Existing back"
+                                    className="nova-kyc-preview-img"
+                                  />
+                                  <div className="nova-kyc-upload-file">
+                                    <span className="nova-kyc-file-empty">
+                                      Previously uploaded — click to replace
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="nova-kyc-upload-file">
                                   <span className="nova-kyc-file-empty">
                                     Click to choose file
                                   </span>
-                                )}
-                              </div>
+                                </div>
+                              )}
                               <input
                                 id="identity_back_pic"
                                 type="file"
@@ -784,28 +835,10 @@ const Kyc = () => {
                               />
                             </label>
                           </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="nova-kyc-block">
-                        <h6 className="nova-kyc-block-title">
-                          Security Verification
-                        </h6>
-                        <div className="row g-3">
-                          <div className="col-md-6">
-                            <label className="form-label">Security Code</label>
-                            <input
-                              type="password"
-                              className="form-control"
-                              name="security_code"
-                              value={formValues.security_code}
-                              onChange={handleInputChange}
-                              placeholder="Enter security code"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
                     </fieldset>
 
                     {(submitError || submitMessage) && (
@@ -822,6 +855,26 @@ const Kyc = () => {
                           }`}
                         />
                         <span>{submitError || submitMessage}</span>
+                      </div>
+                    )}
+
+                    {faceVerifyUrl && (
+                      <div className="nova-kyc-face-verify-box">
+                        <div className="nova-kyc-face-verify-info">
+                          <i className="fa fa-camera" />
+                          <div>
+                            <strong>Face Verification Required</strong>
+                            <span>Complete face verification to finalize your KYC.</span>
+                          </div>
+                        </div>
+                        <a
+                          href={faceVerifyUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-primary"
+                        >
+                          Start Face Verification
+                        </a>
                       </div>
                     )}
 
@@ -856,124 +909,6 @@ const Kyc = () => {
             </div>
           )}
 
-          <div className={isApproved ? "col-12" : "col-xl-4 col-12"}>
-            <div className="card nova-panel nova-kyc-status-card">
-              <div className="card-body">
-                <div className="nova-kyc-side-header">
-                  <div>
-                    <div className="nova-kyc-eyebrow">KYC Status</div>
-                    <h5 className="mb-1">Filled / Approved Status</h5>
-                  </div>
-                  <span className={`nova-kyc-status-chip is-${statusTone}`}>
-                    {approvedBadgeText}
-                  </span>
-                </div>
-
-                <div className={`nova-kyc-approval-banner is-${statusTone}`}>
-                  <div className="nova-kyc-approval-icon">
-                    <i
-                      className={`fa ${
-                        isApproved
-                          ? "fa-check-circle"
-                          : hasFilledKyc
-                            ? "fa-clock"
-                            : "fa-info-circle"
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <strong>
-                      {isApproved
-                        ? "User KYC Is Approved"
-                        : hasFilledKyc
-                          ? `User KYC Is ${statusLabel}`
-                          : "User KYC has not been submitted yet"}
-                    </strong>
-                    <span>
-                      {displayKyc
-                        ? `Record ID ${displayKyc.id} | ${formatDateTime(
-                            displayKyc.submitted_at || displayKyc.created_at,
-                          )}`
-                        : "Complete the form to submit KYC."}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="row g-2 mt-3">
-                  {statusRows.map((row) => (
-                    <div
-                      className={
-                        isApproved
-                          ? "col-xl-4 col-md-6 col-12"
-                          : "col-lg-6 col-md-6 col-12"
-                      }
-                      key={row.label}
-                    >
-                      <div className="nova-kyc-kv-item h-100">
-                        <span>{row.label}</span>
-                        <strong>{row.value || "N/A"}</strong>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="nova-kyc-flow-box">
-                  <h6>KYC Flow</h6>
-                  <div className="nova-kyc-flow-list">
-                    {flowSteps.map((step) => (
-                      <div
-                        className={`nova-kyc-flow-item is-${step.state}`}
-                        key={step.key}
-                      >
-                        <span className="nova-kyc-flow-dot" />
-                        <div>
-                          <strong>{step.label}</strong>
-                          <small>{formatDateTime(step.time)}</small>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {(displayKyc?.identity_front_pic_url ||
-                  displayKyc?.identity_back_pic_url) && (
-                  <div className="nova-kyc-docs-box">
-                    <h6>Uploaded Documents</h6>
-                    <div className="nova-kyc-docs-grid">
-                      {displayKyc?.identity_front_pic_url && (
-                        <a
-                          className="nova-kyc-doc-card"
-                          href={displayKyc.identity_front_pic_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <img
-                            src={displayKyc.identity_front_pic_url}
-                            alt="KYC Front"
-                          />
-                          <span>Front Side</span>
-                        </a>
-                      )}
-                      {displayKyc?.identity_back_pic_url && (
-                        <a
-                          className="nova-kyc-doc-card"
-                          href={displayKyc.identity_back_pic_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <img
-                            src={displayKyc.identity_back_pic_url}
-                            alt="KYC Back"
-                          />
-                          <span>Back Side</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </>

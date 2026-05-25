@@ -23,7 +23,6 @@ const DashboardActionHeader = ({
         type="button"
         className="btn btn-primary me-3"
         onClick={onClickDeposit}
-        disabled={disableFinancialActions}
       >
         Deposit
       </button>
@@ -32,6 +31,7 @@ const DashboardActionHeader = ({
         className="btn btn-primary me-3"
         onClick={onOpenTransfer}
         disabled={disableFinancialActions}
+        title={disableFinancialActions ? "Buy a card first to use Transfer" : ""}
       >
         Transfer
       </button>
@@ -40,6 +40,7 @@ const DashboardActionHeader = ({
         className="btn btn-primary"
         onClick={onOpenWithdraw}
         disabled={disableFinancialActions}
+        title={disableFinancialActions ? "Buy a card first to use Withdraw" : ""}
       >
         Withdraw
       </button>
