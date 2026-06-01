@@ -344,6 +344,17 @@ const CardOrderPage = () => {
               <div className="nova-order-submit-row">
                 <button
                   type="button"
+                  className="btn btn-outline-secondary ms-2"
+                  onClick={() => {
+                    if (cardType === "virtual") setVForm(makeVirtualForm(user));
+                    else setPForm(makePhysicalForm(user));
+                    setFeedback({ type: "", message: "" });
+                  }}
+                >
+                  <i className="pi pi-times me-2" />Clear Form
+                </button>
+                <button
+                  type="button"
                   className="btn btn-primary"
                   onClick={handleSubmit}
                   disabled={submitting || !canOrder}
@@ -353,17 +364,6 @@ const CardOrderPage = () => {
                   ) : (
                     <><i className="pi pi-check me-2" />Submit {cardType === "virtual" ? "Virtual" : "Physical"} Card Order</>
                   )}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary ms-2"
-                  onClick={() => {
-                    if (cardType === "virtual") setVForm(makeVirtualForm(user));
-                    else setPForm(makePhysicalForm(user));
-                    setFeedback({ type: "", message: "" });
-                  }}
-                >
-                  <i className="pi pi-times me-2" />Clear Form
                 </button>
               </div>
             </div>

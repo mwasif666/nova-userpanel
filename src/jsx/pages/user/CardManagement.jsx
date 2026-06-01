@@ -87,6 +87,13 @@ const LIMITS_ROW_CONFIG = [
 const hasValue = (value) =>
   value !== undefined && value !== null && String(value).trim() !== "";
 
+const isCardBound = (card) => {
+  if (!card) return false;
+  if (typeof card.is_bound === "boolean") return card.is_bound;
+  const raw = String(card.is_bound ?? "").toLowerCase();
+  return raw === "true" || raw === "1" || raw === "yes";
+};
+
 const formatLimitValue = (value) => {
   const numeric = toSafeNumber(value);
   if (numeric !== null) {
@@ -234,6 +241,7 @@ const CardManagement = () => {
   const selectedCardCurrency = getCardCurrency(selectedCard);
   const selectedCardBalance = getCardBalance(selectedCard);
   const selectedCardStatus = normalizeStatus(selectedCard?.status);
+  const selectedCardIsBound = isCardBound(selectedCard);
   const selectedCardCreated = selectedCard?.created_at
     ? new Date(selectedCard.created_at).toLocaleDateString("en-US", {
         month: "short",
@@ -532,74 +540,81 @@ const CardManagement = () => {
     }
   };
 
-  const managementSections = [
-    {
-      title: "Security",
-      description: "Sensitive card details and ATM credentials.",
-      items: [
-        {
-          icon: "pi pi-credit-card",
-          title: "Card Number & CVV",
-          subtitle: "Reveal protected card details securely.",
-          actionLabel: "View",
-          tone: "default",
-          onClick: () => showComingSoon("Card Number & CVV"),
-        },
-        {
-          icon: "pi pi-key",
-          title: "PIN / ATM Withdrawal Password",
-          subtitle: "View or manage withdrawal credentials.",
-          actionLabel: "Manage",
-          tone: "default",
-          onClick: handleOpenPinModal,
-        },
-        {
-          icon: "pi pi-link",
-          title: "Bind / Activate Card",
-          subtitle: "Link your card using activation code and billing details.",
-          actionLabel: "Bind",
-          tone: "default",
-          onClick: openBindModal,
-        },
-      ],
-    },
-    {
-      title: "Controls",
-      description: "Daily card controls and spending preferences.",
-      items: [
-        {
-          icon: "pi pi-lock",
-          title: "Freeze Card",
-          subtitle: "Temporarily block transactions on this card.",
-          type: "toggle",
-          onClick: handleFreezeCard,
-        },
-        {
-          icon: "pi pi-sliders-h",
-          title: "Limits",
-          subtitle: "Review and adjust daily and transaction limits.",
-          actionLabel: "Open",
-          tone: "default",
-          onClick: handleOpenLimitsModal,
-        },
-      ],
-    },
-    {
-      title: "Closure",
-      description: "Permanent actions for this card.",
-      items: [
-        {
-          icon: "pi pi-times",
-          title: "Close Card",
-          subtitle: "Permanently close this card and disable future use.",
-          actionLabel: "Close",
-          tone: "danger",
-          onClick: handleCloseCard,
-        },
-      ],
-    },
-  ];
+  const managementSections = useMemo(() => {
+    const securityItems = [
+      {
+        icon: "pi pi-credit-card",
+        title: "Card Number & CVV",
+        subtitle: "Reveal protected card details securely.",
+        actionLabel: "View",
+        tone: "default",
+        onClick: () => showComingSoon("Card Number & CVV"),
+      },
+      {
+        icon: "pi pi-key",
+        title: "PIN / ATM Withdrawal Password",
+        subtitle: "View or manage withdrawal credentials.",
+        actionLabel: "Manage",
+        tone: "default",
+        onClick: handleOpenPinModal,
+      },
+    ];
 
+    if (!selectedCardIsBound) {
+      securityItems.push({
+        icon: "pi pi-link",
+        title: "Bind / Activate Card",
+        subtitle: "Link your card using activation code and billing details.",
+        actionLabel: "Bind",
+        tone: "default",
+        onClick: openBindModal,
+      });
+    }
+
+    return [
+      {
+        title: "Security",
+        description: "Sensitive card details and ATM credentials.",
+        items: securityItems,
+      },
+      {
+        title: "Controls",
+        description: "Daily card controls and spending preferences.",
+        items: [
+          {
+            icon: "pi pi-lock",
+            title: "Freeze Card",
+            subtitle: "Temporarily block transactions on this card.",
+            type: "toggle",
+            onClick: handleFreezeCard,
+          },
+          {
+            icon: "pi pi-sliders-h",
+            title: "Limits",
+            subtitle: "Review and adjust daily and transaction limits.",
+            actionLabel: "Open",
+            tone: "default",
+            onClick: handleOpenLimitsModal,
+          },
+        ],
+      },
+      {
+        title: "Closure",
+        description: "Permanent actions for this card.",
+        items: [
+          {
+            icon: "pi pi-times",
+            title: "Close Card",
+            subtitle: "Permanently close this card and disable future use.",
+            actionLabel: "Close",
+            tone: "danger",
+            onClick: handleCloseCard,
+          },
+        ],
+      },
+    ];
+  }, [selectedCardIsBound]);
+  
   return (
     <>
       <PageTitle motherMenu="Card" activeMenu="Card Management" />
