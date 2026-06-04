@@ -436,7 +436,7 @@ const CardManagement = () => {
       Swal.fire({
         icon: "error",
         title: `${isCurrentlyFrozen ? "Unfreeze" : "Freeze"} Failed`,
-        text: "The Tevau card identifier is missing. Refresh the card list and try again.",
+        text: "The  nova card identifier is missing. Refresh the card list and try again.",
       });
       return;
     }
