@@ -9,6 +9,7 @@ import PublicRoute from './middleware/PublicRoute';
 
 // Styles
 import "./assets/css/style.css";
+import "./assets/css/invite.css";
 import "rsuite/dist/rsuite-no-reset.min.css";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";

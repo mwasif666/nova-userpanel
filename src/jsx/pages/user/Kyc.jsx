@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PageTitle from "../../layouts/PageTitle";
 import { request } from "../../../utils/api";
+import useKycApprovalStatus from "../../hooks/useKycApprovalStatus";
 const INITIAL_FORM_VALUES = {
   country_area: "US",
   first_name_en: "",
@@ -21,17 +22,6 @@ const IDENTITY_TYPE_LABELS = {
   1: "ID Card",
   2: "Passport",
   3: "Driving License",
-};
-
-const normalizeStatusLabel = (value) => {
-  if (!value) return "Not Submitted";
-  return String(value)
-    .replace(/[_-]+/g, " ")
-    .trim()
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
 };
 
 const getStatusTone = (value) => {
@@ -81,40 +71,6 @@ const formatFileSize = (bytes) => {
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
-
-const extractKycPage = (response) => {
-  const envelope = response && typeof response === "object" ? response : {};
-  const page =
-    envelope?.data && typeof envelope.data === "object" ? envelope.data : {};
-  const rows = Array.isArray(page?.data) ? page.data : [];
-
-  return {
-    envelope,
-    page,
-    rows,
-    currentPage: Number(page?.current_page || 1) || 1,
-    lastPage: Number(page?.last_page || 1) || 1,
-    total: Number(page?.total || rows.length || 0) || 0,
-  };
-};
-
-const sortByLatest = (rows = []) =>
-  [...rows].sort((a, b) => {
-    const aTime = new Date(
-      a?.submitted_at || a?.updated_at || a?.created_at || 0,
-    ).getTime();
-    const bTime = new Date(
-      b?.submitted_at || b?.updated_at || b?.created_at || 0,
-    ).getTime();
-    return bTime - aTime;
-  });
-
-const dedupeById = (rows = []) =>
-  Array.from(
-    new Map(
-      rows.map((row, index) => [String(row?.id ?? `kyc-${index}`), row]),
-    ).values(),
-  );
 
 const getApiErrorMessage = (error) => {
   const payload = error?.response?.data || {};
@@ -168,37 +124,33 @@ const mapLivenessStatus = (record) => {
 };
 
 const Kyc = () => {
+  const {
+    loading: kycLoading,
+    error: kycError,
+    kycRows: sortedKycRows,
+    latestKyc,
+    approvedKyc,
+    displayKyc,
+    isApproved,
+    statusLabel,
+    refresh: refreshKycStatus,
+  } = useKycApprovalStatus();
+
   const [formValues, setFormValues] = useState(INITIAL_FORM_VALUES);
   const [files, setFiles] = useState(INITIAL_FILES);
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [faceVerifyUrl, setFaceVerifyUrl] = useState("");
-  const [kycLoading, setKycLoading] = useState(true);
-  const [kycError, setKycError] = useState("");
-  const [kycRows, setKycRows] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const sortedKycRows = useMemo(() => sortByLatest(kycRows), [kycRows]);
-  const isResolvingInitialView = kycLoading && kycRows.length === 0;
-
-  const approvedKyc = useMemo(
-    () =>
-      sortedKycRows.find(
-        (item) => String(item?.status || "").toLowerCase() === "approved",
-      ) || null,
-    [sortedKycRows],
-  );
-
-  const latestKyc = sortedKycRows[0] || null;
-  const displayKyc = approvedKyc || latestKyc;
+  const isResolvingInitialView = kycLoading && sortedKycRows.length === 0;
 
   const statusRaw = displayKyc?.status || "";
   const statusKey = String(statusRaw || "")
     .toLowerCase()
     .trim();
-  const statusLabel = normalizeStatusLabel(statusRaw);
   const statusTone = getStatusTone(statusRaw);
-  const isApproved = statusKey === "approved";
   const isUnderReview = [
     "submitted",
     "pending",
@@ -209,73 +161,30 @@ const Kyc = () => {
   const hasFilledKyc = Boolean(displayKyc);
   const isFormDisabledByStatus = isUnderReview;
 
-  const loadKycList = useCallback(async () => {
-    setKycLoading(true);
-    setKycError("");
-
-    try {
-      const firstResponse = await request({
-        url: "app/tevau/kyc",
-        method: "GET",
-        data: {
-          page: 1,
-          per_page: 50,
-        },
-      });
-
-      const firstPage = extractKycPage(firstResponse);
-      let allRows = [...firstPage.rows];
-
-      if (firstPage.lastPage > 1) {
-        const pageRequests = Array.from(
-          { length: firstPage.lastPage - 1 },
-          (_, index) =>
-            request({
-              url: "app/tevau/kyc",
-              method: "GET",
-              data: {
-                page: index + 2,
-                per_page: 50,
-              },
-            }),
-        );
-
-        const pageResponses = await Promise.all(pageRequests);
-        const extraRows = pageResponses.flatMap(
-          (pageResponse) => extractKycPage(pageResponse).rows,
-        );
-        allRows = [...allRows, ...extraRows];
-      }
-
-      const normalizedRows = dedupeById(allRows);
-      const sortedRows = sortByLatest(normalizedRows);
-
-      setKycRows(sortedRows);
-      const approvedRecord =
-        sortedRows.find(
-          (item) => String(item?.status || "").toLowerCase() === "approved",
-        ) || null;
-      const preferredRecord = approvedRecord || sortedRows[0] || null;
-
-      if (preferredRecord) {
-        const next = toFormValuesFromKyc(preferredRecord);
-        if (next) {
-          setFormValues((prev) => ({
-            ...prev,
-            ...next,
-          }));
-        }
-      }
-    } catch (error) {
-      setKycError(getApiErrorMessage(error));
-    } finally {
-      setKycLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    refreshKycStatus().catch(() => undefined);
+  }, [refreshKycStatus]);
 
   useEffect(() => {
-    loadKycList();
-  }, [loadKycList]);
+    if (!displayKyc) return;
+
+    const next = toFormValuesFromKyc(displayKyc);
+    if (!next) return;
+
+    setFormValues((prev) => ({
+      ...prev,
+      ...next,
+    }));
+  }, [displayKyc]);
+
+  const handleRefreshKyc = async () => {
+    setRefreshing(true);
+    try {
+      await refreshKycStatus();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -350,7 +259,7 @@ const Kyc = () => {
       setSubmitMessage("KYC submitted successfully.");
 
       setFiles(INITIAL_FILES);
-      await loadKycList();
+      await refreshKycStatus();
     } catch (error) {
       setSubmitError(getApiErrorMessage(error));
     } finally {
@@ -882,10 +791,12 @@ const Kyc = () => {
                       <button
                         type="button"
                         className="btn btn-outline-primary"
-                        onClick={loadKycList}
-                        disabled={submitting || kycLoading}
+                        onClick={handleRefreshKyc}
+                        disabled={submitting || kycLoading || refreshing}
                       >
-                        {kycLoading ? "Refreshing..." : "Refresh KYC Data"}
+                        {kycLoading || refreshing
+                          ? "Refreshing..."
+                          : "Refresh KYC Data"}
                       </button>
                       <button
                         type="button"

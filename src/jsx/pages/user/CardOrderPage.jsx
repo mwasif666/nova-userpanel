@@ -3,8 +3,7 @@ import PageTitle from "../../layouts/PageTitle";
 import { AuthContext } from "../../../context/authContext";
 import { request } from "../../../utils/api";
 import { getSecurityCodeStatus } from "../../../services/securityCode";
-import useKycApprovalStatus from "../../hooks/useKycApprovalStatus";
-import { buildCardKycFlowState } from "../../hooks/useCardKycFlow";
+import useCardKycFlow from "../../hooks/useCardKycFlow";
 import CardAccessNotice from "../../components/CardAccessNotice";
 
 /* ── helpers ── */
@@ -133,7 +132,15 @@ const FormField = ({ label, value, onChange, placeholder, type = "text", inputMo
 const CardOrderPage = () => {
   const { user } = useContext(AuthContext);
 
-  const { loading: kycLoading, isApproved: isKycApproved, hasSubmittedKyc, statusLabel: kycStatusLabel } = useKycApprovalStatus();
+  const {
+    loading: kycLoading,
+    isKycApproved,
+    statusLabel: kycStatusLabel,
+    canOrderCard,
+    orderBlockedReason,
+    refreshCards,
+    ...cardFlow
+  } = useCardKycFlow();
   const [hasSecurityCode, setHasSecurityCode] = useState(false);
   const [securityStatusLoading, setSecurityStatusLoading] = useState(true);
 
@@ -155,9 +162,6 @@ const CardOrderPage = () => {
   const userId = user?.id;
   const userCode = user?.tevau_user?.user_code || null;
   const thirdId = user?.tevau_user?.third_id || null;
-
-  const hasPurchasedCard = orders.length > 0;
-  const cardFlow = buildCardKycFlowState({ hasSubmittedKyc, isKycApproved, kycStatusLabel, hasPurchasedCard });
 
   const loadSecurityStatus = useCallback(async () => {
     setSecurityStatusLoading(true);
@@ -230,7 +234,13 @@ const CardOrderPage = () => {
   const address = cardType === "virtual" ? form.billing_address : form.postal_address;
 
   const handleSubmit = async () => {
-    if (!cardFlow.canOrderCard) { setFeedback({ type: "error", message: cardFlow.orderBlockedReason || "Cannot order card at this time." }); return; }
+    if (!canOrderCard) {
+      setFeedback({
+        type: "error",
+        message: orderBlockedReason || "Cannot order card at this time.",
+      });
+      return;
+    }
     const validationError = validateForm(cardType, form);
     if (validationError) { setFeedback({ type: "error", message: validationError }); return; }
 
@@ -241,7 +251,11 @@ const CardOrderPage = () => {
       setFeedback({ type: "success", message: `${cardType === "virtual" ? "Virtual" : "Physical"} card order submitted successfully.` });
       if (cardType === "virtual") setVForm(makeVirtualForm(user));
       else setPForm(makePhysicalForm(user));
-      await Promise.all([loadOrders(), loadPhysicalOrders()]);
+      await Promise.all([
+        loadOrders(),
+        loadPhysicalOrders(),
+        refreshCards(),
+      ]);
     } catch (error) {
       setFeedback({ type: "error", message: extractApiError(error, "Failed to submit card order.") });
     } finally {
@@ -249,14 +263,14 @@ const CardOrderPage = () => {
     }
   };
 
-  const canOrder = cardFlow.canOrderCard && !kycLoading;
+  const canOrder = canOrderCard && !kycLoading;
 
   return (
     <>
       <PageTitle motherMenu="Cards" activeMenu="Order Card" />
       <div className="row g-3">
 
-        {!kycLoading && !cardFlow.canOrderCard && (
+        {!kycLoading && !canOrderCard && (
           <div className="col-12">
             <CardAccessNotice title={cardFlow.title} message={cardFlow.message} />
           </div>

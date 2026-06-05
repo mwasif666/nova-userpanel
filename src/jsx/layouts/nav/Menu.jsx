@@ -26,6 +26,12 @@ export const MenuList = [
     ],
   },
   {
+    title: "Invite",
+    classsChange: "mm-collapse",
+    iconStyle: SVGICON.InviteSvg,
+    to: "/invite",
+  },
+  {
     title: "KYC",
     classsChange: "mm-collapse",
     iconStyle: SVGICON.FormIconSvg,

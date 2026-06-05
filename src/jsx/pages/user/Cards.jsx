@@ -7,7 +7,7 @@ import CardAccessNotice from "../../components/CardAccessNotice";
 import { AuthContext } from "../../../context/authContext";
 import { request } from "../../../utils/api";
 import useKycApprovalStatus from "../../hooks/useKycApprovalStatus";
-import { buildCardKycFlowState } from "../../hooks/useCardKycFlow";
+import { buildCardKycFlowState } from "../../hooks/buildCardKycFlowState";
 import {
   getSecurityCodeStatus,
   validateSecurityCode,

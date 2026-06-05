@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFormik } from "formik";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../context/authContext";
@@ -11,8 +11,12 @@ import novaCards from "../../../assets/images/nova-cards.png";
 function Register() {
   const date = new Date();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sendingCode, setSendingCode] = useState(false);
   const { signup, sendVerificationCode } = useContext(AuthContext);
+  const referralCodeFromUrl = String(
+    searchParams.get("referral_code") || "",
+  ).trim();
 
   const formik = useFormik({
     initialValues: {
@@ -22,7 +26,7 @@ function Register() {
       password: "",
       password_confirmation: "",
       verification_code: "",
-      referral_code: "",
+      referral_code: referralCodeFromUrl,
     },
     validationSchema: signupValidationSchema,
     onSubmit: async (values, { resetForm, setSubmitting }) => {

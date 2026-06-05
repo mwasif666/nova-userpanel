@@ -7,6 +7,7 @@ import {Provider} from 'react-redux';
 import {store} from './store/store';
 import  ThemeContext  from "./context/ThemeContext"; 
 import { AuthProvider } from './context/authContext';
+import { UserFlowProvider } from './context/userFlowContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -14,9 +15,11 @@ root.render(
     <Provider store = {store}>
       <BrowserRouter basename='/'>
         <AuthProvider>
-        <ThemeContext>
-          <App />
-        </ThemeContext>
+          <UserFlowProvider>
+            <ThemeContext>
+              <App />
+            </ThemeContext>
+          </UserFlowProvider>
         </AuthProvider>
       </BrowserRouter>
     </Provider>
