@@ -366,7 +366,7 @@ const Kyc = () => {
 
   return (
     <>
-      <PageTitle motherMenu="KYC" activeMenu="KYC Submission" />
+      <PageTitle motherMenu="Home" motherMenuPath="/" activeMenu="KYC Submission" />
 
       <div className="nova-kyc-submit-page">
         <div className={`card nova-panel nova-kyc-hero-card mb-3 ${isApproved ? "is-approved" : ""}`}>

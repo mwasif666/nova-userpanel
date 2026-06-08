@@ -405,7 +405,7 @@ export const SVGICON = {
         <line x1="16" y1="17" x2="8" y2="17"></line>
         <polyline points="10 9 9 9 8 9"></polyline>
     </svg>,
-    InviteSvg : <svg id="icon-invite" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C99FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    InviteSvg : <svg id="icon-invite" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
         <circle cx="9" cy="7" r="4"></circle>
         <line x1="19" y1="8" x2="19" y2="14"></line>

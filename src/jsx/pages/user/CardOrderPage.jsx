@@ -115,14 +115,31 @@ const formatDate = (v) => {
 };
 
 /* ── Field component ── */
+const FIELD_ICONS = {
+  "Dial Code": "pi-phone",
+  "Phone Number": "pi-phone",
+  Email: "pi-envelope",
+  City: "pi-building",
+  "Country Code": "pi-globe",
+  "Post Code": "pi-envelope",
+  Address: "pi-map-marker",
+  "First Name": "pi-user",
+  "Last Name": "pi-user",
+  "Recipient Title": "pi-id-card",
+  Province: "pi-map",
+};
+
 const FormField = ({ label, value, onChange, placeholder, type = "text", inputMode, rows, colClass = "col-md-6" }) => (
   <div className={colClass}>
-    <div className="nova-bind-field">
+    <div className="nova-bind-field nova-order-field">
       <label>{label}</label>
+      <span className="nova-order-input-icon">
+        <i className={`pi ${FIELD_ICONS[label] || "pi-pencil"}`} />
+      </span>
       {rows > 0 ? (
-        <textarea rows={rows} className="nova-bind-input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+        <textarea rows={rows} className="nova-bind-input nova-order-input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       ) : (
-        <input type={type} className="nova-bind-input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} inputMode={inputMode} />
+        <input type={type} className="nova-bind-input nova-order-input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} inputMode={inputMode} />
       )}
     </div>
   </div>
@@ -266,8 +283,8 @@ const CardOrderPage = () => {
   const canOrder = canOrderCard && !kycLoading;
 
   return (
-    <>
-      <PageTitle motherMenu="Cards" activeMenu="Order Card" />
+    <div className="nova-card-order-page">
+      <PageTitle motherMenu="Cards" motherMenuPath="/cards" activeMenu="Order Card" />
       <div className="row g-3">
 
         {!kycLoading && !canOrderCard && (
@@ -278,7 +295,7 @@ const CardOrderPage = () => {
 
         {/* ── Order form ── */}
         <div className="col-12">
-          <div className="card nova-panel">
+          <div className="card nova-panel nova-order-card">
             <div className="card-body">
               <div className="nova-order-page-head">
                 <div>
@@ -323,9 +340,9 @@ const CardOrderPage = () => {
               <div className="nova-order-form-wrap">
                 <div className="nova-order-section-label">Contact & Card Info</div>
                 <div className="row g-3">
-                  <FormField label="Dial Code" value={form.dial_code} onChange={(v) => setField("dial_code", v)} placeholder="971" inputMode="numeric" colClass="col-md-2" />
+                  <FormField label="Dial Code" value={form.dial_code} onChange={(v) => setField("dial_code", v)} placeholder="971" inputMode="numeric" colClass="col-md-4" />
                   <FormField label="Phone Number" value={form.phone_number} onChange={(v) => setField("phone_number", v)} placeholder="581231234" inputMode="numeric" colClass="col-md-4" />
-                  <FormField label="Email" type="email" value={form.email} onChange={(v) => setField("email", v)} placeholder="user@mail.com" colClass="col-md-6" />
+                  <FormField label="Email" type="email" value={form.email} onChange={(v) => setField("email", v)} placeholder="user@mail.com" colClass="col-md-4" />
                 </div>
 
                 <div className="nova-order-section-label mt-3">
@@ -358,7 +375,7 @@ const CardOrderPage = () => {
               <div className="nova-order-submit-row">
                 <button
                   type="button"
-                  className="btn btn-outline-secondary ms-2"
+                  className="btn nova-order-clear-btn"
                   onClick={() => {
                     if (cardType === "virtual") setVForm(makeVirtualForm(user));
                     else setPForm(makePhysicalForm(user));
@@ -369,14 +386,14 @@ const CardOrderPage = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn nova-order-submit-btn"
                   onClick={handleSubmit}
                   disabled={submitting || !canOrder}
                 >
                   {submitting ? (
                     <><span className="spinner-border spinner-border-sm me-2" />Submitting Order...</>
                   ) : (
-                    <><i className="pi pi-check me-2" />Submit {cardType === "virtual" ? "Virtual" : "Physical"} Card Order</>
+                    <><i className="pi pi-send me-2" />Submit {cardType === "virtual" ? "Virtual" : "Physical"} Card Order</>
                   )}
                 </button>
               </div>
@@ -386,16 +403,16 @@ const CardOrderPage = () => {
 
         {/* ── Physical Card Order Tracking ── */}
         <div className="col-12">
-          <div className="card nova-panel">
+          <div className="card nova-panel nova-order-card nova-order-tracking-card">
             <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-3">
+              <div className="nova-order-tracking-head">
                 <div>
                   <h5 className="mb-0">Physical Card Order Tracking</h5>
                   <p className="text-muted small mb-0 mt-1">Live tracking of your physical card orders via delivery status.</p>
                 </div>
                 <button
                   type="button"
-                  className="nova-google-footer-btn"
+                  className="nova-order-refresh-btn"
                   onClick={loadPhysicalOrders}
                   disabled={physicalOrdersLoading}
                 >
@@ -448,7 +465,7 @@ const CardOrderPage = () => {
 
                 return (
                   <div className="table-responsive">
-                    <table className="table table-sm align-middle mb-0">
+                    <table className="table table-sm align-middle mb-0 nova-order-tracking-table">
                       <thead>
                         <tr>
                           <th>Order Reference</th>
@@ -463,9 +480,11 @@ const CardOrderPage = () => {
                       <tbody>
                         {!physicalOrdersLoading && rows.length === 0 ? (
                           <tr>
-                            <td colSpan={trackingTab === "delivered" ? 7 : 6} className="text-center text-muted py-4">
-                              <i className="pi pi-inbox me-2" />
-                              {trackingTab === "delivered" ? "No delivered orders yet." : "No active orders found."}
+                            <td colSpan={trackingTab === "delivered" ? 7 : 6}>
+                              <div className="nova-order-empty-state">
+                                <span><i className="pi pi-inbox" /></span>
+                                <p>{trackingTab === "delivered" ? "No delivered orders yet." : "No active orders found."}</p>
+                              </div>
                             </td>
                           </tr>
                         ) : (
@@ -501,7 +520,7 @@ const CardOrderPage = () => {
         </div>
 
       </div>
-    </>
+    </div>
   );
 };
 

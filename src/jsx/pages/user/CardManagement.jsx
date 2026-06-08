@@ -617,7 +617,7 @@ const CardManagement = () => {
   
   return (
     <>
-      <PageTitle motherMenu="Card" activeMenu="Card Management" />
+      <PageTitle motherMenu="Cards" motherMenuPath="/cards" activeMenu="Card Management" />
 
       {loading ? (
         <div className="card nova-panel">

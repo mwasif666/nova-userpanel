@@ -133,55 +133,64 @@ const WalletTransactions = () => {
 
   return (
     <>
-      <PageTitle motherMenu="Wallet" activeMenu="Transaction History" />
+      <PageTitle motherMenu="Wallet" motherMenuPath="/wallet" activeMenu="Transaction History" />
 
       <div className="row g-3">
         {/* Filter card */}
         <div className="col-12">
-          <div className="card nova-panel">
-            <div className="card-body">
-              <div className="nova-wtx-filter-bar">
-                <div className="nova-wtx-filter-group">
-                  <label>Type</label>
+          <div className="card nova-wtx-filter-card">
+            <div className="nova-wtx-filter-bar">
+              <div className="nova-wtx-filter-group">
+                <label className={`nova-wtx-filter-label${filterType ? " is-active" : ""}`}>Type</label>
+                <div className="nova-wtx-select-wrap">
                   <select
-                    className="nova-wtx-select"
+                    className={`nova-wtx-select${filterType ? " is-active" : ""}`}
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
                   >
                     {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
+                  <i className="pi pi-chevron-down nova-wtx-select-arrow" />
                 </div>
+              </div>
 
-                <div className="nova-wtx-filter-group">
-                  <label>Status</label>
+              <div className="nova-wtx-filter-group">
+                <label className={`nova-wtx-filter-label${filterStatus ? " is-active" : ""}`}>Status</label>
+                <div className="nova-wtx-select-wrap">
                   <select
-                    className="nova-wtx-select"
+                    className={`nova-wtx-select${filterStatus ? " is-active" : ""}`}
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
                     {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
+                  <i className="pi pi-chevron-down nova-wtx-select-arrow" />
                 </div>
+              </div>
 
-                <div className="nova-wtx-filter-group">
-                  <label>Network</label>
+              <div className="nova-wtx-filter-group">
+                <label className={`nova-wtx-filter-label${filterNetwork ? " is-active" : ""}`}>Network</label>
+                <div className="nova-wtx-select-wrap">
                   <select
-                    className="nova-wtx-select"
+                    className={`nova-wtx-select${filterNetwork ? " is-active" : ""}`}
                     value={filterNetwork}
                     onChange={(e) => setFilterNetwork(e.target.value)}
                   >
                     {NETWORK_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
+                  <i className="pi pi-chevron-down nova-wtx-select-arrow" />
                 </div>
+              </div>
 
-                <div className="nova-wtx-filter-actions">
-                  <button type="button" className="btn btn-primary btn-sm px-3" onClick={applyFilters} disabled={loading}>
-                    <i className="pi pi-search me-1" />Apply
-                  </button>
-                  <button type="button" className="btn btn-outline-secondary btn-sm px-3" onClick={resetFilters} disabled={loading}>
-                    <i className="pi pi-times me-1" />Reset
-                  </button>
-                </div>
+              <div className="nova-wtx-filter-actions">
+                <button type="button" className="nova-wtx-apply-btn" onClick={applyFilters} disabled={loading}>
+                  <i className="pi pi-search" />
+                  Apply
+                </button>
+                <button type="button" className="nova-wtx-reset-btn" onClick={resetFilters} disabled={loading}>
+                  <i className="pi pi-times" />
+                  Reset
+                </button>
               </div>
             </div>
           </div>

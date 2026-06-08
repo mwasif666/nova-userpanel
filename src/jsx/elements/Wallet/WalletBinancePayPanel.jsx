@@ -13,79 +13,46 @@ const WalletBinancePayPanel = ({ networks = [] }) => {
   const [binanceCreateResponse, setBinanceCreateResponse] = useState(null);
   const [copySuccess, setCopySuccess] = useState("");
 
-  const [statusForm, setStatusForm] = useState({
-    merchantTradeNo: "",
-  });
-
+  const [statusForm, setStatusForm] = useState({ merchantTradeNo: "" });
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState("");
   const [statusResponse, setStatusResponse] = useState(null);
 
   useEffect(() => {
     if (binanceForm.network || networks.length === 0) return;
-
-    const preferredNetwork =
+    const preferred =
       networks.find((n) => n.value === "TRC20")?.value || networks[0]?.value;
-
-    setBinanceForm((prev) => ({
-      ...prev,
-      network: preferredNetwork,
-    }));
+    setBinanceForm((prev) => ({ ...prev, network: preferred }));
   }, [networks]);
 
   const createBinancePayDeposit = async () => {
-    if (!binanceForm.amount) {
-      setBinanceCreateError("Amount is required.");
-      return;
-    }
-
-    if (!binanceForm.currency) {
-      setBinanceCreateError("Currency is required.");
-      return;
-    }
-
+    if (!binanceForm.amount) { setBinanceCreateError("Amount is required."); return; }
+    if (!binanceForm.currency) { setBinanceCreateError("Currency is required."); return; }
     setBinanceCreateLoading(true);
     setBinanceCreateError("");
     setBinanceCreateResponse(null);
-
     try {
       const res = await request({
         url: "app/usdt/wallet/deposit/binance-pay",
         method: "POST",
-        data: {
-          amount: binanceForm.amount,
-          currency: binanceForm.currency,
-          network: binanceForm.network || "TRC20",
-        },
+        data: { amount: binanceForm.amount, currency: binanceForm.currency, network: binanceForm.network || "TRC20" },
       });
-
       setBinanceCreateResponse(res?.data);
       const merchantTradeNo = res?.data?.merchant_trade_no;
       window.open(res?.data?.checkout_url, "_blank");
-
-      if (merchantTradeNo) {
-        setStatusForm({ merchantTradeNo });
-      }
+      if (merchantTradeNo) setStatusForm({ merchantTradeNo });
     } catch (error) {
-      setBinanceCreateError(
-        error?.response?.data?.message ||
-          "Failed to create Binance Pay deposit.",
-      );
+      setBinanceCreateError(error?.response?.data?.message || "Failed to create Binance Pay deposit.");
     } finally {
       setBinanceCreateLoading(false);
     }
   };
 
   const checkBinanceStatus = async () => {
-    if (!statusForm.merchantTradeNo) {
-      setStatusError("Merchant Trade No is required.");
-      return;
-    }
-
+    if (!statusForm.merchantTradeNo) { setStatusError("Merchant Trade No is required."); return; }
     setStatusLoading(true);
     setStatusError("");
     setStatusResponse(null);
-
     try {
       const res = await request({
         url: `app/usdt/wallet/binance-pay/status?merchant_trade_no=${statusForm.merchantTradeNo}`,
@@ -93,9 +60,7 @@ const WalletBinancePayPanel = ({ networks = [] }) => {
       });
       setStatusResponse(res.data.binance_status);
     } catch (error) {
-      setStatusError(
-        error?.response?.data?.message  ||  "Failed to fetch Binance Pay status."
-      );
+      setStatusError(error?.response?.data?.message || "Failed to fetch Binance Pay status.");
     } finally {
       setStatusLoading(false);
     }
@@ -103,7 +68,6 @@ const WalletBinancePayPanel = ({ networks = [] }) => {
 
   const merchantTradeNoFromCreate = useMemo(() => {
     if (!binanceCreateResponse) return null;
-
     return (
       binanceCreateResponse?.merchant_trade_no ||
       binanceCreateResponse?.merchantTradeNo ||
@@ -114,7 +78,6 @@ const WalletBinancePayPanel = ({ networks = [] }) => {
 
   const paymentLinkFromCreate = useMemo(() => {
     if (!binanceCreateResponse) return null;
-
     return (
       binanceCreateResponse?.checkout_url ||
       binanceCreateResponse?.payment_url ||
@@ -127,233 +90,192 @@ const WalletBinancePayPanel = ({ networks = [] }) => {
 
   const statusLabel = useMemo(() => {
     if (!statusResponse) return null;
-    return statusResponse?.status
+    return statusResponse?.status;
   }, [statusResponse]);
 
-const statusTone = useMemo(() => {
-  const normalizedStatus = String(statusLabel || "").toUpperCase();
+  const statusTone = useMemo(() => {
+    const s = String(statusLabel || "").toUpperCase();
+    if (s === "INITIAL") return "info";
+    if (["PENDING", "PROCESSING"].includes(s)) return "warning";
+    if (["PAID", "SUCCESS"].includes(s)) return "success";
+    if (["FAIL", "CANCEL", "EXPIRE"].includes(s)) return "danger";
+    return "secondary";
+  }, [statusLabel]);
 
-  switch (normalizedStatus) {
-    case "INITIAL":
-      return "info";       
-    case "PENDING":
-    case "PROCESSING":
-      return "warning";
-    case "PAID":
-    case "SUCCESS":
-      return "success";    
-    case "FAIL":
-    case "CANCEL":
-    case "EXPIRE":
-      return "danger";     
-    default:
-      return "secondary";
-  }
-}, [statusLabel]);
   const openCheckoutPage = () => {
     if (!paymentLinkFromCreate) return;
-
-    const checkoutWindow = window.open(
-      paymentLinkFromCreate,
-      "_blank",
-      "noopener,noreferrer",
-    );
-
-    if (!checkoutWindow) {
-      window.location.href = paymentLinkFromCreate;
-    }
+    const w = window.open(paymentLinkFromCreate, "_blank", "noopener,noreferrer");
+    if (!w) window.location.href = paymentLinkFromCreate;
   };
 
   const copyCheckoutUrl = async () => {
     if (!paymentLinkFromCreate) return;
-
     try {
       await navigator.clipboard.writeText(paymentLinkFromCreate);
-      setCopySuccess("Checkout URL copied.");
-    } catch (_) {
+    } catch {
       const input = document.createElement("input");
       input.value = paymentLinkFromCreate;
       document.body.appendChild(input);
       input.select();
       document.execCommand("copy");
       document.body.removeChild(input);
-      setCopySuccess("Checkout URL copied.");
     }
-
+    setCopySuccess("Copied!");
     setTimeout(() => setCopySuccess(""), 2500);
   };
 
   return (
-    <div className="card nova-panel h-100">
-      <div className="card-body">
-        <div className="nova-flow-kicker mb-1">Wallet</div>
-        <h5 className="mb-3">Binance Pay Deposit</h5>
+    <div className="nova-binance-wrap">
+      <div className="nova-binance-head">
+        <div className="nova-flow-kicker nova-binance-kicker mb-1">Wallet</div>
+        <h4 className="nova-binance-title mb-1">Binance Pay Deposit</h4>
+        <p className="nova-binance-subtitle">
+          Create a Binance Pay deposit or check the status of an existing transaction.
+        </p>
+      </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6">
-            <div className="nova-flow-shell">
-              <h6>Create Binance Pay Deposit</h6>
-              <div className="row g-3 mt-2">
-                <div className="col-md-4">
-                  <label className="form-label">Amount</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={binanceForm.amount}
-                    onChange={(e) =>
-                      setBinanceForm((prev) => ({
-                        ...prev,
-                        amount: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter Amount"
-                  />
-                </div>
+      <div className="nova-binance-grid">
+        {/* ── Create panel ── */}
+        <div className="nova-binance-card">
+          <div className="nova-binance-card-head">
+            <span className="nova-binance-card-ico">
+              <i className="pi pi-credit-card" />
+            </span>
+            <h6 className="nova-binance-card-title">Create Binance Pay Deposit</h6>
+          </div>
 
-                <div className="col-md-4">
-                  <label className="form-label">Currency</label>
-                  <input
-                    className="form-control"
-                    value={binanceForm.currency}
-                    onChange={(e) =>
-                      setBinanceForm((prev) => ({
-                        ...prev,
-                        currency: e.target.value.toUpperCase(),
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="col-md-4">
-                  <label className="form-label">Network</label>
-                  <select
-                    className="form-select"
-                    value={binanceForm.network}
-                    onChange={(e) =>
-                      setBinanceForm((prev) => ({
-                        ...prev,
-                        network: e.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">Select </option>
-                    {networks.map((n) => (
-                      <option key={n.value} value={n.value}>
-                        {n.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <button
-                className="btn btn-primary mt-3"
-                onClick={createBinancePayDeposit}
-                disabled={binanceCreateLoading}
+          <div className="nova-binance-fields">
+            <div className="nova-binance-field">
+              <label className="nova-binance-label">Amount</label>
+              <input
+                type="number"
+                className="nova-binance-input"
+                value={binanceForm.amount}
+                onChange={(e) => setBinanceForm((prev) => ({ ...prev, amount: e.target.value }))}
+                placeholder="Enter Amount"
+              />
+            </div>
+            <div className="nova-binance-field">
+              <label className="nova-binance-label">Currency</label>
+              <input
+                className="nova-binance-input"
+                value={binanceForm.currency}
+                onChange={(e) => setBinanceForm((prev) => ({ ...prev, currency: e.target.value.toUpperCase() }))}
+              />
+            </div>
+            <div className="nova-binance-field">
+              <label className="nova-binance-label">Network</label>
+              <select
+                className="nova-binance-input"
+                value={binanceForm.network}
+                onChange={(e) => setBinanceForm((prev) => ({ ...prev, network: e.target.value }))}
               >
-                {binanceCreateLoading
-                  ? "Creating..."
-                  : "Create Binance Pay Deposit"}
-              </button>
-
-              {binanceCreateError && (
-                <div className="alert alert-danger mt-3">
-                  {binanceCreateError}
-                </div>
-              )}
-
-              {binanceCreateResponse && (
-                <div className="mt-3 border rounded-3 p-3 bg-light-subtle">
-                  <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
-                    <div>
-                      <div className="small text-muted text-uppercase">
-                        Merchant Trade No
-                      </div>
-                      <div className="fw-semibold">
-                        {merchantTradeNoFromCreate || "N/A"}
-                      </div>
-                    </div>
-
-                    {paymentLinkFromCreate && (
-                      <div className="d-flex gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          className="btn btn-success btn-sm"
-                          onClick={openCheckoutPage}
-                        >
-                          Open Binance Checkout
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={copyCheckoutUrl}
-                        >
-                          Copy Checkout URL
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {paymentLinkFromCreate && (
-                    <div className="small text-muted mt-2">
-                      Opens Binance checkout in a new page.
-                      {copySuccess && <span className="ms-2">{copySuccess}</span>}
-                    </div>
-                  )}
-                </div>
-              )}
+                <option value="">Select</option>
+                {networks.map((n) => (
+                  <option key={n.value} value={n.value}>{n.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <div className="col-xl-6">
-            <div className="nova-flow-shell">
-              <h6>Check Binance Pay Status</h6>
-              <div className="mt-3">
-                <label className="form-label">Merchant Trade No</label>
+          <button
+            type="button"
+            className="nova-binance-cta"
+            onClick={createBinancePayDeposit}
+            disabled={binanceCreateLoading}
+          >
+            <span className="nova-binance-cta-icon">
+              <i className={`pi ${binanceCreateLoading ? "pi-spin pi-spinner" : "pi-send"}`} />
+            </span>
+            <span className="nova-binance-cta-label">
+              {binanceCreateLoading ? "Creating..." : "Create Binance Pay Deposit"}
+            </span>
+          </button>
 
-                <input
-                  className="form-control"
-                  placeholder="Enter Merchant Trade No"
-                  value={statusForm.merchantTradeNo}
-                  onChange={(e) =>
-                    setStatusForm({ merchantTradeNo: e.target.value })
-                  }
-                />
+          {binanceCreateError && (
+            <div className="nova-kyc-feedback is-error mt-3">
+              <i className="fa fa-exclamation-circle" />
+              <span>{binanceCreateError}</span>
+            </div>
+          )}
+
+          {binanceCreateResponse && (
+            <div className="nova-binance-result mt-3">
+              <div className="nova-binance-result-row">
+                <span className="nova-binance-result-label">Merchant Trade No</span>
+                <span className="nova-binance-result-value">{merchantTradeNoFromCreate || "N/A"}</span>
               </div>
-
-              <button
-                className="btn btn-primary mt-3"
-                onClick={checkBinanceStatus}
-                disabled={statusLoading}
-              >
-                {statusLoading ? "Checking..." : "Check Status"}
-              </button>
-
-              {statusError && (
-                <div className="alert alert-danger mt-3">{statusError}</div>
-              )}
-
-              {statusResponse && (
-                <div className="mt-3 border rounded-3 p-3 bg-light-subtle">
-                  <div className="small text-muted text-uppercase">
-                    Merchant Trade No
-                  </div>
-                  <div className="fw-semibold">
-                    {statusForm.merchantTradeNo}
-                  </div>
-
-                  <div className="mt-3 d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                    <div className="small text-muted text-uppercase">
-                      Status
-                    </div>
-                    <span className={`badge text-bg-${statusTone}`} style={{color:"white"}}>
-                      {statusLabel || "N/A"}
-                    </span>
-                  </div>
+              {paymentLinkFromCreate && (
+                <div className="nova-binance-result-actions">
+                  <button type="button" className="nova-binance-action-btn is-primary" onClick={openCheckoutPage}>
+                    <i className="pi pi-external-link me-1" />Open Checkout
+                  </button>
+                  <button type="button" className="nova-binance-action-btn" onClick={copyCheckoutUrl}>
+                    <i className={`pi ${copySuccess ? "pi-check" : "pi-copy"} me-1`} />
+                    {copySuccess || "Copy URL"}
+                  </button>
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        {/* ── Status panel ── */}
+        <div className="nova-binance-card">
+          <div className="nova-binance-card-head">
+            <span className="nova-binance-card-ico">
+              <i className="pi pi-verified" />
+            </span>
+            <h6 className="nova-binance-card-title">Check Binance Pay Status</h6>
           </div>
+
+          <div className="nova-binance-fields">
+            <div className="nova-binance-field is-full">
+              <label className="nova-binance-label">Merchant Trade No</label>
+              <input
+                className="nova-binance-input"
+                placeholder="Enter Merchant Trade No"
+                value={statusForm.merchantTradeNo}
+                onChange={(e) => setStatusForm({ merchantTradeNo: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="nova-binance-cta"
+            onClick={checkBinanceStatus}
+            disabled={statusLoading}
+          >
+            <span className="nova-binance-cta-icon">
+              <i className={`pi ${statusLoading ? "pi-spin pi-spinner" : "pi-search"}`} />
+            </span>
+            <span className="nova-binance-cta-label">
+              {statusLoading ? "Checking..." : "Check Status"}
+            </span>
+          </button>
+
+          {statusError && (
+            <div className="nova-kyc-feedback is-error mt-3">
+              <i className="fa fa-exclamation-circle" />
+              <span>{statusError}</span>
+            </div>
+          )}
+
+          {statusResponse && (
+            <div className="nova-binance-result mt-3">
+              <div className="nova-binance-result-row">
+                <span className="nova-binance-result-label">Merchant Trade No</span>
+                <span className="nova-binance-result-value">{statusForm.merchantTradeNo}</span>
+              </div>
+              <div className="nova-binance-result-row">
+                <span className="nova-binance-result-label">Status</span>
+                <span className={`nova-binance-status-badge is-${statusTone}`}>
+                  {statusLabel || "N/A"}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

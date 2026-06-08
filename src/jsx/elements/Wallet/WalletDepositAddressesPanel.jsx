@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { request } from "../../../utils/api";
 
-const WalletDepositAddressesPanel = ({ networks = [] }) => {
+const WalletDepositAddressesPanel = ({ networks = [], selectedNetwork: propNetwork = "", onNetworkChange }) => {
   const [addressForm, setAddressForm] = useState({ asset: "USDT", network: "" });
   const [addressLoading, setAddressLoading] = useState(false);
   const [addressError, setAddressError] = useState("");
@@ -9,6 +9,11 @@ const WalletDepositAddressesPanel = ({ networks = [] }) => {
   const [attentionPoints, setAttentionPoints] = useState([]);
   const [copiedAddressId, setCopiedAddressId] = useState("");
   const [addressSearchDone, setAddressSearchDone] = useState(false);
+
+  useEffect(() => {
+    if (!propNetwork) return;
+    setAddressForm((prev) => ({ ...prev, network: propNetwork }));
+  }, [propNetwork]);
 
   useEffect(() => {
     if (addressForm.network || networks.length === 0) return;
@@ -100,9 +105,10 @@ const WalletDepositAddressesPanel = ({ networks = [] }) => {
           <select
             className="nova-deposit-input"
             value={addressForm.network}
-            onChange={(e) =>
-              setAddressForm((prev) => ({ ...prev, network: e.target.value }))
-            }
+            onChange={(e) => {
+              setAddressForm((prev) => ({ ...prev, network: e.target.value }));
+              if (onNetworkChange) onNetworkChange(e.target.value);
+            }}
           >
             <option value="">Select Network</option>
             {networks.map((item) => (

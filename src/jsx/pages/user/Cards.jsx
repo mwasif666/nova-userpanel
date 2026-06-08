@@ -503,7 +503,7 @@ const Cards = () => {
 
   return (
     <>
-      <PageTitle motherMenu="Cards" activeMenu="Cards" />
+      <PageTitle motherMenu="Home" motherMenuPath="/" activeMenu="Cards" />
 
       <div className="row g-3">
         {!loading && !hasPurchasedCard && !cardFlow.canOrderCard ? (

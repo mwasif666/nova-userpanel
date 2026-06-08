@@ -1,22 +1,19 @@
-import React from "react";
 import { Link } from "react-router-dom";
 
-const PageTitle = ({ motherMenu, activeMenu }) => {
-
-  return (   
-	<div className="row page-titles mx-0">
-		<div className="col-sm-6 p-md-0">
-			<div className="welcome-text">
-				<h4>{activeMenu}</h4>
-			</div>
-		</div>
-		<div className="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
-			<ol className="breadcrumb">				
-				<li className="breadcrumb-item"><Link to={"#"}>{motherMenu}</Link></li>
-				<li className="breadcrumb-item active"><Link to={"#"}>{activeMenu}</Link></li>
-			</ol>
-		</div>
-	</div>
+const PageTitle = ({ motherMenu, motherMenuPath = "/", activeMenu }) => {
+  return (
+    <div className="nova-page-header">
+      <h4 className="nova-page-header-title">{activeMenu}</h4>
+      <ol className="nova-page-header-crumb">
+        <li>
+          <Link to={motherMenuPath} className="nova-crumb-link">
+            {motherMenu}
+          </Link>
+        </li>
+        <li className="nova-crumb-sep" aria-hidden="true">&gt;</li>
+        <li className="nova-crumb-active">{activeMenu}</li>
+      </ol>
+    </div>
   );
 };
 

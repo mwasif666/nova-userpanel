@@ -11,7 +11,7 @@ const InviteStatistics = () => {
 
   return (
     <>
-      <PageTitle motherMenu="Invite" activeMenu="Statistics" />
+      <PageTitle motherMenu="Invitation" motherMenuPath="/invite" activeMenu="Statistics" />
 
       <div className="nova-invite-page">
         {error && (

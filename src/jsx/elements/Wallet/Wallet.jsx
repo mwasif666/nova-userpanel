@@ -11,6 +11,7 @@ const Wallet = () => {
   const [networks, setNetworks] = useState([]);
   const [loadingNetworks, setLoadingNetworks] = useState(false);
   const [networkError, setNetworkError] = useState("");
+  const [selectedNetwork, setSelectedNetwork] = useState("");
 
   const loadNetworks = async () => {
     setNetworkError("");
@@ -21,14 +22,15 @@ const Wallet = () => {
         method: "GET",
       });
       const list = res?.data?.networks || [];
-      setNetworks(
-        list.map((item) => ({
-          value: item.network,
-          label: item.name,
-          withdrawal_fee: item.withdrawal_fee,
-          min_withdrawal: item.min_withdrawal,
-        }))
-      );
+      const mapped = list.map((item) => ({
+        value: item.network,
+        label: item.name,
+        withdrawal_fee: item.withdrawal_fee,
+        min_withdrawal: item.min_withdrawal,
+      }));
+      setNetworks(mapped);
+      const preferred = mapped.find((n) => n.value === "TRC20")?.value || mapped[0]?.value || "";
+      setSelectedNetwork(preferred);
     } catch (error) {
       setNetworkError(getApiErrorMessage(error, "Failed to load withdrawal networks."));
     } finally {
@@ -42,7 +44,7 @@ const Wallet = () => {
 
   return (
     <>
-      <PageTitle motherMenu="Wallet" activeMenu="Wallet" />
+      <PageTitle motherMenu="Home" motherMenuPath="/" activeMenu="Wallet" />
 
       <div className="nova-wallet-page">
         <div className="nova-wallet-page-head">
@@ -54,18 +56,24 @@ const Wallet = () => {
             {networks.length > 0 && (
               <div className="nova-wallet-network-chips">
                 {networks.map((item) => (
-                  <span key={item.value} className="nova-wallet-network-chip">
+                  <button
+                    key={item.value}
+                    type="button"
+                    className={`nova-wallet-network-chip ${selectedNetwork === item.value ? "is-active" : ""}`}
+                    onClick={() => setSelectedNetwork(item.value)}
+                  >
                     {item.label}
-                  </span>
+                  </button>
                 ))}
               </div>
             )}
             <button
               type="button"
-              className="btn btn-sm btn-outline-secondary"
+              className="nova-wallet-refresh-btn"
               onClick={loadNetworks}
               disabled={loadingNetworks}
             >
+              <i className={`pi ${loadingNetworks ? "pi-spin pi-spinner" : "pi-refresh"} me-1`} />
               {loadingNetworks ? "Refreshing..." : "Refresh Networks"}
             </button>
           </div>
@@ -80,24 +88,24 @@ const Wallet = () => {
         <div className="nova-wallet-tabs mt-4">
           <button
             type="button"
-            className={`nova-wallet-tab ${activeTab === "addresses" ? "is-active" : ""}`}
+            className={`nova-wallet-tab-btn ${activeTab === "addresses" ? "is-active" : ""}`}
             onClick={() => setActiveTab("addresses")}
           >
-            Deposit Addresses
+            <i className="pi pi-map-marker me-2" />Deposit Addresses
           </button>
           <button
             type="button"
-            className={`nova-wallet-tab ${activeTab === "binance" ? "is-active" : ""}`}
+            className={`nova-wallet-tab-btn ${activeTab === "binance" ? "is-active" : ""}`}
             onClick={() => setActiveTab("binance")}
           >
-            Binance Pay
+            <i className="pi pi-credit-card me-2" />Binance Pay
           </button>
         </div>
 
         {activeTab === "addresses" ? (
-          <WalletDepositAddressesPanel networks={networks} />
+          <WalletDepositAddressesPanel networks={networks} selectedNetwork={selectedNetwork} onNetworkChange={setSelectedNetwork} />
         ) : (
-          <WalletBinancePayPanel />
+          <WalletBinancePayPanel networks={networks} />
         )}
       </div>
     </>

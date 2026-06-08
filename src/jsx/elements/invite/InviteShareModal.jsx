@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { copyTextToClipboard } from "../../../utils/clipboard";
@@ -7,6 +8,8 @@ const SHARE_OPTIONS = [
     key: "telegram",
     label: "Telegram",
     icon: "pi-send",
+    color: "#0088cc",
+    bg: "#e8f5ff",
     buildUrl: (link) =>
       `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Join Nova with my invite link")}`,
   },
@@ -14,6 +17,8 @@ const SHARE_OPTIONS = [
     key: "whatsapp",
     label: "WhatsApp",
     icon: "pi-whatsapp",
+    color: "#25d366",
+    bg: "#e8faf0",
     buildUrl: (link) =>
       `https://wa.me/?text=${encodeURIComponent(`Join Nova: ${link}`)}`,
   },
@@ -21,6 +26,8 @@ const SHARE_OPTIONS = [
     key: "twitter",
     label: "Twitter",
     icon: "pi-twitter",
+    color: "#1da1f2",
+    bg: "#e8f5fd",
     buildUrl: (link) =>
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Join Nova: ${link}`)}`,
   },
@@ -28,23 +35,34 @@ const SHARE_OPTIONS = [
     key: "copy",
     label: "Copy Link",
     icon: "pi-copy",
+    color: "#2a6587",
+    bg: "#dcedf5",
     action: "copy",
   },
   {
     key: "share",
-    label: "Share To",
+    label: "Share",
     icon: "pi-share-alt",
+    color: "#7c3aed",
+    bg: "#f0ebff",
     action: "native",
   },
 ];
 
+const truncateLink = (v, max = 38) => {
+  const s = String(v || "");
+  return s.length > max ? s.slice(0, max) + "..." : s;
+};
+
 const InviteShareModal = ({ show, onHide, invitationLink = "" }) => {
   const safeLink = String(invitationLink || "").trim();
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
       await copyTextToClipboard(safeLink);
-      toast.success("Invitation link copied.");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Unable to copy invitation link.");
     }
@@ -55,63 +73,69 @@ const InviteShareModal = ({ show, onHide, invitationLink = "" }) => {
       toast.error("Invitation link is not available yet.");
       return;
     }
-
-    if (option.action === "copy") {
-      await handleCopy();
-      return;
-    }
-
+    if (option.action === "copy") { await handleCopy(); return; }
     if (option.action === "native") {
       if (navigator?.share) {
-        try {
-          await navigator.share({
-            title: "Nova Invitation",
-            text: "Join Nova with my invitation link.",
-            url: safeLink,
-          });
-        } catch {
-          // User dismissed native share sheet.
-        }
+        try { await navigator.share({ title: "Nova Invitation", text: "Join Nova with my invitation link.", url: safeLink }); }
+        catch { /* dismissed */ }
       } else {
         await handleCopy();
       }
       return;
     }
-
-    if (option.buildUrl) {
-      window.open(option.buildUrl(safeLink), "_blank", "noopener,noreferrer");
-    }
+    if (option.buildUrl) window.open(option.buildUrl(safeLink), "_blank", "noopener,noreferrer");
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered className="nova-invite-share-modal">
-      <div className="modal-content nova-invite-share-panel">
-        <div className="modal-header border-0 pb-0">
-          <h5 className="modal-title w-100 text-center">Share</h5>
-          <button
-            type="button"
-            className="btn-close"
-            aria-label="Close"
-            onClick={onHide}
-          />
+    <Modal show={show} onHide={onHide} centered className="nova-share-modal-wrap">
+      <div className="nova-share-modal">
+        {/* Header */}
+        <div className="nova-share-modal-head">
+          <div className="nova-share-modal-title">
+            <span className="nova-share-modal-title-ico"><i className="pi pi-share-alt" /></span>
+            Share Your Invite
+          </div>
+          <button type="button" className="nova-share-close" aria-label="Close" onClick={onHide}>
+            <i className="pi pi-times" />
+          </button>
         </div>
 
-        <div className="modal-body pt-3">
-          <div className="nova-invite-share-grid">
-            {SHARE_OPTIONS.map((option) => (
+        {/* Link preview */}
+        {safeLink && (
+          <div className="nova-share-link-preview">
+            <i className="pi pi-link nova-share-link-ico" />
+            <span className="nova-share-link-text">{truncateLink(safeLink)}</span>
+            <div className="nova-share-copy-wrap">
               <button
-                key={option.key}
                 type="button"
-                className="nova-invite-share-item"
-                onClick={() => handleOptionClick(option)}
+                className={`nova-share-link-copy ${copied ? "is-copied" : ""}`}
+                onClick={handleCopy}
               >
-                <span className="nova-invite-share-icon">
-                  <i className={`pi ${option.icon}`} />
-                </span>
-                <span>{option.label}</span>
+                <i className={`pi ${copied ? "pi-check" : "pi-copy"}`} />
               </button>
-            ))}
+              {copied && <span className="nova-share-copy-tooltip">Copied!</span>}
+            </div>
           </div>
+        )}
+
+        {/* Share options grid */}
+        <div className="nova-share-grid">
+          {SHARE_OPTIONS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              className="nova-share-item"
+              onClick={() => handleOptionClick(option)}
+            >
+              <span
+                className="nova-share-item-ico"
+                style={{ background: option.bg, color: option.color }}
+              >
+                <i className={`pi ${option.icon}`} />
+              </span>
+              <span className="nova-share-item-label">{option.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </Modal>

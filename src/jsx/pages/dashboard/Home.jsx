@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 
+import PageTitle from "../../layouts/PageTitle";
 import DashboardActionHeader from "../../elements/dashboard/DashboardActionHeader";
 import WalletSummaryCard from "../../elements/dashboard/WalletSummaryCard";
 import OverviewMetricsBoard from "../../elements/dashboard/OverviewMetricsBoard";
@@ -55,6 +56,7 @@ export function CommandPage({ user }) {
   const userPhone = user?.phone || "N/A";
   const userCode = user?.tevau_user?.user_code || null;
   const thirdId = user?.tevau_user?.third_id || null;
+  const accountId = userCode || thirdId || user?.user_code || null;
 
   useEffect(() => {
     if (!user?.id) {
@@ -465,6 +467,7 @@ export function CommandPage({ user }) {
 
   return (
     <>
+      <PageTitle motherMenu="Home" activeMenu="Dashboard" />
       <div className="row">
         <div className="col-xl-12">
           <div className="payment-bx nova-dashboard-clean">
@@ -472,6 +475,7 @@ export function CommandPage({ user }) {
               userName={userName}
               userEmail={userEmail}
               userPhone={userPhone}
+              accountId={accountId}
               onClickDeposit={() => navigate("/wallet")}
               onOpenTransfer={() => setTransferModal(true)}
               onOpenWithdraw={() => setWithdrowModal(true)}
@@ -508,7 +512,7 @@ export function CommandPage({ user }) {
               </div>
             ) : (
               <div className="mt-3">
-                <CardAccessNotice message="This dashboard wallet area is available after the user has purchased at least one card. For a new account, continue with Profile and KYC first." />
+                <CardAccessNotice variant="dashboard" />
               </div>
             )}
           </div>
