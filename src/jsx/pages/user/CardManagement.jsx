@@ -135,10 +135,9 @@ const CardManagement = () => {
   const [cardLimits, setCardLimits] = useState(createEmptyCardLimits);
 
   const cardSwiperRef = useRef(null);
-
   const userId = user?.id;
-  const userCode = user?.tevau_user?.user_code || null;
-  const thirdId = user?.tevau_user?.third_id || null;
+  const userCode = user?.card_account?.user_code || null;
+  const thirdId = user?.card_account?.third_id || null;
 
   const loadCards = useCallback(async () => {
     if (!userId) {
@@ -626,14 +625,13 @@ const CardManagement = () => {
             Loading card management...
           </div>
         </div>
-      ) : !cards.length ? (
+      ) : cards.length == 0 ? (
         <CardAccessNotice
           title="Card Management Unavailable"
           message="At least one purchased card is required before card management actions can be used."
         />
       ) : (
         <div className="row g-3">
-          {/* ── Card selector — Swiper ── */}
           {cards.length > 1 && (
             <div className="col-12">
               <div className="nova-cm-selector-v2">

@@ -77,13 +77,9 @@ export function CommandPage({ user }) {
       try {
         const rows = await getAllDashboardCards();
         const filteredRows = rows.filter((row) => {
-          const rowUserCode = row?.user_code || row?.tevau_user?.user_code;
-          const rowThirdId = row?.third_id || row?.tevau_user?.third_id;
-          const rowUserId =
-            row?.user_id ||
-            row?.tevau_user?.user_id ||
-            row?.tevau_user?.user?.id;
-
+          const rowUserCode = row?.user_code;
+          const rowThirdId = row?.third_id;
+          const rowUserId = row?.card_account?.user_id;
           return (
             (userCode && rowUserCode === userCode) ||
             (thirdId && rowThirdId === thirdId) ||

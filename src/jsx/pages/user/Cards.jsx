@@ -158,13 +158,9 @@ const Cards = () => {
         );
 
         const filtered = deduped.filter((row) => {
-          const rowUserCode = row?.user_code || row?.tevau_user?.user_code;
-          const rowThirdId = row?.third_id || row?.tevau_user?.third_id;
-          const rowUserId =
-            row?.user_id ||
-            row?.tevau_user?.user_id ||
-            row?.tevau_user?.user?.id;
-
+          const rowUserCode = row?.user_code;
+          const rowThirdId = row?.third_id;
+          const rowUserId = row?.card_account?.user_id;
           return (
             (userCode && rowUserCode === userCode) ||
             (thirdId && rowThirdId === thirdId) ||
@@ -862,29 +858,10 @@ const Cards = () => {
                     <div className="nova-first-card-step-num">3</div>
                     <div>
                       <strong>Order Your Card</strong>
-                      <p>Virtual or Physical card</p>
+                      <p>Use Order Card from the menu when KYC is complete</p>
                     </div>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  className="nova-first-card-cta"
-                  onClick={() => {
-                    if (!cardFlow.canOrderCard) return;
-                    setCardOpsScreen("order");
-                    setShowCardOpsModal(true);
-                  }}
-                  disabled={!cardFlow.canOrderCard || kycLoading}
-                >
-                  {kycLoading ? (
-                    <><span className="spinner-border spinner-border-sm me-2" />Checking...</>
-                  ) : cardFlow.canOrderCard ? (
-                    <><i className="pi pi-credit-card me-2" />Buy First Card</>
-                  ) : (
-                    <><i className="pi pi-lock me-2" />{cardFlow.title}</>
-                  )}
-                </button>
               </div>
             </div>
           </div>
@@ -959,7 +936,7 @@ const Cards = () => {
         </div>
       </Modal>
 
-      <CardOperationsModal
+       <CardOperationsModal
         show={showCardOpsModal}
         onHide={() => {
           setShowCardOpsModal(false);
