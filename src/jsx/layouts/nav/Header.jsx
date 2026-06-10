@@ -4,7 +4,6 @@ import { Dropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
 /// Image
-import profile from "../../../assets/images/user.jpg";
 import avatar from "../../../assets/images/avatar/1.jpg";
 
 import Logout from "../nav/Logout";
@@ -334,7 +333,9 @@ const Header = ({ onNote }) => {
                           <span className="d-block text-end">{roleLabel}</span>
                         </div>
                       </div>
-                      <img src={profile} width="20" alt="" />
+                      <span className="nova-header-avatar" aria-hidden="true">
+                        {(displayName || "U").trim().charAt(0).toUpperCase() || "U"}
+                      </span>
                     </div>
                   </Dropdown.Toggle>
                   <Dropdown.Menu

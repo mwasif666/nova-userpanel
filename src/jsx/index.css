@@ -4148,6 +4148,245 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   font-size: 0.88rem;
   line-height: 1.35;
 }
+
+/* ── KYC Verified hero (mockup) ───────────────────────── */
+.nova-kyc-hero-title {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 800;
+}
+.nova-kyc-hero-card.is-approved {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(34, 197, 94, 0.12), transparent 42%),
+    linear-gradient(135deg, #effdf4 0%, #e3f9ec 52%, #f4fdf8 100%);
+  border-color: #c3eed3;
+}
+.nova-kyc-verified-badge {
+  position: relative;
+  flex-shrink: 0;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #22c55e 0%, #15a046 100%);
+  box-shadow:
+    0 12px 30px rgba(22, 163, 74, 0.35),
+    0 0 0 8px rgba(34, 197, 94, 0.12),
+    0 0 0 16px rgba(34, 197, 94, 0.06);
+}
+.nova-kyc-verified-svg {
+  width: 44px;
+  height: 44px;
+}
+.nova-kyc-pill i {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.nova-kyc-pill.is-success i {
+  color: #16a34a;
+}
+
+/* Stat cards with icon */
+.nova-kyc-approved-stats {
+  gap: 0.85rem;
+}
+.nova-kyc-approved-stats .nova-kyc-stat-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  min-width: 185px;
+  background: #ffffff;
+  border-color: #d6f0e0;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(16, 163, 74, 0.07);
+}
+.nova-kyc-stat-text {
+  min-width: 0;
+}
+.nova-kyc-stat-box .nova-kyc-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  margin: 0;
+  border-radius: 11px;
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.nova-kyc-stat-box .nova-kyc-stat-icon.is-blue {
+  color: #2563eb;
+  background: #e6effe;
+}
+.nova-kyc-stat-box .nova-kyc-stat-icon.is-green {
+  color: #16a34a;
+  background: #e7f8ee;
+}
+
+/* ── Security & Compliance + Need Help row ────────────── */
+.nova-kyc-info-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.nova-kyc-compliance-card,
+.nova-kyc-help-card {
+  border: 1px solid #e6edf3;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(12, 42, 61, 0.05);
+  padding: 1.4rem 1.5rem;
+}
+.nova-kyc-compliance-head,
+.nova-kyc-help-head {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.15rem;
+}
+.nova-kyc-compliance-icon,
+.nova-kyc-help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 12px;
+  flex-shrink: 0;
+  color: #2a6587;
+  background: #e8f1fb;
+  font-size: 1.2rem;
+}
+.nova-kyc-compliance-head h5,
+.nova-kyc-help-head h5 {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #14283d;
+}
+.nova-kyc-compliance-head p,
+.nova-kyc-help-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.nova-kyc-compliance-badges {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.nova-kyc-compliance-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #fafbfd;
+}
+.nova-kyc-compliance-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: #2a6587;
+  background: #eef4fb;
+  font-size: 0.9rem;
+}
+.nova-kyc-compliance-badge strong {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #14283d;
+  line-height: 1.15;
+}
+.nova-kyc-compliance-badge small {
+  font-size: 0.72rem;
+  color: #8a97a8;
+}
+.nova-kyc-dashed-circle {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  border: 2px dashed #2a6587;
+}
+.nova-kyc-help-card {
+  display: flex;
+  flex-direction: column;
+}
+.nova-kyc-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+  background: linear-gradient(135deg, #2a6587 0%, #1b4a63 100%);
+  box-shadow: 0 10px 22px rgba(27, 74, 99, 0.25);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.nova-kyc-help-btn:hover {
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(27, 74, 99, 0.3);
+}
+
+/* ── Header initial avatar (replaces broken profile image) ── */
+.header-profile2 .nova-header-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-left: 0.8rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2a6587 0%, #1b4a63 100%);
+  box-shadow: 0 6px 14px rgba(27, 74, 99, 0.22);
+  text-transform: uppercase;
+}
+@media only screen and (max-width: 35.9375rem) {
+  .header-profile2 .nova-header-avatar {
+    width: 2.6rem;
+    height: 2.6rem;
+    margin-left: 0;
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .nova-kyc-info-row {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 575.98px) {
+  .nova-kyc-compliance-badges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .nova-kyc-approved-stats .nova-kyc-stat-box {
+    min-width: 100%;
+  }
+}
 .nova-kyc-form-card,
 .nova-kyc-status-card,
 .nova-kyc-guide-card {
@@ -5816,65 +6055,170 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
 
 /* ── Google Auth redesign ──────────────────────────────── */
 .nova-google-wrap {
-  max-width: 620px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
+}
+.nova-google-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.nova-google-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  color: #2563eb;
+  background: #e8f1fe;
+}
+.nova-google-header-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+}
+.nova-google-header-sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  color: #64748b;
+  line-height: 1.45;
 }
 .nova-google-status-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #f8f9fa;
+  gap: 1rem;
+  background: #f8fafc;
   border: 1px solid #e9ecef;
-  border-radius: 14px;
-  padding: 1.1rem 1.3rem;
-  margin-bottom: 1rem;
+  border-left: 4px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 1.15rem 1.4rem;
+  margin-bottom: 1.25rem;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.nova-google-status-card.is-enabled {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f7fffb 65%);
+  border-color: #b7f0cf;
+  border-left-color: #16a34a;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.12);
 }
 .nova-google-status-info {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 1rem;
+  min-width: 0;
 }
-.nova-google-status-dot {
-  width: 10px;
-  height: 10px;
+.nova-google-status-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 50%;
-  background: #94a3b8;
   flex-shrink: 0;
-  transition: background 0.2s;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
 }
-.nova-google-status-dot.is-on { background: #10b981; }
+.nova-google-status-brand-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 50%;
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #ffffff;
+  background: linear-gradient(135deg, #34d399 0%, #16a34a 100%);
+}
+.nova-google-status-card:not(.is-enabled) .nova-google-status-brand-inner {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
 .nova-google-status-name {
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 .nova-google-status-state {
+  color: #334155;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+.nova-google-status-state strong.is-on {
+  color: #16a34a;
+  font-weight: 700;
+}
+.nova-google-status-state strong.is-off {
   color: #64748b;
-  font-size: 0.82rem;
-  margin-top: 0.1rem;
+  font-weight: 700;
+}
+.nova-google-status-right {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  flex-shrink: 0;
+}
+.nova-google-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.nova-google-status-badge.is-on {
+  color: #047857;
+  background: #d1fae5;
+}
+.nova-google-status-badge.is-off {
+  color: #64748b;
+  background: #e8edf2;
+}
+.nova-google-status-dot-sm {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 .nova-google-notice {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  background: rgba(38,150,253,0.06);
-  border: 1px solid rgba(38,150,253,0.15);
-  border-radius: 12px;
-  padding: 0.9rem 1.1rem;
+  align-items: center;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f9ff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
 }
 .nova-google-notice-icon {
-  color: var(--primary);
-  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  margin-top: 0.1rem;
+  color: #2563eb;
+  font-size: 1.3rem;
 }
 .nova-google-notice p {
   margin: 0;
-  color: #374151;
-  font-size: 0.875rem;
+  color: #475569;
+  font-size: 0.9rem;
   line-height: 1.5;
+}
+.nova-google-notice p strong {
+  color: #2563eb;
+  font-weight: 700;
 }
 .nova-google-howto {
   display: flex;
@@ -5925,9 +6269,12 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   border-radius: 14px;
   padding: 1rem;
 }
-.nova-google-qr-card img {
-  max-width: 148px;
+.nova-google-qr-card img,
+.nova-google-qr-card svg {
+  width: 148px;
+  height: 148px;
   border-radius: 8px;
+  background: #ffffff;
 }
 .nova-google-qr-card p {
   margin: 0.5rem 0 0;
@@ -5986,34 +6333,277 @@ button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--r
   color: #64748b;
   line-height: 1.4;
 }
-.nova-google-code-form { margin-bottom: 1rem; }
-.nova-google-footer {
-  display: flex;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-  padding-top: 0.25rem;
-  margin-bottom: 0.5rem;
+/* Code card */
+.nova-google-code-card {
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
+  padding: 1.3rem 1.4rem;
+  margin-bottom: 1.25rem;
+  background: #fff;
 }
-.nova-google-footer-btn {
+.nova-google-code-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+.nova-google-code-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  flex-shrink: 0;
+  color: #7c3aed;
+  background: #f0ebfe;
+  font-size: 1.05rem;
+}
+.nova-google-code-card-head h6 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.nova-google-code-row {
+  display: flex;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+.nova-google-code-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.nova-google-code-input {
+  width: 100%;
+  min-height: 3.4rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.7rem 3rem 0.7rem 1.1rem;
+  font-size: 1rem;
+  color: #0f172a;
+  background: #fff;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.nova-google-code-input::placeholder {
+  color: #94a3b8;
+}
+.nova-google-code-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.nova-google-code-scan {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  color: #64748b;
+  background: #f1f5f9;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+.nova-google-submit-btn {
   display: inline-flex;
   align-items: center;
-  background: #fff;
-  border: 1.5px solid #d1d5db;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 11rem;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s,
+    opacity 0.2s;
 }
-.nova-google-footer-btn:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+.nova-google-submit-btn.is-danger {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 0 10px 22px rgba(239, 68, 68, 0.28);
 }
-.nova-google-footer-btn.is-danger { color: #ef4444; border-color: #fca5a5; }
-.nova-google-footer-btn.is-danger:hover { border-color: #ef4444; background: #fff5f5; }
-.nova-google-footer-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.nova-google-submit-btn.is-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  transform: translateY(-1px);
+}
+.nova-google-submit-btn.is-confirm {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.28);
+}
+.nova-google-submit-btn.is-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  transform: translateY(-1px);
+}
+.nova-google-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.nova-google-code-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0.85rem 0 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.nova-google-code-hint i {
+  margin-top: 0.1rem;
+}
+
+/* Action tiles */
+.nova-google-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+.nova-google-action-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+  padding: 1rem 1.1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  background: #fafbfd;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+.nova-google-action-tile:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+.nova-google-action-tile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.nova-google-action-tile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+.nova-google-action-tile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.nova-google-action-tile-text strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.nova-google-action-tile-text small {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 0.1rem;
+}
+.nova-google-action-tile-arrow {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.nova-google-action-tile.is-blue {
+  background: #f3f8ff;
+  border-color: #dbeafe;
+}
+.nova-google-action-tile.is-blue .nova-google-action-tile-icon {
+  color: #2563eb;
+  background: #e0edfe;
+}
+.nova-google-action-tile.is-blue:hover:not(:disabled) {
+  border-color: #93c5fd;
+}
+.nova-google-action-tile.is-orange {
+  background: #fff8ef;
+  border-color: #fde9cc;
+}
+.nova-google-action-tile.is-orange .nova-google-action-tile-icon {
+  color: #ea8a0c;
+  background: #fdedd3;
+}
+.nova-google-action-tile.is-orange:hover:not(:disabled) {
+  border-color: #fbcd8a;
+}
+.nova-google-action-tile.is-red {
+  background: #fff5f5;
+  border-color: #fbd5d5;
+}
+.nova-google-action-tile.is-red .nova-google-action-tile-icon {
+  color: #ef4444;
+  background: #fde0e0;
+}
+.nova-google-action-tile.is-red .nova-google-action-tile-text strong {
+  color: #ef4444;
+}
+.nova-google-action-tile.is-red:hover:not(:disabled) {
+  border-color: #f7b0b0;
+}
+
+/* Bottom secure note */
+.nova-google-secure-note {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 12px;
+  background: #f5f3ff;
+  border: 1px solid #ece9fe;
+  color: #6b7280;
+  font-size: 0.86rem;
+}
+.nova-google-secure-note-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: #7c3aed;
+  background: #ece9fe;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .nova-google-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .nova-google-code-row {
+    flex-direction: column;
+  }
+  .nova-google-submit-btn {
+    width: 100%;
+    min-width: 0;
+  }
+  .nova-google-header-title {
+    font-size: 1.25rem;
+  }
+}
 .nova-google-forget-panel {
   margin-top: 1.25rem;
   background: #fff8f8;

@@ -636,6 +636,484 @@
   }
 }
 
+/* ============================================================
+   Invite Statistics Page
+   ============================================================ */
+.nova-stat-page {
+  --nova-stat-ink: #14283d;
+  --nova-stat-muted: #6b7a90;
+  --nova-stat-line: #e9eef5;
+  --nova-stat-blue: #3b82f6;
+  --nova-stat-green: #22c55e;
+  --nova-stat-purple: #8b5cf6;
+  --nova-stat-orange: #f59e0b;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header */
+.nova-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.4rem 1.6rem;
+  border: 1px solid var(--nova-stat-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(21, 48, 92, 0.05);
+}
+.nova-stat-header-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+.nova-stat-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 14px;
+  color: var(--nova-stat-blue);
+  background: #e8f1fe;
+  font-size: 1.45rem;
+  flex: 0 0 auto;
+}
+.nova-stat-header-title {
+  margin: 0;
+  color: var(--nova-stat-ink);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.nova-stat-header-sub {
+  margin: 0.2rem 0 0;
+  color: var(--nova-stat-muted);
+  font-size: 0.95rem;
+}
+.nova-stat-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.15rem;
+  border: 1px solid #bcd3f5;
+  border-radius: 12px;
+  color: var(--nova-stat-blue);
+  background: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+.nova-stat-back-btn:hover {
+  color: #ffffff;
+  background: var(--nova-stat-blue);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.28);
+  transform: translateY(-1px);
+}
+
+/* Summary cards */
+.nova-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.nova-stat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  overflow: hidden;
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--nova-stat-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(21, 48, 92, 0.05);
+}
+.nova-stat-card.is-rebates {
+  border-color: #d7e6fb;
+  background: linear-gradient(135deg, #eef5ff 0%, #f6faff 60%);
+}
+.nova-stat-card.is-invites {
+  border-color: #d2efdd;
+  background: linear-gradient(135deg, #ecfbf1 0%, #f6fef9 60%);
+}
+.nova-stat-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.7rem;
+  height: 3.7rem;
+  border-radius: 15px;
+  color: #ffffff;
+  font-size: 1.55rem;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+.nova-stat-card.is-rebates .nova-stat-card-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.32);
+}
+.nova-stat-card.is-invites .nova-stat-card-icon {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 12px 22px rgba(22, 163, 74, 0.3);
+}
+.nova-stat-card-body {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+.nova-stat-card-label {
+  margin-bottom: 0.3rem;
+  color: var(--nova-stat-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.nova-stat-card-value {
+  color: var(--nova-stat-ink);
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.1;
+  word-break: break-word;
+}
+.nova-stat-card-unit {
+  color: #93a3b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.nova-stat-card-foot {
+  margin-top: 0.3rem;
+  color: var(--nova-stat-muted);
+  font-size: 0.9rem;
+}
+.nova-stat-card-wave {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 55%;
+  height: 60%;
+  pointer-events: none;
+}
+.nova-stat-card.is-rebates .nova-stat-card-wave {
+  color: #d6e6fb;
+}
+.nova-stat-card.is-invites .nova-stat-card-wave {
+  color: #cdeed9;
+}
+
+/* Panel */
+.nova-stat-panel {
+  padding: 1.6rem;
+  border: 1px solid var(--nova-stat-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(21, 48, 92, 0.05);
+}
+.nova-stat-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.nova-stat-panel-titles {
+  min-width: 0;
+}
+.nova-stat-panel-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--nova-stat-ink);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.nova-stat-panel-title i {
+  color: #9fb0c4;
+  font-size: 0.95rem;
+}
+.nova-stat-panel-sub {
+  margin: 0.3rem 0 0;
+  color: var(--nova-stat-muted);
+  font-size: 0.92rem;
+}
+.nova-stat-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--nova-stat-line);
+  border-radius: 12px;
+  background: #f8fafd;
+  color: #3f4f63;
+  font-size: 0.92rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.nova-stat-range > i:first-child {
+  color: var(--nova-stat-blue);
+}
+.nova-stat-range > i:last-child {
+  color: #9fb0c4;
+  font-size: 0.8rem;
+}
+
+/* Metrics under chart */
+.nova-stat-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--nova-stat-line);
+}
+.nova-stat-metric {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--nova-stat-line);
+  border-radius: 13px;
+  background: #fafbfd;
+}
+.nova-stat-metric-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 11px;
+  font-size: 1.15rem;
+  flex: 0 0 auto;
+}
+.nova-stat-metric-icon.is-blue {
+  color: #3b82f6;
+  background: #e8f1fe;
+}
+.nova-stat-metric-icon.is-purple {
+  color: #8b5cf6;
+  background: #f0ebfe;
+}
+.nova-stat-metric-icon.is-orange {
+  color: #f59e0b;
+  background: #fef3e2;
+}
+.nova-stat-metric-icon.is-green {
+  color: #22c55e;
+  background: #e6f9ee;
+}
+.nova-stat-metric-body {
+  min-width: 0;
+}
+.nova-stat-metric-label {
+  margin-bottom: 0.2rem;
+  color: var(--nova-stat-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+.nova-stat-metric-value {
+  color: var(--nova-stat-ink);
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+.nova-stat-metric-value.is-up {
+  color: #16a34a;
+}
+.nova-stat-metric-value.is-down {
+  color: #dc2626;
+}
+.nova-stat-metric-foot {
+  margin-top: 0.2rem;
+  color: #93a3b8;
+  font-size: 0.82rem;
+}
+
+/* Referral Rewards */
+.nova-stat-rewards-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+.nova-stat-rewards-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 13px;
+  color: #6366f1;
+  background: #eceefe;
+  font-size: 1.3rem;
+  flex: 0 0 auto;
+}
+.nova-stat-rewards-title {
+  margin: 0;
+  color: var(--nova-stat-ink);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.nova-stat-rewards-sub {
+  margin: 0.25rem 0 0;
+  color: var(--nova-stat-muted);
+  font-size: 0.92rem;
+}
+.nova-stat-rewards-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.nova-stat-rewards-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.8fr) minmax(0, 1.6fr) minmax(6rem, 0.6fr);
+  align-items: center;
+  gap: 1rem;
+}
+.nova-stat-rewards-row.is-header {
+  padding: 0 1.1rem 0.4rem;
+  color: #93a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.nova-stat-rewards-row.is-header span:last-child {
+  text-align: right;
+}
+.nova-stat-rewards-row:not(.is-header) {
+  position: relative;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid var(--nova-stat-line);
+  border-left-width: 4px;
+  border-radius: 12px;
+  background: #ffffff;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.nova-stat-rewards-row:not(.is-header):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(21, 48, 92, 0.07);
+}
+.nova-stat-rewards-level {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.nova-stat-rewards-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--nova-stat-ink);
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+.nova-stat-rewards-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 1.85rem;
+  border-radius: 7px;
+  font-size: 0.95rem;
+}
+.nova-stat-rewards-amount {
+  text-align: right;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.nova-stat-rewards-row.is-blue {
+  border-left-color: #3b82f6;
+  background: linear-gradient(90deg, #f4f8ff 0%, #ffffff 40%);
+}
+.nova-stat-rewards-row.is-blue .nova-stat-rewards-level,
+.nova-stat-rewards-row.is-blue .nova-stat-rewards-card-icon {
+  color: #2563eb;
+  background: #e3edfd;
+}
+.nova-stat-rewards-row.is-blue .nova-stat-rewards-amount {
+  color: #2563eb;
+}
+
+.nova-stat-rewards-row.is-green {
+  border-left-color: #22c55e;
+  background: linear-gradient(90deg, #f1fbf5 0%, #ffffff 40%);
+}
+.nova-stat-rewards-row.is-green .nova-stat-rewards-level,
+.nova-stat-rewards-row.is-green .nova-stat-rewards-card-icon {
+  color: #16a34a;
+  background: #dcf6e6;
+}
+.nova-stat-rewards-row.is-green .nova-stat-rewards-amount {
+  color: #16a34a;
+}
+
+.nova-stat-rewards-row.is-purple {
+  border-left-color: #8b5cf6;
+  background: linear-gradient(90deg, #f6f3ff 0%, #ffffff 40%);
+}
+.nova-stat-rewards-row.is-purple .nova-stat-rewards-level,
+.nova-stat-rewards-row.is-purple .nova-stat-rewards-card-icon {
+  color: #7c3aed;
+  background: #ece4fd;
+}
+.nova-stat-rewards-row.is-purple .nova-stat-rewards-amount {
+  color: #7c3aed;
+}
+
+.nova-stat-rewards-row.is-orange {
+  border-left-color: #f59e0b;
+  background: linear-gradient(90deg, #fff8ee 0%, #ffffff 40%);
+}
+.nova-stat-rewards-row.is-orange .nova-stat-rewards-level,
+.nova-stat-rewards-row.is-orange .nova-stat-rewards-card-icon {
+  color: #d97706;
+  background: #fdedd3;
+}
+.nova-stat-rewards-row.is-orange .nova-stat-rewards-amount {
+  color: #d97706;
+}
+
+/* Chart wrap spacing */
+.nova-invite-chart-wrap {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .nova-stat-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767.98px) {
+  .nova-stat-cards,
+  .nova-stat-metrics {
+    grid-template-columns: 1fr;
+  }
+  .nova-stat-header,
+  .nova-stat-panel {
+    padding: 1.15rem;
+  }
+  .nova-stat-rewards-row {
+    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+    gap: 0.6rem;
+  }
+}
+
 /* -- Share Modal -- */
 .nova-share-modal-wrap .modal-content {
   border: none !important;

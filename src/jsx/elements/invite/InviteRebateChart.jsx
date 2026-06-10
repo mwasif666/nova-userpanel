@@ -13,8 +13,14 @@ const InviteRebateChart = ({ labels = [], inviteRebate = [], subAffiliateRebate 
       curve: "smooth",
       width: 3,
     },
-    colors: ["#7ec8f7", "#1f4f82"],
+    colors: ["#3b82f6", "#1f4f82"],
     dataLabels: { enabled: false },
+    markers: {
+      size: 5,
+      strokeColors: "#ffffff",
+      strokeWidth: 2,
+      hover: { size: 7 },
+    },
     grid: {
       borderColor: "#e8eef5",
       strokeDashArray: 4,

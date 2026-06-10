@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import PageTitle from "../../layouts/PageTitle";
 import { AuthContext } from "../../../context/authContext";
 import {
@@ -332,6 +333,26 @@ const SecuritySettings = () => {
     () => maskEmailAddress(profileData?.email),
     [profileData?.email],
   );
+
+  // Build an otpauth:// URL from the secret so a QR can be rendered locally
+  // when the backend response only returns the manual setup key (no qr_code).
+  const googleOtpAuthUrl = useMemo(() => {
+    const secret = String(googleSecret || "").trim();
+    if (!secret) return "";
+    const issuer = "Nova";
+    const account = String(
+      profileData?.email || profileData?.name || "account",
+    ).trim();
+    const label = encodeURIComponent(`${issuer}:${account}`);
+    const params = new URLSearchParams({
+      secret,
+      issuer,
+      algorithm: "SHA1",
+      digits: "6",
+      period: "30",
+    });
+    return `otpauth://totp/${label}?${params.toString()}`;
+  }, [googleSecret, profileData?.email, profileData?.name]);
 
   const profileRows = useMemo(
     () => [
@@ -2029,36 +2050,62 @@ const SecuritySettings = () => {
 
               {activeTab === "google" && (
                 <div className="nova-google-wrap">
-                  <div className="nova-email-stepper-head">
-                    <h5 className="nova-email-stepper-title">Google Authentication (2FA)</h5>
-                    <p className="nova-email-stepper-sub">Protect your account with two-factor authentication</p>
+                  <div className="nova-google-header">
+                    <span className="nova-google-header-icon" aria-hidden="true">
+                      <i className="pi pi-shield" />
+                    </span>
+                    <div>
+                      <h5 className="nova-google-header-title">Google Authentication (2FA)</h5>
+                      <p className="nova-google-header-sub">
+                        Add an extra layer of security to your account with two-factor authentication.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Status toggle */}
-                  <div className="nova-google-status-card">
+                  <div className={`nova-google-status-card ${googleEnabled ? "is-enabled" : ""}`}>
                     <div className="nova-google-status-info">
-                      <div className={`nova-google-status-dot ${googleEnabled ? "is-on" : ""}`} />
+                      <span className="nova-google-status-brand" aria-hidden="true">
+                        <span className="nova-google-status-brand-inner">G</span>
+                      </span>
                       <div>
-                        <div className="nova-google-status-name">Google Authenticator</div>
                         <div className="nova-google-status-state">
-                          {googleLoading ? "Checking status..." : googleEnabled ? "Two-factor authentication is enabled" : "Two-factor authentication is disabled"}
+                          Two-factor authentication is{" "}
+                          <strong className={googleEnabled ? "is-on" : "is-off"}>
+                            {googleLoading
+                              ? "checking..."
+                              : googleEnabled
+                                ? "enabled"
+                                : "disabled"}
+                          </strong>
                         </div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className={`nova-2fa-switch ${googleEnabled ? "is-on" : ""}`}
-                      onClick={onGoogleToggleSwitch}
-                      disabled={googleLoading || submittingAction === "google-setup"}
-                    >
-                      <span />
-                    </button>
+                    <div className="nova-google-status-right">
+                      <span className={`nova-google-status-badge ${googleEnabled ? "is-on" : "is-off"}`}>
+                        <span className="nova-google-status-dot-sm" />
+                        {googleLoading ? "..." : googleEnabled ? "Active" : "Inactive"}
+                      </span>
+                      <button
+                        type="button"
+                        className={`nova-2fa-switch ${googleEnabled ? "is-on" : ""}`}
+                        onClick={onGoogleToggleSwitch}
+                        disabled={googleLoading || submittingAction === "google-setup"}
+                      >
+                        <span />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Notice */}
                   <div className="nova-google-notice">
-                    <i className="pi pi-shield nova-google-notice-icon" />
-                    <p>2FA verification will be required for critical actions such as <strong>login, card purchase/top-up, CVV/PAN view, withdrawal, and transfer</strong>.</p>
+                    <span className="nova-google-notice-icon" aria-hidden="true">
+                      <i className="pi pi-shield" />
+                    </span>
+                    <p>
+                      2FA verification will be required for critical actions such as{" "}
+                      <strong>login, card purchase/top-up, CVV/PAN view, withdrawal, and transfer</strong>.
+                    </p>
                   </div>
 
                   {/* How-to steps — only when disabled */}
@@ -2082,9 +2129,18 @@ const SecuritySettings = () => {
                   {/* QR + Secret */}
                   {(googleQr || googleSecret) && (
                     <div className="nova-google-setup-panel">
-                      {googleQr && (
+                      {(googleQr || googleOtpAuthUrl) && (
                         <div className="nova-google-qr-card">
-                          <img src={googleQr} alt="Google Auth QR" />
+                          {googleQr ? (
+                            <img src={googleQr} alt="Google Auth QR" />
+                          ) : (
+                            <QRCodeSVG
+                              value={googleOtpAuthUrl}
+                              size={148}
+                              level="M"
+                              includeMargin
+                            />
+                          )}
                           <p>Scan with Google Authenticator</p>
                         </div>
                       )}
@@ -2104,73 +2160,108 @@ const SecuritySettings = () => {
                   )}
 
                   {/* Code input + submit */}
-                  <form onSubmit={onGooglePrimarySubmit} className="nova-google-code-form">
-                    <div className="nova-bind-field">
-                      <label>{googleEnabled ? "Enter code to disable 2FA" : "Authenticator Code"}</label>
-                      <div className="nova-bind-input-group">
+                  <form onSubmit={onGooglePrimarySubmit} className="nova-google-code-card">
+                    <div className="nova-google-code-card-head">
+                      <span className="nova-google-code-card-icon" aria-hidden="true">
+                        <i className="pi pi-lock" />
+                      </span>
+                      <h6>{googleEnabled ? "Enter code to disable 2FA" : "Authenticator Code"}</h6>
+                    </div>
+                    <div className="nova-google-code-row">
+                      <div className="nova-google-code-field">
                         <input
                           type="text"
-                          className="nova-bind-input"
+                          className="nova-google-code-input"
                           value={googleForm.otp}
                           onChange={(e) => setGoogleForm((prev) => ({ ...prev, otp: e.target.value }))}
                           placeholder="Enter 6-digit code"
                           maxLength={6}
                         />
-                        <button
-                          type="submit"
-                          className={`nova-email-stepper-next-btn ${googleEnabled ? "is-danger" : "is-confirm"}`}
-                          disabled={submittingAction === "google-verify" || submittingAction === "google-disable"}
-                        >
-                          {submittingAction === "google-verify" ? (
-                            <><span className="spinner-border spinner-border-sm me-2" />Confirming...</>
-                          ) : submittingAction === "google-disable" ? (
-                            <><span className="spinner-border spinner-border-sm me-2" />Disabling...</>
-                          ) : googleEnabled ? (
-                            <><i className="pi pi-times me-2" />Disable 2FA</>
-                          ) : (
-                            <><i className="pi pi-check me-2" />Confirm & Enable</>
-                          )}
-                        </button>
+                        <span className="nova-google-code-scan" aria-hidden="true">
+                          <i className="pi pi-qrcode" />
+                        </span>
                       </div>
-                      <p className="nova-email-stepper-hint mt-1"><i className="pi pi-info-circle me-1" />The code comes from the Google Authenticator app after scanning the QR code or adding the secret key.</p>
+                      <button
+                        type="submit"
+                        className={`nova-google-submit-btn ${googleEnabled ? "is-danger" : "is-confirm"}`}
+                        disabled={submittingAction === "google-verify" || submittingAction === "google-disable"}
+                      >
+                        {submittingAction === "google-verify" ? (
+                          <><span className="spinner-border spinner-border-sm me-2" />Confirming...</>
+                        ) : submittingAction === "google-disable" ? (
+                          <><span className="spinner-border spinner-border-sm me-2" />Disabling...</>
+                        ) : googleEnabled ? (
+                          <><i className="pi pi-times me-2" />Disable 2FA</>
+                        ) : (
+                          <><i className="pi pi-check me-2" />Confirm & Enable</>
+                        )}
+                      </button>
                     </div>
+                    <p className="nova-google-code-hint">
+                      <i className="pi pi-info-circle" />
+                      The code comes from the Google Authenticator app after scanning the QR code or adding the secret key.
+                    </p>
                   </form>
 
-                  {/* Footer actions */}
-                  <div className="nova-google-footer">
+                  {/* Action tiles */}
+                  <div className="nova-google-actions-grid">
                     <button
                       type="button"
-                      className="nova-google-footer-btn"
+                      className="nova-google-action-tile is-blue"
                       onClick={() => onSetupGoogle()}
                       disabled={submittingAction === "google-setup"}
                     >
-                      {submittingAction === "google-setup" ? (
-                        <><span className="spinner-border spinner-border-sm me-2" />Generating...</>
-                      ) : (
-                        <><i className="pi pi-refresh me-2" />{googleQr || googleSecret ? "Regenerate Setup" : "Generate Setup"}</>
-                      )}
+                      <span className="nova-google-action-tile-icon" aria-hidden="true">
+                        {submittingAction === "google-setup" ? (
+                          <span className="spinner-border spinner-border-sm" />
+                        ) : (
+                          <i className="pi pi-refresh" />
+                        )}
+                      </span>
+                      <span className="nova-google-action-tile-text">
+                        <strong>
+                          {googleQr || googleSecret ? "Regenerate Setup" : "Generate Setup"}
+                        </strong>
+                        <small>Set up Google Authenticator</small>
+                      </span>
+                      <i className="pi pi-angle-right nova-google-action-tile-arrow" />
                     </button>
+
                     {googleEnabled && (
                       <button
                         type="button"
-                        className="nova-google-footer-btn"
+                        className="nova-google-action-tile is-orange"
                         onClick={onResetGoogleSetup}
                         disabled={submittingAction === "google-reset-setup"}
                       >
-                        {submittingAction === "google-reset-setup" ? (
-                          <><span className="spinner-border spinner-border-sm me-2" />Resetting...</>
-                        ) : (
-                          <><i className="pi pi-replay me-2" />Disable & New Setup</>
-                        )}
+                        <span className="nova-google-action-tile-icon" aria-hidden="true">
+                          {submittingAction === "google-reset-setup" ? (
+                            <span className="spinner-border spinner-border-sm" />
+                          ) : (
+                            <i className="pi pi-replay" />
+                          )}
+                        </span>
+                        <span className="nova-google-action-tile-text">
+                          <strong>Disable &amp; New Setup</strong>
+                          <small>Disable 2FA and setup again</small>
+                        </span>
+                        <i className="pi pi-angle-right nova-google-action-tile-arrow" />
                       </button>
                     )}
+
                     <button
                       type="button"
-                      className="nova-google-footer-btn is-danger"
+                      className="nova-google-action-tile is-red"
                       onClick={() => setShowForgetGoogle((prev) => !prev)}
                     >
-                      <i className={`pi ${showForgetGoogle ? "pi-times" : "pi-trash"} me-2`} />
-                      {showForgetGoogle ? "Cancel" : "Forget 2FA"}
+                      <span className="nova-google-action-tile-icon" aria-hidden="true">
+                        <i className={`pi ${showForgetGoogle ? "pi-times" : "pi-trash"}`} />
+                      </span>
+                      <span className="nova-google-action-tile-text">
+                        <strong>{showForgetGoogle ? "Cancel" : "Forget 2FA"}</strong>
+                        <small>Remove 2FA from account</small>
+                      </span>
+                      <i className="pi pi-angle-right nova-google-action-tile-arrow" />
                     </button>
                   </div>
 
@@ -2206,6 +2297,17 @@ const SecuritySettings = () => {
                       </form>
                     </div>
                   )}
+
+                  {/* Bottom secure note */}
+                  <div className="nova-google-secure-note">
+                    <span className="nova-google-secure-note-icon" aria-hidden="true">
+                      <i className="pi pi-lock" />
+                    </span>
+                    <span>
+                      Keep your account secure. Never share your authentication codes
+                      with anyone.
+                    </span>
+                  </div>
                 </div>
               )}
                   </div>

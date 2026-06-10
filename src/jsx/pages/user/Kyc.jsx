@@ -374,15 +374,34 @@ const Kyc = () => {
             {isApproved ? (
               <div className="nova-kyc-approved-hero">
                 <div className="nova-kyc-approved-left">
-                  <div className="nova-kyc-approved-icon">
-                    <i className="fa fa-check-circle" />
+                  <div className="nova-kyc-verified-badge" aria-hidden="true">
+                    <svg
+                      className="nova-kyc-verified-svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 2.2 4.6 5.1v5.6c0 4.6 3.2 7.9 7.4 9.9 4.2-2 7.4-5.3 7.4-9.9V5.1L12 2.2Z"
+                        fill="rgba(255,255,255,0.18)"
+                        stroke="rgba(255,255,255,0.6)"
+                        strokeWidth="1"
+                      />
+                      <path
+                        d="m8.7 12 2.3 2.3 4.4-4.5"
+                        stroke="#ffffff"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </div>
                   <div>
                     <div className="nova-kyc-eyebrow">Tevau Verification</div>
                     <h3 className="nova-kyc-hero-title">KYC Verified</h3>
                     <div className="nova-kyc-pill-row">
                       <span className="nova-kyc-pill is-success">
-                        <span className="nova-kyc-pill-dot" />
+                        <i className="pi pi-check-circle" />
                         KYC Approved
                       </span>
                     </div>
@@ -390,16 +409,31 @@ const Kyc = () => {
                 </div>
                 <div className="nova-kyc-approved-stats">
                   <div className="nova-kyc-stat-box">
-                    <span>Approved KYC ID</span>
-                    <strong>{approvedKyc?.id || "N/A"}</strong>
+                    <div className="nova-kyc-stat-text">
+                      <span>Approved KYC ID</span>
+                      <strong>{approvedKyc?.id || "N/A"}</strong>
+                    </div>
+                    <span className="nova-kyc-stat-icon is-blue">
+                      <i className="pi pi-id-card" />
+                    </span>
                   </div>
                   <div className="nova-kyc-stat-box">
-                    <span>Submitted At</span>
-                    <strong>{formatDateTime(latestKyc?.submitted_at || latestKyc?.created_at)}</strong>
+                    <div className="nova-kyc-stat-text">
+                      <span>Submitted At</span>
+                      <strong>{formatDateTime(latestKyc?.submitted_at || latestKyc?.created_at)}</strong>
+                    </div>
+                    <span className="nova-kyc-stat-icon is-green">
+                      <i className="pi pi-calendar" />
+                    </span>
                   </div>
                   <div className="nova-kyc-stat-box">
-                    <span>Approved At</span>
-                    <strong>{formatDateTime(approvedKyc?.approved_at)}</strong>
+                    <div className="nova-kyc-stat-text">
+                      <span>Approved At</span>
+                      <strong>{formatDateTime(approvedKyc?.approved_at)}</strong>
+                    </div>
+                    <span className="nova-kyc-stat-icon is-green">
+                      <i className="pi pi-clock" />
+                    </span>
                   </div>
                 </div>
               </div>
@@ -820,6 +854,82 @@ const Kyc = () => {
             </div>
           )}
 
+        </div>
+
+        {/* Security & Compliance + Need Help */}
+        <div className="nova-kyc-info-row">
+          <div className="nova-kyc-compliance-card">
+            <div className="nova-kyc-compliance-head">
+              <span className="nova-kyc-compliance-icon" aria-hidden="true">
+                <i className="pi pi-shield" />
+              </span>
+              <div>
+                <h5>Security &amp; Compliance</h5>
+                <p>
+                  Your data is encrypted and stored securely. We comply with
+                  global KYC and AML regulations to ensure a safe and trusted
+                  platform.
+                </p>
+              </div>
+            </div>
+            <div className="nova-kyc-compliance-badges">
+              <div className="nova-kyc-compliance-badge">
+                <span className="nova-kyc-compliance-badge-icon" aria-hidden="true">
+                  <i className="pi pi-lock" />
+                </span>
+                <div>
+                  <strong>AES-256</strong>
+                  <small>Encrypted</small>
+                </div>
+              </div>
+              <div className="nova-kyc-compliance-badge">
+                <span className="nova-kyc-compliance-badge-icon" aria-hidden="true">
+                  <span className="nova-kyc-dashed-circle" />
+                </span>
+                <div>
+                  <strong>GDPR</strong>
+                  <small>Compliant</small>
+                </div>
+              </div>
+              <div className="nova-kyc-compliance-badge">
+                <span className="nova-kyc-compliance-badge-icon" aria-hidden="true">
+                  <i className="pi pi-shield" />
+                </span>
+                <div>
+                  <strong>AML</strong>
+                  <small>Screened</small>
+                </div>
+              </div>
+              <div className="nova-kyc-compliance-badge">
+                <span className="nova-kyc-compliance-badge-icon" aria-hidden="true">
+                  <i className="pi pi-verified" />
+                </span>
+                <div>
+                  <strong>ISO 27001</strong>
+                  <small>Certified</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="nova-kyc-help-card">
+            <div className="nova-kyc-help-head">
+              <span className="nova-kyc-help-icon" aria-hidden="true">
+                <i className="pi pi-headphones" />
+              </span>
+              <div>
+                <h5>Need Help?</h5>
+                <p>
+                  Our support team is here to help you with any KYC related
+                  queries.
+                </p>
+              </div>
+            </div>
+            <a href="mailto:support@novacrest.io" className="nova-kyc-help-btn">
+              <i className="pi pi-send" />
+              Contact Support
+            </a>
+          </div>
         </div>
       </div>
     </>
