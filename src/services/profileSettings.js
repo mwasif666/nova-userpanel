@@ -1,6 +1,6 @@
 import { request } from "../utils/api";
 
-const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api";
+const ROOT_API_BASE_URL = "https://backend.novacrest.io/api";
 
 const callCandidates = async ({ candidates, method = "GET", data = null }) => {
   let lastError = null;

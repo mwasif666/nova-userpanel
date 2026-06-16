@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_API_URL = "https://nova.innovationpixel.com/public/api";
+const DEFAULT_BACKEND_API_URL = "https://backend.novacrest.io/api";
 
 export const API_BASE_URL =
   process.env.REACT_APP_BACKEND_URL || DEFAULT_BACKEND_API_URL;

@@ -1,8 +1,8 @@
 // utils/api.js
 import axios from "axios";
 
-const APP_API_BASE_URL = "https://nova.innovationpixel.com/public/api/";
-const ROOT_API_BASE_URL = "https://nova.innovationpixel.com/public/api/";
+const APP_API_BASE_URL = "https://backend.novacrest.io/api/";
+const ROOT_API_BASE_URL = "https://backend.novacrest.io/api/";
 
 const api = axios.create({
   baseURL: APP_API_BASE_URL,

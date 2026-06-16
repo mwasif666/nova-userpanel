@@ -200,7 +200,6 @@ const Cards = () => {
       const res = await request({
         url: "wallet/balance",
         method: "GET",
-        baseURL: "https://nova.innovationpixel.com/public/api/",
         data: {
           ...(userCode ? { user_code: userCode } : {}),
           ...(thirdId ? { third_id: thirdId } : {}),
